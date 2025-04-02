@@ -9,7 +9,7 @@
 .container[data-expanded="true"],
 .container:has([data-state="open"]),
 .container:has([data-expanded="true"]) {
-    background-color: var(--background-hover-4);
+    background-color: var(--bg-hover-4);
 }
 
 .container.reply {
@@ -37,7 +37,7 @@
     display: block;
     position: absolute;
     pointer-events: none;
-    background-color: var(--accent-1);
+    background-color: var(--accent-0);
 }
 
 .container.large > div:not(.buttonContainer, .messageReply) {
@@ -54,7 +54,7 @@
 }
 
 .container.mentioned::before {
-    background-color: var(--warning-foreground);
+    background-color: var(--warning-fg);
 }
 
 .container.mentioned:hover,
@@ -80,7 +80,7 @@
 
 .content strong {
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .content em {
@@ -119,13 +119,13 @@
     position: absolute;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     background-color: transparent;
 }
 
 .content pre > button:hover,
 .content pre > button:focus-visible {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .content pre > button:active {
@@ -141,14 +141,14 @@
     line-height: 1.125rem;
     text-indent: 0;
     white-space: pre-wrap;
-    background-color: var(--background-3);
-    border: 1px solid var(--background-1);
+    background-color: var(--bg-3);
+    border: 1px solid var(--bg-1);
     display: block;
     overflow-x: auto;
     padding: 0.5rem;
     border-radius: 4px;
     text-size-adjust: none;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     font-family: var(--font-code);
 }
 
@@ -162,11 +162,11 @@
 .content .spoiler {
     cursor: pointer;
     border-radius: 4px;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .content .spoiler:hover {
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
 }
 
 .content .spoiler > span {
@@ -175,7 +175,7 @@
 }
 
 .content .spoiler.display {
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
     cursor: text;
 }
 
@@ -201,7 +201,7 @@
     display: block;
     position: absolute;
     border-radius: 4px;
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
 }
 
 .mainContent h1,
@@ -216,7 +216,7 @@
     margin-top: 1rem;
     margin-bottom: 0.5rem;
     line-height: 1.375rem;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .mainContent h1:first-child,
@@ -261,7 +261,7 @@
 }
 
 .content li::marker {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .userAvatar {
@@ -298,7 +298,7 @@
     position: relative;
     overflow: hidden;
     cursor: pointer;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     user-select: text;
 }
 
@@ -310,7 +310,7 @@
     position: relative;
     font-size: 0.75rem;
     line-height: 1.375rem;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     margin-left: 0.25rem;
     display: inline-block;
     cursor: default;
@@ -329,16 +329,16 @@
     padding-left: 72px;
     position: relative;
     text-indent: 0;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .inline .content > div:not(.editHint, .userAvatar, .contentTimestamp) {
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .bold {
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageTimestamp {
@@ -357,7 +357,7 @@
     font-weight: 500;
     cursor: default;
     display: inline-block;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .container:hover .messageTimestamp {
@@ -368,23 +368,6 @@
     position: relative;
     line-height: 1.375rem;
     height: 100%;
-}
-
-.editHint {
-    padding: 7px 0;
-    font-size: 12px;
-    font-weight: 400;
-    color: var(--foreground-2);
-    user-select: none;
-}
-
-.editHint > span {
-    color: var(--accent-light);
-    cursor: pointer;
-}
-
-.editHint > span:hover {
-    text-decoration: underline;
 }
 
 .messageReply .contentTimestamp {
@@ -398,7 +381,7 @@
 .contentTimestamp > span {
     font-size: 0.75rem;
     line-height: 1.375rem;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     height: 1.25rem;
     cursor: default;
     font-weight: 500;
@@ -410,7 +393,7 @@
     display: flex;
     align-items: center;
     font-size: 0.875rem;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     line-height: 1.125rem;
     position: relative;
     white-space: pre;
@@ -452,7 +435,7 @@
     margin-right: 0.25rem;
     opacity: 0.64;
     font-weight: 500;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     position: relative;
     cursor: pointer;
     overflow: hidden;
@@ -474,7 +457,7 @@
 }
 
 .contentRef:hover {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageReply > svg {
@@ -498,8 +481,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-2);
-    background-color: var(--background-2);
+    color: var(--fg-2);
+    background-color: var(--bg-2);
     flex: 0 0 auto;
     width: 16px;
     height: 16px;
@@ -521,7 +504,7 @@
 
 .messageLink {
     text-decoration: none;
-    color: var(--accent-light);
+    color: var(--accent-fg);
 }
 
 .messageLink:hover {
@@ -555,15 +538,15 @@
 }
 
 .buttons {
-    background-color: var(--background-4);
-    display: grid;
-    grid-auto-flow: column;
     height: 32px;
-    border-radius: 4px;
-    align-items: center;
-    justify-content: flex-start;
+    display: grid;
     user-select: none;
+    border-radius: 4px;
     position: relative;
+    align-items: center;
+    grid-auto-flow: column;
+    justify-content: flex-start;
+    background-color: var(--bg-3);
     box-shadow: var(--elevation-low);
     transition: box-shadow 0.2s ease-in-out;
 }
@@ -581,12 +564,12 @@
     width: 32px;
     cursor: pointer;
     position: relative;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
 }
 
 .buttons > button.red {
-    color: var(--error-1) !important;
+    color: var(--danger-0) !important;
 }
 
 .buttons > button > svg {
@@ -607,12 +590,12 @@
 }
 
 .buttons > button:hover {
-    background-color: var(--background-hover-1);
-    color: var(--foreground-2);
+    background-color: var(--bg-hover-1);
+    color: var(--fg-2);
 }
 
 .buttons > button:active {
-    background-color: var(--background-hover-2);
+    background-color: var(--bg-hover-2);
 }
 
 .buttons > button > svg {
@@ -651,7 +634,7 @@
     cursor: pointer;
     font-size: 16px;
     font-weight: 500;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     background-color: var(--background-mention);
     transition: all 0.05s ease-out;
 }
@@ -673,8 +656,8 @@
 
 .mention:hover:not(.editor) {
     text-decoration: underline;
-    color: var(--foreground-1);
-    background-color: var(--accent-1);
+    color: var(--fg-1);
+    background-color: var(--accent-0);
 }
 
 .imagesUpload {
@@ -685,8 +668,8 @@
     border-radius: 8px;
     align-items: center;
     display: flex !important;
-    border: 1px solid var(--background-1);
-    background-color: var(--background-3);
+    border: 1px solid var(--bg-1);
+    background-color: var(--bg-2);
 }
 
 .imagesUpload > img {
@@ -711,12 +694,12 @@
 .imagesUpload > div > :first-child > :first-child {
     font-size: 16px;
     font-weight: 500;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .imagesUpload > div > :first-child > :last-child {
     font-weight: 500;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .imagesUpload > div > :last-child {
@@ -733,7 +716,7 @@
     width: 100%;
     border-radius: 3px;
     height: 6px;
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
 }
 
 .imagesUpload > div > :last-child > div > div {
@@ -741,7 +724,7 @@
     height: 6px;
     border-radius: 3px;
     transition: transform 0.2s ease-out;
-    background-color: var(--accent-1);
+    background-color: var(--accent-0);
     transform: translate3d(-100%, 0, 0);
 }
 
@@ -754,14 +737,14 @@
     margin-right: -4px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     transition: color 0.15s ease;
     background-color: transparent;
 }
 
 .imagesUpload > button:hover,
 .imagesUpload > button:focus-visible {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageAccessories {
@@ -784,21 +767,21 @@
     margin-bottom: 8px;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: var(--foreground-2);
-    background-color: var(--background-4);
-    border: 1px solid var(--border-light);
+    color: var(--fg-2);
+    background-color: var(--bg-4);
+    border: 1px solid var(--border-0);
     transition: background-color 0.15s ease;
 }
 
 .translation:hover,
 .translation:focus-visible {
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .translationText {
     user-select: text;
     line-height: 1.375;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .embed {
@@ -808,14 +791,14 @@
     border-radius: 4px;
     align-self: start;
     justify-self: auto;
-    background-color: var(--background-3);
-    border-left: 4px solid var(--background-1);
+    background-color: var(--bg-3);
+    border-left: 4px solid var(--bg-1);
     font-size: 1rem;
     line-height: 1.375rem;
     white-space: break-spaces;
     word-wrap: break-word;
     user-select: text;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .embed > div {
@@ -837,11 +820,11 @@
     right: -20px;
     cursor: pointer;
     padding: 2px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .embedRemove:hover {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .embedRemove > svg {
@@ -862,7 +845,7 @@
 }
 
 .embed .title {
-    color: var(--accent-light);
+    color: var(--accent-fg);
     font-weight: 600;
     display: inline-block;
     word-break: break-word;
@@ -935,31 +918,31 @@
     cursor: pointer;
     user-select: none;
     position: relative;
+    color: var(--fg-3);
     align-items: center;
     border-radius: 0.5rem;
     margin-right: 0.25rem;
     margin-bottom: 0.25rem;
     padding: 0.125rem 0.375rem;
-    color: var(--foreground-3);
     border: 1px solid transparent;
-    background-color: var(--background-3);
+    background-color: var(--bg-1);
     transition: border-color 0.1s ease, background-color 0.1s ease, color 0.1s ease;
 }
 
 .reaction.me {
-    border-color: var(--accent-1);
-    background-color: var(--accent-1-15);
+    border-color: var(--accent-0);
+    background-color: var(--accent-0-15);
 }
 
 .reaction:not(.me):hover,
 .reaction:not(.me):focus-visible {
-    color: var(--foreground-1);
-    border-color: var(--background-6);
+    color: var(--fg-1);
+    border-color: var(--border-3);
 }
 
 .reaction:not(.me):active {
     border-color: transparent;
-    background-color: var(--background-2);
+    background-color: var(--bg-0);
 }
 
 .reaction > img,
@@ -974,4 +957,25 @@
     font-weight: 600;
     text-align: center;
     margin-left: 0.375rem;
+}
+
+@media (max-width: 562px) {
+    .buttonContainer {
+        display: none;
+    }
+}
+
+.joinCall {
+    height: 23px;
+    cursor: pointer;
+    user-select: text;
+    line-height: 24px;
+    color: var(--accent-3);
+    background-color: transparent;
+}
+
+.joinCall:hover,
+.joinCall:focus-visible {
+    color: var(--accent-0);
+    text-decoration: underline;
 }

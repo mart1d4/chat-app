@@ -1,15 +1,22 @@
 "use client";
 
 import type { DMChannel, GuildChannel, LocalMessage, ResponseMessage, UserGuild } from "@/type";
-import { TooltipContent, TooltipTrigger, MenuTrigger, Tooltip, Icon, Menu } from "@components";
-import { MessageMenuContent } from "../Layers/Menu/MenuContents/Message";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useEmojiPicker, useWindowSettings } from "@/store";
 import type { MessageFunctions } from "./Message";
+import { memo, useCallback, useMemo, useRef } from "react";
 import styles from "./Message.module.css";
-import { useRef } from "react";
+import {
+    MessageMenuContent,
+    TooltipContent,
+    TooltipTrigger,
+    MenuTrigger,
+    Tooltip,
+    Icon,
+    Menu,
+} from "@components";
 
-export function MessageMenu({
+export const MessageMenu = memo(function MessageMenu({
     message,
     functions,
     channel,
@@ -24,7 +31,7 @@ export function MessageMenu({
     large?: boolean;
     inline?: boolean;
 }) {
-    const { shiftKeyDown: shift } = useWindowSettings();
+    const shift = useWindowSettings((s) => s.shiftKeyDown);
     const user = useAuthenticatedUser();
 
     const { data: emojiPickerData, setData: setEmojiPickerData } = useEmojiPicker();
@@ -44,152 +51,158 @@ export function MessageMenu({
             icon: string;
             dangerous?: boolean;
         };
-    } = {
-        COPY_ID: {
-            text: "Copy Message ID",
-            onClick: () => functions.copyMessageId(),
-            icon: "id",
-        },
-        PIN_MESSAGE: {
-            text: `${message.pinned ? "Unpin" : "Pin"} Message`,
-            onClick: () => {
-                if (message.pinned) functions.unpinMessage();
-                else functions.pinMessage();
+    } = useMemo(
+        () => ({
+            COPY_ID: {
+                text: "Copy Message ID",
+                onClick: () => functions.copyMessageId(),
+                icon: "id",
             },
-            icon: "pin",
-        },
-        COPY_TEXT: {
-            text: "Copy Text",
-            onClick: () => functions.copyMessageContent(),
-            icon: "copy",
-        },
-        TRANSLATE: {
-            text: "Translate",
-            onClick: () => functions.translateMessageContent(),
-            icon: "translate",
-        },
-        MARK_UNREAD: {
-            text: "Mark Unread",
-            onClick: () => {},
-            icon: "mark",
-        },
-        COPY_LINK: {
-            text: "Copy Message Link",
-            onClick: () => functions.copyMessageLink(),
-            icon: "link",
-        },
-        SPEAK: {
-            text: "Speak Message",
-            onClick: () => functions.speakMessageContent(),
-            icon: "speak",
-        },
-        ADD_REACTION: {
-            text: "Add Reaction",
-            onClick: () => {
-                setEmojiPickerData({
-                    open: true,
-                    container: emojiPickerRef.current,
-                    placement: "left-start",
-                    onClick: (emoji) => functions.addReaction(emoji),
-                });
+            PIN_MESSAGE: {
+                text: `${message.pinned ? "Unpin" : "Pin"} Message`,
+                onClick: () => {
+                    if (message.pinned) functions.unpinMessage();
+                    else functions.pinMessage();
+                },
+                icon: "pin",
             },
-            icon: "addReaction",
-        },
-        EDIT: {
-            text: "Edit",
-            onClick: () => functions.startEditingMessage(),
-            icon: "edit",
-        },
-        REPLY: {
-            text: "Reply",
-            onClick: () => functions.setReplyToMessage(),
-            icon: "reply",
-        },
-        MORE: {
-            text: "More",
-            onClick: () => {},
-            icon: "dots",
-        },
-        DELETE: {
-            text: "Delete",
-            onClick: () => {
-                if ("error" in message && message.error) {
-                    functions.deleteMessageLocally();
-                } else {
-                    functions.deleteMessage();
-                }
+            COPY_TEXT: {
+                text: "Copy Text",
+                onClick: () => functions.copyMessageContent(),
+                icon: "copy",
             },
-            icon: "delete",
-            dangerous: true,
-        },
-        REPORT: {
-            text: "Report Message",
-            onClick: () => {},
-            icon: "report",
-            dangerous: true,
-        },
-        RETRY: {
-            text: "Retry",
-            onClick: () => functions.sendMessage(),
-            icon: "retry",
-        },
-    };
+            TRANSLATE: {
+                text: "Translate",
+                onClick: () => functions.translateMessageContent(),
+                icon: "translate",
+            },
+            MARK_UNREAD: {
+                text: "Mark Unread",
+                onClick: () => {},
+                icon: "mark",
+            },
+            COPY_LINK: {
+                text: "Copy Message Link",
+                onClick: () => functions.copyMessageLink(),
+                icon: "link",
+            },
+            SPEAK: {
+                text: "Speak Message",
+                onClick: () => functions.speakMessageContent(),
+                icon: "speak",
+            },
+            ADD_REACTION: {
+                text: "Add Reaction",
+                onClick: () => {
+                    setEmojiPickerData({
+                        open: true,
+                        container: emojiPickerRef.current,
+                        placement: "left-start",
+                        onClick: (emoji) => functions.addReaction(emoji),
+                    });
+                },
+                icon: "addReaction",
+            },
+            EDIT: {
+                text: "Edit",
+                onClick: () => functions.startEditingMessage(),
+                icon: "edit",
+            },
+            REPLY: {
+                text: "Reply",
+                onClick: () => functions.setReplyToMessage(),
+                icon: "reply",
+            },
+            MORE: {
+                text: "More",
+                onClick: () => {},
+                icon: "dots",
+            },
+            DELETE: {
+                text: "Delete",
+                onClick: () => {
+                    if ("error" in message && message.error) {
+                        functions.deleteMessageLocally();
+                    } else {
+                        functions.deleteMessage();
+                    }
+                },
+                icon: "delete",
+                dangerous: true,
+            },
+            REPORT: {
+                text: "Report Message",
+                onClick: () => {},
+                icon: "report",
+                dangerous: true,
+            },
+            RETRY: {
+                text: "Retry",
+                onClick: () => functions.sendMessage(),
+                icon: "retry",
+            },
+        }),
+        [message, functions, setEmojiPickerData]
+    );
 
-    function renderButton(button: keyof typeof buttons) {
-        const { text, onClick, icon, dangerous } = buttons[button];
+    const renderButton = useCallback(
+        function renderButton(button: keyof typeof buttons) {
+            const { text, onClick, icon, dangerous } = buttons[button];
 
-        if (button === "MORE") {
+            if (button === "MORE") {
+                return (
+                    <Menu placement="left-start">
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <MenuTrigger>
+                                    <button
+                                        key={text}
+                                        onClick={onClick}
+                                        className={dangerous ? styles.red : undefined}
+                                    >
+                                        <Icon name={icon} />
+                                    </button>
+                                </MenuTrigger>
+                            </TooltipTrigger>
+
+                            <TooltipContent>{text}</TooltipContent>
+
+                            <MessageMenuContent
+                                guild={guild}
+                                channel={channel}
+                                message={message}
+                                functions={functions}
+                            />
+                        </Tooltip>
+                    </Menu>
+                );
+            }
+
+            let id = "";
+            if (button === "ADD_REACTION") {
+                id = `emoji-picker-${message.id}`;
+            }
+
             return (
-                <Menu placement="left-start">
-                    <Tooltip>
-                        <TooltipTrigger>
-                            <MenuTrigger>
-                                <button
-                                    key={text}
-                                    onClick={onClick}
-                                    className={dangerous ? styles.red : undefined}
-                                >
-                                    <Icon name={icon} />
-                                </button>
-                            </MenuTrigger>
-                        </TooltipTrigger>
+                <Tooltip>
+                    <TooltipTrigger>
+                        <button
+                            id={id}
+                            key={text}
+                            onClick={onClick}
+                            className={dangerous ? styles.red : undefined}
+                            ref={button === "ADD_REACTION" ? emojiPickerRef : null}
+                        >
+                            <Icon name={icon} />
+                        </button>
+                    </TooltipTrigger>
 
-                        <TooltipContent>{text}</TooltipContent>
-
-                        <MessageMenuContent
-                            guild={guild}
-                            channel={channel}
-                            message={message}
-                            functions={functions}
-                        />
-                    </Tooltip>
-                </Menu>
+                    <TooltipContent>{text}</TooltipContent>
+                </Tooltip>
             );
-        }
-
-        let id = "";
-        if (button === "ADD_REACTION") {
-            id = `emoji-picker-${message.id}`;
-        }
-
-        return (
-            <Tooltip>
-                <TooltipTrigger>
-                    <button
-                        id={id}
-                        key={text}
-                        onClick={onClick}
-                        className={dangerous ? styles.red : undefined}
-                        ref={button === "ADD_REACTION" ? emojiPickerRef : null}
-                    >
-                        <Icon name={icon} />
-                    </button>
-                </TooltipTrigger>
-
-                <TooltipContent>{text}</TooltipContent>
-            </Tooltip>
-        );
-    }
+        },
+        [buttons]
+    );
 
     return (
         <div
@@ -254,4 +267,4 @@ export function MessageMenu({
             </div>
         </div>
     );
-}
+});

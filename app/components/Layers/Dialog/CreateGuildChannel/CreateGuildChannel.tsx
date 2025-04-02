@@ -1,10 +1,10 @@
 "use client";
 
 import { Checkbox, DialogContent, Icon, Input, useDialogContext } from "@components";
-import useRequestHelper from "@/hooks/useFetchHelper";
 import type { GuildChannel, UserGuild } from "@/type";
 import styles from "./CreateGuildChannel.module.css";
 import { useState } from "react";
+import { useRequests } from "@/hooks/useRequests";
 
 export function CreateGuildChannel({
     channel,
@@ -15,43 +15,35 @@ export function CreateGuildChannel({
     guild: UserGuild;
     isCategory?: boolean;
 }) {
-    const [loading, setLoading] = useState(false);
     const [type, setType] = useState("text");
     const [lock, setLock] = useState(false);
     const [name, setName] = useState("");
 
-    const { sendRequest } = useRequestHelper();
+    const { createGuildChannel } = useRequests();
     const { setOpen } = useDialogContext();
 
     async function createChannel() {
-        if (loading || !name) return;
-        setLoading(true);
+        if (createGuildChannel.isLoading || !name) return;
 
-        try {
-            const { errors } = await sendRequest({
-                query: "GUILD_CHANNEL_CREATE",
-                params: {
-                    guildId: guild.id,
-                },
+        await createGuildChannel.send(
+            {
+                guildId: guild.id,
                 body: {
                     name,
                     type: isCategory ? 4 : type === "text" ? 2 : 3,
                     locked: lock,
                     categoryId: channel?.id,
                 },
-            });
-
-            if (!errors) {
-                setName("");
-                setLock(false);
-                setType("text");
-                setOpen(false);
+            },
+            {
+                onComplete: () => {
+                    setName("");
+                    setLock(false);
+                    setType("text");
+                    setOpen(false);
+                },
             }
-        } catch (e) {
-            console.error(e);
-        }
-
-        setLoading(false);
+        );
     }
 
     return (
@@ -60,8 +52,8 @@ export function CreateGuildChannel({
             width={460}
             noHeadingGap
             confirmDisabled={!name}
-            confirmLoading={loading}
             onConfirm={createChannel}
+            confirmLoading={createGuildChannel.isLoading}
             description={channel ? `In ${channel.name}` : ""}
             heading={`Create ${isCategory ? "Category" : "Channel"}`}
             confirmLabel={lock ? "Next" : `Create ${isCategory ? "Category" : "Channel"}`}

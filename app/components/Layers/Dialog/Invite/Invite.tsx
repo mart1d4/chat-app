@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo } from "react";
-import type { AppGuild, GuildChannel } from "@/type";
-import useFetchHelper from "@/hooks/useFetchHelper";
+import type { GuildChannel, UserGuild } from "@/type";
+import { useState, useRef, useMemo } from "react";
+import { useRequests } from "@/hooks/useRequests";
+import { lowercaseContains } from "@/lib/strings";
 import styles from "./Invite.module.css";
 import { useData } from "@/store";
 import {
@@ -14,94 +15,67 @@ import {
     Avatar,
     Icon,
 } from "@components";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 
-export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild: AppGuild }) {
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild: UserGuild }) {
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [copied, setCopied] = useState(false);
     const [search, setSearch] = useState("");
     const [link, setLink] = useState("");
+
+    const [editInvite, setEditInvite] = useState(false);
+    const [inviteSettings, setInviteSettings] = useState({
+        maxUses: 100,
+        maxAge: 86400,
+        temporary: false,
+    });
 
     const [loading, setLoading] = useState<number[]>([]);
     const [sentTo, setSentTo] = useState<number[]>([]);
     const [failed, setFailed] = useState<number[]>([]);
 
-    const channels = useData((state) => state.channels);
-    const { sendRequest } = useFetchHelper();
+    const { sendMessage, createInvite } = useRequests();
     const { setOpen } = useDialogContext();
+    const user = useAuthenticatedUser();
+    const { channels } = useData();
 
     const inputLinkRef = useRef<HTMLInputElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        getLink();
-    }, []);
-
-    const filteredList = useMemo(() => {
-        if (search) {
-            return channels.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
-        }
-
-        return channels;
-    }, [search, channels]);
-
-    async function getLink() {
-        try {
-            const { data, errors } = await sendRequest({
-                query: "CREATE_INVITE",
-                params: {
-                    channelId: channel.id,
-                },
-                body: {
-                    maxUses: 100,
-                    maxAge: 86400,
-                    temporary: false,
-                },
-            });
-
-            if (data?.invite) {
-                setLink(data.invite.code);
-            } else if (errors) {
-                throw new Error("Failed to create invite link");
-            }
-        } catch (error) {
-            setErrors((prev) => ({ ...prev, server: "Something went wrong" }));
-        }
+    if (!link && !createInvite.error && !createInvite.isLoading) {
+        createInvite.send(
+            { channelId: channel.id, body: inviteSettings },
+            { onComplete: (data) => setLink(data.invite.code) }
+        );
     }
 
     async function invite(channelId: number) {
-        if (loading.includes(channelId) || errors.server) return;
         setLoading((prev) => [...prev, channelId]);
 
-        try {
-            const { errors } = await sendRequest({
-                query: "SEND_MESSAGE",
-                params: {
-                    channelId,
+        sendMessage.send(
+            {
+                channelId,
+                message: { content: `${window.location.origin}/${link}` },
+                senderShouldReceive: true,
+            },
+            {
+                onComplete: () => {
+                    if (failed.includes(channelId)) {
+                        setFailed(failed.filter((id) => id !== channelId));
+                    }
+                    setSentTo((prev) => [...prev, channelId]);
                 },
-                body: {
-                    message: {
-                        content: `https://spark.mart1d4.dev/${link}`,
-                        attachments: [],
-                        messageReference: null,
-                    },
-                },
-            });
-
-            if (!errors) {
-                if (failed.includes(channelId)) {
-                    setFailed(failed.filter((id) => id !== channelId));
-                }
-                setSentTo((prev) => [...prev, channelId]);
-            } else {
-                setFailed((prev) => [...prev, channelId]);
+                onFail: () => setFailed((prev) => [...prev, channelId]),
             }
-        } catch (error) {
-            console.error(error);
-            setFailed((prev) => [...prev, channelId]);
-        }
+        );
 
         setLoading(loading.filter((id) => id !== channelId));
     }
+
+    const filteredList = useMemo(() => {
+        if (search) return channels.filter((c) => lowercaseContains(c.name, search));
+        return channels;
+    }, [search, channels]);
 
     return (
         <div className={styles.popup}>
@@ -115,15 +89,15 @@ export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild:
 
                 <div className={styles.input}>
                     <input
-                        ref={inputRef}
                         type="text"
-                        placeholder={"Search for friends"}
-                        value={search || ""}
-                        spellCheck="false"
+                        ref={inputRef}
+                        value={search}
                         role="combobox"
-                        aria-autocomplete="list"
+                        spellCheck="false"
                         aria-expanded="true"
                         aria-haspopup="true"
+                        aria-autocomplete="list"
+                        placeholder={"Search for friends"}
                         onChange={(e) => setSearch(e.target.value)}
                     />
 
@@ -135,67 +109,76 @@ export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild:
 
             {filteredList.length > 0 && !errors.server ? (
                 <div className={styles.scroller + " scrollbar"}>
-                    {filteredList.map((channel) => (
-                        <div
-                            key={channel.id}
-                            className={styles.friend}
-                        >
-                            <div>
-                                <div className={styles.friendAvatar}>
-                                    <Avatar
-                                        size={32}
-                                        type="channel"
-                                        alt={channel.name}
-                                        fileId={channel.icon}
-                                        generateId={channel.id}
-                                    />
+                    {filteredList.map((channel) => {
+                        const friend =
+                            channel.type === 0
+                                ? channel.recipients.find((r) => r.id !== user.id)
+                                : null;
+
+                        return (
+                            <div
+                                key={channel.id}
+                                className={styles.friend}
+                            >
+                                <div>
+                                    <div className={styles.friendAvatar}>
+                                        <Avatar
+                                            size={32}
+                                            alt={channel.name}
+                                            status={friend?.status}
+                                            generateId={friend?.id || channel.id}
+                                            fileId={friend?.avatar || channel.icon}
+                                            type={channel.type === 0 ? "user" : "channel"}
+                                        />
+                                    </div>
+
+                                    <div className={styles.friendUsername}>{channel.name}</div>
                                 </div>
 
-                                <div className={styles.friendUsername}>{channel.name}</div>
-                            </div>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <button
+                                            className={`
+                                                button ${styles.inviteButton}
+                                                ${failed.includes(channel.id) ? styles.failed : ""}
+                                                ${sentTo.includes(channel.id) ? styles.sent : ""}
+                                            `}
+                                            onClick={() => {
+                                                if (
+                                                    !sentTo.includes(channel.id) &&
+                                                    !loading.includes(channel.id)
+                                                ) {
+                                                    invite(channel.id);
+                                                }
+                                            }}
+                                        >
+                                            {failed.includes(channel.id) ? (
+                                                "Failed"
+                                            ) : sentTo.includes(channel.id) ? (
+                                                "Sent"
+                                            ) : loading.includes(channel.id) ? (
+                                                <LoadingDots />
+                                            ) : (
+                                                "Invite"
+                                            )}
+                                        </button>
+                                    </TooltipTrigger>
 
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <button
-                                        className={`
-                                            button ${styles.inviteButton}
-                                            ${failed.includes(channel.id) ? styles.failed : ""}
-                                            ${sentTo.includes(channel.id) ? styles.sent : ""}
-                                        `}
-                                        onClick={() => {
-                                            if (
-                                                !sentTo.includes(channel.id) &&
-                                                !loading.includes(channel.id)
-                                            ) {
-                                                invite(channel.id);
-                                            }
-                                        }}
-                                    >
-                                        {failed.includes(channel.id) ? (
-                                            "Failed"
-                                        ) : sentTo.includes(channel.id) ? (
-                                            "Sent"
-                                        ) : loading.includes(channel.id) ? (
-                                            <LoadingDots />
-                                        ) : (
-                                            "Invite"
-                                        )}
-                                    </button>
-                                </TooltipTrigger>
-                                {failed.includes(channel.id) && (
-                                    <TooltipContent>Retry sending invite</TooltipContent>
-                                )}
-                            </Tooltip>
-                        </div>
-                    ))}
+                                    {failed.includes(channel.id) && (
+                                        <TooltipContent>Retry sending invite</TooltipContent>
+                                    )}
+                                </Tooltip>
+                            </div>
+                        );
+                    })}
                 </div>
             ) : (
                 <div className={styles.noFriends}>
                     <div
                         style={{
-                            backgroundImage: `url(/assets/system/nothing-found.svg)`,
                             width: "85px",
                             height: "85px",
+                            backgroundImage: `url(/assets/system/nothing-found.svg)`,
                         }}
                     />
 
@@ -215,7 +198,7 @@ export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild:
                             type="text"
                             ref={inputLinkRef}
                             focus-id="inviteLink"
-                            value={`https://spark.mart1d4.dev/${link}`}
+                            value={`${window.location.origin}/${link}`}
                             onClick={() => inputLinkRef.current?.select()}
                         />
                     </div>
@@ -224,14 +207,11 @@ export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild:
                         className={copied ? "button green" : "button blue"}
                         onClick={() => {
                             try {
-                                navigator.clipboard.writeText(`https://spark.mart1d4.dev/${link}`);
+                                navigator.clipboard.writeText(`${window.location.origin}/${link}`);
                                 setCopied(true);
                                 setTimeout(() => setCopied(false), 1000);
                             } catch (error) {
-                                setErrors((prev) => ({
-                                    ...prev,
-                                    invite: "Failed to copy",
-                                }));
+                                setErrors((prev) => ({ ...prev, invite: "Failed to copy" }));
                             }
                         }}
                     >
@@ -240,15 +220,13 @@ export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild:
                 </div>
 
                 <div>
-                    {(errors.invite || errors.server) && (
-                        <div style={{ color: "var(--error-1)" }}>
-                            {errors.invite || errors.server}
-                        </div>
+                    {createInvite.error && (
+                        <div style={{ color: "var(--danger-0)" }}>{createInvite.error}</div>
                     )}
 
                     {link && (
                         <div>
-                            Your invite link expires in 24 hours.{" "}
+                            Your invite link expires in {inviteSettings.maxAge / 60 / 60} hours.
                             <span className={styles.editLink}>Edit invite link.</span>
                         </div>
                     )}

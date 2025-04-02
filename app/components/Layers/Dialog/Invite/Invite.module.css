@@ -2,7 +2,7 @@
     width: 440px;
     min-height: 200px;
     max-height: 720px;
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
     border-radius: 4px;
     display: flex;
     flex-direction: column;
@@ -35,13 +35,13 @@
     height: 24px;
     cursor: pointer;
     position: absolute;
-    color: var(--foreground-5);
+    color: var(--fg-5);
     background-color: transparent;
 }
 
 .header > button:hover,
 .header > button:focus-visible {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .header > h1 {
@@ -50,7 +50,7 @@
     line-height: 20px;
     margin-right: 40px;
     text-transform: none;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .header > div:nth-child(2) {
@@ -59,7 +59,7 @@
     font-weight: 500;
     line-height: 16px;
     text-transform: none;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .input {
@@ -72,7 +72,7 @@
     flex-wrap: nowrap;
     border-radius: 4px;
     overflow: hidden;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
     height: 32px;
 }
 
@@ -89,7 +89,7 @@
 }
 
 .input > div > svg {
-    color: var(--foreground-2);
+    color: var(--fg-2);
     width: 16px;
     height: 16px;
 }
@@ -107,7 +107,7 @@
     border: none;
     resize: none;
     flex: 1;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .input > input:focus {
@@ -117,7 +117,7 @@
 .input > input::placeholder {
     font-size: 14px;
     font-weight: 400;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .scroller {
@@ -132,17 +132,17 @@
 }
 
 .scroller::-webkit-scrollbar-track {
-    border: 2px var(--background-4) solid;
-    background-color: var(--background-4);
+    border: 2px var(--bg-4) solid;
+    background-color: var(--bg-4);
 }
 
 .scroller::-webkit-scrollbar-thumb {
-    border: 2px var(--background-4) solid;
-    background-color: var(--background-4);
+    border: 2px var(--bg-4) solid;
+    background-color: var(--bg-4);
 }
 
 .scroller:hover::-webkit-scrollbar-thumb {
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .friend {
@@ -160,7 +160,7 @@
 
 .friend:hover,
 .friend:focus-within {
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .friend > div {
@@ -190,7 +190,7 @@
     font-size: 16px;
     line-height: 18px;
     font-weight: 400;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     text-transform: none;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -200,12 +200,12 @@
 button.inviteButton {
     min-width: 72px;
     transition: all 0s;
-    border: 1px solid var(--success-1);
+    border: 1px solid var(--success-0);
 }
 
 .inviteButton.failed {
-    border-color: var(--error-1) !important;
-    background-color: var(--error-1) !important;
+    border-color: var(--danger-0) !important;
+    background-color: var(--danger-0) !important;
 }
 
 .inviteButton.sent {
@@ -216,18 +216,18 @@ button.inviteButton {
 
 .friend:hover > .inviteButton,
 .friend:focus-visible > .inviteButton {
-    background-color: var(--success-1);
+    background-color: var(--success-0);
 }
 
 .friend:hover > .inviteButton:hover,
 .inviteButton:focus-visible {
-    border-color: var(--success-2);
-    background-color: var(--success-2);
+    border-color: var(--success-1);
+    background-color: var(--success-1);
 }
 
 .friend:hover > .inviteButton:active {
-    border-color: var(--success-3);
-    background-color: var(--success-3);
+    border-color: var(--success-2);
+    background-color: var(--success-2);
 }
 
 .separator {
@@ -252,7 +252,7 @@ button.inviteButton {
 
 .footer > h1 {
     margin-bottom: 8px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     font-size: 12px;
     line-height: 16px;
     font-weight: 700;
@@ -265,8 +265,8 @@ button.inviteButton {
     font-size: 16px;
     width: 100%;
     border-radius: 3px;
-    color: var(--foreground-3);
-    background-color: var(--background-2);
+    color: var(--fg-3);
+    background-color: var(--bg-2);
     border: none;
     flex-wrap: nowrap;
     display: flex;
@@ -287,8 +287,8 @@ button.inviteButton {
     font-size: 16px;
     width: 100%;
     border-radius: 3px;
-    color: var(--foreground-2);
-    background-color: var(--background-2);
+    color: var(--fg-2);
+    background-color: var(--bg-2);
 }
 
 .footer > div:nth-child(2) > div > input:active,
@@ -303,7 +303,7 @@ button.inviteButton {
 }
 
 .footer > div:last-child {
-    color: var(--foreground-3);
+    color: var(--fg-3);
     margin-top: 8px;
     font-size: 12px;
     line-height: 16px;
@@ -321,7 +321,7 @@ button.inviteButton {
     flex-direction: column;
     justify-content: center;
     padding: 20px 20px 40px;
-    color: var(--foreground-5);
+    color: var(--fg-5);
 }
 
 .noFriends > div:first-child {
@@ -338,12 +338,12 @@ button.inviteButton {
     width: 100%;
     margin-top: 20px;
     font-weight: 500;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .editLink {
     cursor: pointer;
-    color: var(--accent-light);
+    color: var(--accent-fg);
     text-decoration: underline;
 }
 

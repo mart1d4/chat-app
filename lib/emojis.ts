@@ -44,7 +44,7 @@ export function getCodeFromName(name: string): string | undefined {
     return undefined;
 }
 
-export function isCorrectTwemojiHex(hex: string) {
+export function isCorrectEmojiHex(hex: string) {
     return emojiCodesWithExt.map((emoji) => emoji.replace(".svg", "")).includes(hex);
 }
 

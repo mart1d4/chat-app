@@ -6,7 +6,7 @@
     user-select: none;
     border-radius: 4px;
     flex-direction: column;
-    background-color: var(--background-4);
+    background-color: var(--bg-3);
     box-shadow: var(--elevation-low), var(--elevation-high-dark);
 }
 
@@ -32,7 +32,7 @@
     padding: 0;
     width: 24px;
     height: 24px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
     visibility: hidden;
     cursor: pointer;
@@ -40,11 +40,11 @@
 }
 
 .closeButton:hover {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .header > h1 {
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-size: 20px;
     line-height: 24px;
     font-weight: 600;
@@ -52,7 +52,7 @@
 }
 
 .header > div:nth-child(2) {
-    color: var(--foreground-3);
+    color: var(--fg-3);
     margin-top: 4px;
     font-size: 12px;
     line-height: 16px;
@@ -74,7 +74,7 @@
     flex: 1;
     border-radius: 4px;
     overflow: hidden;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .addButton {
@@ -110,7 +110,7 @@
     border: none;
     resize: none;
     flex: 1;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .input input:focus {
@@ -119,7 +119,7 @@
 
 .input input::placeholder {
     font-weight: 400;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .friendChip {
@@ -133,8 +133,8 @@
     text-align: center;
     margin: 1px;
     cursor: pointer;
-    background-color: var(--background-4);
-    color: var(--foreground-3);
+    background-color: var(--bg-4);
+    color: var(--fg-3);
     text-transform: none;
     outline-offset: -2px;
 }
@@ -166,17 +166,17 @@
 }
 
 .scroller::-webkit-scrollbar-track {
-    border: 2px var(--background-4) solid;
-    background-color: var(--background-4);
+    border: 2px var(--bg-4) solid;
+    background-color: var(--bg-4);
 }
 
 .scroller::-webkit-scrollbar-thumb {
-    border: 2px var(--background-4) solid;
-    background-color: var(--background-4);
+    border: 2px var(--bg-4) solid;
+    background-color: var(--bg-4);
 }
 
 .scroller:hover::-webkit-scrollbar-thumb {
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .friend {
@@ -197,7 +197,7 @@
 
 .friend:hover > div,
 .friend:focus-visible > div {
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .friendAvatar {
@@ -224,7 +224,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     text-transform: none;
 }
 
@@ -239,7 +239,7 @@
     font-size: 14px;
     display: flex;
     align-items: center;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .friendCheck {
@@ -251,7 +251,7 @@
 .friendCheck > div {
     height: 100%;
     width: 100%;
-    border: 1px solid var(--foreground-5);
+    border: 1px solid var(--fg-5);
     border-radius: 5px;
     display: flex;
     justify-content: center;
@@ -260,7 +260,7 @@
 
 .friendCheck svg {
     margin: 0;
-    color: var(--accent-1);
+    color: var(--accent-0);
 }
 
 .separator {
@@ -285,7 +285,7 @@
 
 .footer > h1 {
     margin-bottom: 8px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     font-size: 12px;
     line-height: 16px;
     font-weight: 700;
@@ -298,8 +298,8 @@
     font-size: 16px;
     width: 100%;
     border-radius: 3px;
-    color: var(--foreground-3);
-    background-color: var(--background-2);
+    color: var(--fg-3);
+    background-color: var(--bg-2);
     border: none;
     flex-wrap: nowrap;
     display: flex;
@@ -320,8 +320,8 @@
     font-size: 16px;
     width: 100%;
     border-radius: 3px;
-    color: var(--foreground-2);
-    background-color: var(--background-2);
+    color: var(--fg-2);
+    background-color: var(--bg-2);
 }
 
 .footer > div:nth-child(2) > div > input:active,
@@ -336,7 +336,7 @@
 }
 
 .footer > div:last-child {
-    color: var(--foreground-3);
+    color: var(--fg-3);
     margin-top: 8px;
     font-size: 12px;
     line-height: 16px;
@@ -354,7 +354,7 @@
     flex-wrap: nowrap;
     line-height: 20px;
     font-weight: 500;
-    color: var(--foreground-5);
+    color: var(--fg-5);
 }
 
 .noFriends > div:first-child {
@@ -370,7 +370,7 @@
     margin-top: 20px;
     width: 100%;
     font-weight: 500;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 @media (max-width: 562px) {

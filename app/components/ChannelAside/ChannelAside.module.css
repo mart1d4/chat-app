@@ -112,20 +112,20 @@
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     transition: background-color 0.2s ease;
-    background-color: var(--background-hover-dark-1);
+    background-color: var(--bg-hover-0);
 }
 
 .topTools > button:hover,
 .topTools > button:focus-visible {
-    background-color: var(--background-hover-dark-2);
+    background-color: var(--bg-hover-5);
 }
 
 .topTools > button:disabled {
     opacity: 0.5;
     cursor: default;
-    background-color: var(--background-hover-dark-1);
+    background-color: var(--bg-hover-0);
 }
 
 .usercard .body {
@@ -145,7 +145,7 @@
     user-select: text;
     width: fit-content;
     word-break: break-word;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .usercard .heading > p {
@@ -154,7 +154,7 @@
     width: fit-content;
     text-overflow: clip;
     word-break: break-all;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .usercard .heading > *:hover,
@@ -181,13 +181,13 @@
     font-size: 12px;
     font-weight: 500;
     line-height: 16px;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .usercard .panel p {
     font-size: 14px;
     line-height: 18px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .usercard .mutuals {
@@ -213,19 +213,19 @@
     font-weight: 600;
     user-select: none;
     align-items: center;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     background-color: transparent;
     justify-content: space-between;
 }
 
 .usercard .mutuals .button > svg {
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .usercard .mutuals > hr {
     height: 1px;
     margin: 0 12px;
-    background-color: var(--border-light);
+    background-color: var(--border-0);
 }
 
 .cardInput {
@@ -238,13 +238,13 @@
     max-height: 92px;
     line-height: 14px;
     border-radius: 3px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     background-color: transparent;
 }
 
 .cardInput::placeholder {
     user-select: none;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .cardInput:focus {
@@ -257,7 +257,7 @@ textarea.cardInput::-webkit-scrollbar {
 
 textarea.cardInput::-webkit-scrollbar-thumb {
     border: 1px solid transparent;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 textarea.cardInput::-webkit-scrollbar-track {
@@ -271,15 +271,15 @@ textarea.cardInput::-webkit-scrollbar-track {
     cursor: pointer;
     font-weight: 600;
     user-select: none;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     transition: color 0.1s ease;
     background-color: transparent;
-    border-top: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-0);
 }
 
 .usercard > button:hover,
 .usercard > button:focus-visible {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .mutualItems {
@@ -296,7 +296,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     border-radius: 4px;
     align-items: center;
     margin: 1px 0px 1px 8px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .mutualItem:hover,
@@ -328,8 +328,8 @@ textarea.cardInput::-webkit-scrollbar-track {
     border-radius: 33%;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-1);
-    background-color: var(--accent-1);
+    color: var(--fg-1);
+    background-color: var(--accent-0);
 }
 
 /* GROUP */
@@ -338,7 +338,8 @@ textarea.cardInput::-webkit-scrollbar-track {
     width: 240px;
     display: flex;
     position: relative;
-    background-color: var(--background-3);
+    background-color: var(--bg-2);
+    border-left: 1px solid var(--border-0);
 }
 
 .memberList > div {
@@ -358,16 +359,16 @@ textarea.cardInput::-webkit-scrollbar-track {
 
 .memberList > div::-webkit-scrollbar-track {
     background-color: transparent;
-    border: 2px var(--background-3) solid;
+    border: 2px var(--bg-3) solid;
 }
 
 .memberList > div::-webkit-scrollbar-thumb {
     background-color: transparent;
-    border: 2px var(--background-3) solid;
+    border: 2px var(--bg-3) solid;
 }
 
 .memberList > div:hover::-webkit-scrollbar-thumb {
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .memberList > div > h2 {
@@ -381,7 +382,42 @@ textarea.cardInput::-webkit-scrollbar-track {
     text-overflow: ellipsis;
     padding: 24px 8px 0 16px;
     text-transform: uppercase;
-    color: var(--foreground-4);
+    color: var(--fg-4);
+}
+
+.mutualSkeleton {
+    gap: 8px;
+    display: flex;
+}
+
+.mutualSkeleton > div {
+    width: 120px;
+    height: 20px;
+    display: flex;
+    padding: 0 16px;
+    border-radius: 20px;
+    align-items: center;
+    justify-content: space-between;
+    animation: pulse 1.5s infinite;
+    background-color: hsl(228, 6%, 32.6%, 0.3);
+}
+
+.mutualSkeleton > div:last-child {
+    width: 40px;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: hsl(228, 6%, 32.6%, 0.3);
+    }
+
+    50% {
+        background-color: hsl(228, 6%, 32.6%, 0.5);
+    }
+
+    100% {
+        background-color: hsl(228, 6%, 32.6%, 0.3);
+    }
 }
 
 @media screen and (max-width: 1200px) {
@@ -392,4 +428,117 @@ textarea.cardInput::-webkit-scrollbar-track {
     .memberList {
         display: none;
     }
+}
+
+/* UserItem */
+
+.liContainer {
+    display: flex;
+    position: relative;
+    max-width: 224px;
+    margin: 0 0 2px 8px;
+    border-radius: 4px;
+    color: var(--fg-4);
+    user-select: none;
+}
+
+.liContainer:hover,
+.liContainer:focus-visible {
+    opacity: 1 !important;
+    color: var(--fg-2);
+    background-color: var(--bg-4);
+}
+
+.liContainer:active,
+.liContainer[data-state="open"],
+.liContainer[aria-expanded="true"] {
+    opacity: 1 !important;
+    color: var(--fg-1);
+    background-color: var(--bg-5);
+}
+
+.liWrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    border-radius: 4px;
+}
+
+.link {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    align-items: center;
+    cursor: pointer;
+}
+
+.layout {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    height: 42px;
+    padding: 0 8px;
+    border-radius: 4px;
+}
+
+.layoutAvatar {
+    display: flex;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    align-items: center;
+    position: relative;
+}
+
+.layoutAvatar > div {
+    width: 32px;
+    height: 32px;
+}
+
+.layoutContent {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.contentName {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.contentName > div {
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 500;
+    flex: 0 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contentName > svg {
+    width: 14px;
+    height: 14px;
+    top: 1px;
+    flex: 0 0 auto;
+    position: relative;
+    flex-shrink: 0;
+    color: var(--warning-0);
+    margin-left: 4px;
+}
+
+.contentStatus {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
 }

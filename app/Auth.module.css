@@ -14,16 +14,16 @@
     border-radius: 4px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     transform: translateX(-50%);
-    background-color: var(--error-1);
+    background-color: var(--danger-0);
     max-width: clamp(300px, 90dvw, 850px);
     max-width: clamp(300px, 90vw, 850px);
 }
 
 .disclaimer a {
     font-weight: 700;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .wrapper {
@@ -46,8 +46,8 @@
     font-size: 18px;
     border-radius: 0px;
     box-shadow: var(--elevation-high);
-    color: var(--foreground-4);
-    background-color: var(--background-4);
+    color: var(--fg-4);
+    background-color: var(--bg-4);
     z-index: 1;
 }
 
@@ -72,13 +72,13 @@
     margin-bottom: 8px;
     font-size: 24px;
     line-height: 30px;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .header div {
     font-size: 1rem;
     line-height: 20px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .loginBlock {
@@ -100,7 +100,7 @@
     width: auto;
     height: auto;
     padding: 2px 0;
-    color: var(--accent-light);
+    color: var(--accent-fg);
     background-color: transparent;
     font-size: 14px;
 }
@@ -111,8 +111,8 @@
 }
 
 .button.submit {
-    color: var(--foreground-1);
-    background-color: var(--accent-1);
+    color: var(--fg-1);
+    background-color: var(--accent-0);
     font-size: 1rem;
     line-height: 24px;
     margin-bottom: 8px;
@@ -128,7 +128,7 @@
 }
 
 .button.submit:active {
-    background-color: var(--accent-3);
+    background-color: var(--accent-2);
 }
 
 .bottomText {
@@ -142,12 +142,12 @@
     font-size: 14px;
     line-height: 16px;
     user-select: none;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     opacity: 0.9;
 }
 
 .bottomText > a {
-    color: var(--accent-light);
+    color: var(--accent-fg);
     font-size: 14px;
     display: inline-block;
     margin-left: 4px;

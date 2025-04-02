@@ -1,9 +1,9 @@
 .nav {
-    position: relative;
     width: 72px;
+    display: flex;
     flex-shrink: 0;
     overflow: hidden;
-    display: flex;
+    position: relative;
     flex-direction: column;
 }
 
@@ -15,12 +15,12 @@
 .list {
     min-height: 0;
     flex: 1 1 auto;
-    padding: 12px 0 4px 0;
     user-select: none;
     padding-right: 0px;
     position: relative;
+    padding: 12px 0 4px 0;
     overflow: hidden scroll;
-    background-color: var(--background-1);
+    background-color: var(--bg-0);
 }
 
 .list::-webkit-scrollbar {
@@ -43,13 +43,13 @@
     display: flex;
     cursor: pointer;
     border-radius: 50%;
+    color: var(--fg-1);
     position: relative;
     align-items: center;
     outline-offset: 2px;
     text-decoration: none;
     justify-content: center;
-    color: var(--foreground-1);
-    background-color: var(--background-4);
+    background-color: var(--bg-3);
     transition: background-color 0.15s ease-in-out, border-radius 0.15s ease-in-out,
         color 0.15s ease-in-out, transform 0.05s ease-in-out;
 }
@@ -57,7 +57,7 @@
 .wrapper:hover,
 .active {
     border-radius: 33%;
-    background-color: var(--accent-1);
+    background-color: var(--accent-0);
 }
 
 .wrapper > span {
@@ -66,7 +66,7 @@
 
 .green > .active,
 .green > .wrapper:hover {
-    background-color: var(--accent-1);
+    background-color: var(--accent-0);
 }
 
 .wrapper img {
@@ -90,12 +90,12 @@
 }
 
 .green > .wrapper {
-    color: var(--foreground-1);
+    color: var(--fg-2);
 }
 
 .green > .wrapper:hover,
 .green > .active {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .marker {
@@ -116,7 +116,7 @@
     width: 8px;
     border-radius: 0 4px 4px 0;
     margin-left: -4px;
-    background-color: var(--foreground-1);
+    background-color: var(--fg-1);
 }
 
 .separator {
@@ -124,38 +124,49 @@
     width: 32px;
     border-radius: 4px;
     margin: 0 auto 8px auto;
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
 }
 
-.badgeContainer {
-    position: absolute;
-    bottom: -3px;
+.badgeContainer,
+.topBadge {
     right: -3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
     width: 23px;
     height: 23px;
-    background-color: var(--background-1);
+    bottom: -3px;
+    display: flex;
+    border-radius: 50%;
+    position: absolute;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-1);
 }
 
-.badgeContainer > div {
-    background-color: var(--error-1);
+.topBadge {
+    top: -3px;
+    bottom: unset;
+}
+
+.badgeContainer > div,
+.topBadge > div {
     width: 16px;
     height: 16px;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    min-height: 16px;
-    min-width: 16px;
-    color: var(--foreground-1);
-    text-align: center;
     flex: 0 0 auto;
     font-size: 12px;
-    line-height: 16px;
+    min-width: 16px;
+    min-height: 16px;
     font-weight: 700;
-    text-transform: uppercase;
+    line-height: 16px;
+    color: var(--fg-1);
+    text-align: center;
+    border-radius: 8px;
+    align-items: center;
     letter-spacing: 0.02rem;
+    justify-content: center;
+    text-transform: uppercase;
+    background-color: var(--danger-0);
+}
+
+.topBadge > div {
+    background-color: var(--success-0);
 }

@@ -5,11 +5,11 @@
 }
 
 .container img {
-    border-radius: 50%;
-    object-fit: cover;
     min-width: 100%;
     min-height: 100%;
     user-select: none;
+    object-fit: cover;
+    border-radius: 50%;
     pointer-events: none;
 }
 
@@ -25,4 +25,18 @@
 
 .svg rect {
     pointer-events: all;
+}
+
+.status {
+    z-index: 101;
+    position: relative;
+}
+
+.speaking {
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: inset 0 0 0 2px var(--success-light), inset 0 0 0 3px var(--bg-7);
 }

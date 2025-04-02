@@ -3,7 +3,7 @@
 import { DialogContent, Input, Icon, EmojiButton, useDialogContext } from "@components";
 import { getStatusColor, getStatusLabel, getStatusMask } from "@/lib/utils";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
-import useRequestHelper from "@/hooks/useFetchHelper";
+import { useRequests } from "@/hooks/useRequests";
 import styles from "./UpdateStatus.module.css";
 import { useData } from "@/store";
 import { useState } from "react";
@@ -17,8 +17,8 @@ const expirations = [
 ];
 
 export function UpdateStatus() {
-    const { sendRequest } = useRequestHelper();
     const { setOpen } = useDialogContext();
+    const { updateUser } = useRequests();
     const user = useAuthenticatedUser();
     const { setUser } = useData();
 
@@ -28,36 +28,25 @@ export function UpdateStatus() {
     const [expiration, setExpiration] = useState("today");
     const [showOptions, setShowOptions] = useState(false);
     const [status, setStatus] = useState(user.status);
-    const [loading, setLoading] = useState(false);
 
     async function save() {
-        if (loading) return;
-        setLoading(true);
-
         if (user.customStatus === customStatus && user.status === status) {
-            setLoading(false);
             return;
         }
 
-        try {
-            const { data } = await sendRequest({
-                query: "UPDATE_USER",
-                body: {
-                    customStatus,
-                    status,
-                    expiration,
+        updateUser.send(
+            {
+                customStatus,
+                status,
+                expiration,
+            },
+            {
+                onComplete: () => {
+                    setUser({ ...user, customStatus, status });
+                    setOpen(false);
                 },
-            });
-
-            if (data?.user) {
-                setUser(data.user);
-                setOpen(false);
-            } else {
-                console.error("Failed to update user status");
             }
-        } catch (error) {
-            console.error(error);
-        }
+        );
     }
 
     return (
@@ -67,8 +56,8 @@ export function UpdateStatus() {
             noContentOverflow
             confirmLabel="Save"
             headingIcon="userStatus"
-            confirmLoading={loading}
             heading="Set a custom status"
+            confirmLoading={updateUser.isLoading}
         >
             <Input
                 maxLength={100}
@@ -138,7 +127,7 @@ export function UpdateStatus() {
                                     {expiration === e.value && (
                                         <Icon
                                             name="selected"
-                                            fill="var(--accent-1)"
+                                            fill="var(--accent-0)"
                                         />
                                     )}
                                 </li>

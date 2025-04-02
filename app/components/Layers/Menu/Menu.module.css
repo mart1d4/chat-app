@@ -1,16 +1,17 @@
 .menu {
+    padding: 6px;
     display: flex;
     z-index: 10000;
     cursor: default;
     min-width: 188px;
     max-width: 320px;
-    padding: 6px 8px;
     position: relative;
-    border-radius: 4px;
+    border-radius: 5px;
     flex-direction: column;
-    max-height: calc(var(--dvh) - 32px);
+    background-color: var(--bg-7);
+    border: 1px solid transparent;
     box-shadow: var(--elevation-high);
-    background-color: var(--background-dark-1);
+    max-height: calc(var(--dvh) - 32px);
 }
 
 .menu.big {
@@ -21,20 +22,20 @@
     gap: 8px;
     width: 100%;
     outline: none;
-    margin: 2px 0;
+    margin: 1px 0;
     display: flex;
     max-width: 100%;
     cursor: pointer;
     font-size: 14px;
-    min-height: 32px;
     padding: 6px 8px;
+    min-height: 32px;
     text-align: left;
     font-weight: 500;
     line-height: 18px;
     user-select: none;
     border-radius: 2px;
+    color: var(--fg-3);
     align-items: center;
-    color: var(--foreground-3);
     background-color: transparent;
 }
 
@@ -51,53 +52,53 @@
 }
 
 .item.danger {
-    color: var(--error-1);
+    color: var(--danger-0);
 }
 
 .item.disabled {
     opacity: 0.5;
     cursor: default;
-    color: var(--foreground-3) !important;
+    color: var(--fg-3) !important;
     background-color: transparent !important;
 }
 
 .item:hover,
 .item:focus-visible,
 .menu [data-state="open"] .item {
-    color: var(--foreground-1);
-    background-color: var(--accent-1);
+    color: var(--fg-1);
+    background-color: var(--accent-0);
 }
 
 .item:active {
-    color: var(--foreground-1);
+    color: var(--fg-1);
     background-color: var(--accent-2);
 }
 
 .item.danger:hover,
 .item.danger:focus-visible {
-    background-color: var(--error-1);
-    color: var(--foreground-1);
+    background-color: var(--danger-0);
+    color: var(--fg-1);
 }
 
 .item.danger:active {
-    background-color: var(--error-2);
-    color: var(--foreground-1);
+    background-color: var(--danger-1);
+    color: var(--fg-1);
 }
 
 .item:hover div[data-type="status"] {
-    background-color: var(--foreground-1) !important;
+    background-color: var(--fg-1) !important;
 }
 
 .subtext {
     font-size: 12px;
-    color: var(--foreground-5);
+    color: var(--fg-5);
 }
 
 .item:hover .subtext,
 .item:focus-visible .subtext,
 .item:active .subtext,
 .menu [data-state="open"] .item .subtext {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .item > div {
@@ -114,7 +115,7 @@
 
 .divider {
     margin: 4px;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-1);
 }
 
 .loading {
@@ -125,7 +126,7 @@
 }
 
 .item.isChecked > svg > :first-child {
-    color: var(--accent-border);
+    color: var(--accent-3);
 }
 
 .item.isChecked > svg > :last-child {
@@ -136,23 +137,23 @@
 .item.isChecked:focus-visible > svg > :first-child,
 .item.isChecked:active > svg > :first-child,
 .menu [data-state="open"] .item.isChecked > svg > :first-child {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .item.isChecked:hover > svg > :last-child,
 .item.isChecked:focus-visible > svg > :last-child,
 .item.isChecked:active > svg > :last-child,
 .menu [data-state="open"] .item.isChecked > svg > :last-child {
-    color: var(--accent-1);
+    color: var(--accent-0);
 }
 
 .item.isPicked circle {
-    color: var(--accent-border);
+    color: var(--accent-3);
 }
 
 .item.isPicked:hover circle,
 .item.isPicked:focus-visible circle,
 .item.isPicked:active circle,
 .menu [data-state="open"] .item.isPicked circle {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }

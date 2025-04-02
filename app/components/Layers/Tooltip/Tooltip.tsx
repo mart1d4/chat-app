@@ -28,6 +28,7 @@ import {
     useState,
     useMemo,
     useRef,
+    memo,
 } from "react";
 
 import styles from "./Tooltip.module.css";
@@ -140,12 +141,15 @@ export const useTooltipContext = () => {
     return context;
 };
 
-export function Tooltip({ children, ...options }: { children: React.ReactNode } & TooltipOptions) {
+export const Tooltip = memo(function Tooltip({
+    children,
+    ...options
+}: { children: React.ReactNode } & TooltipOptions) {
     // This can accept any props as options, e.g. `placement`,
     // or other positioning options.
     const tooltip = useTooltip(options);
     return <TooltipContext.Provider value={tooltip}>{children}</TooltipContext.Provider>;
-}
+});
 
 export const TooltipTrigger = forwardRef<
     HTMLElement,
@@ -180,8 +184,11 @@ export const TooltipTrigger = forwardRef<
     );
 });
 
-export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElement>>(
-    function TooltipContent({ style, ...props }, propRef) {
+export const TooltipContent = memo(
+    forwardRef<HTMLDivElement, HTMLProps<HTMLDivElement>>(function TooltipContent(
+        { style, ...props },
+        propRef
+    ) {
         const context = useTooltipContext();
         const ref = useMergeRefs([context.refs.setFloating, propRef]);
 
@@ -217,7 +224,10 @@ export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
                             height={5}
                             context={context}
                             ref={context.arrowRef}
-                            fill={context.background || "var(--background-dark-1)"}
+                            fill={context.background || "var(--bg-7)"}
+                            style={{
+                                borderColor: context.background || "transparent",
+                            }}
                         />
 
                         <div
@@ -235,5 +245,5 @@ export const TooltipContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
                 </div>
             </FloatingPortal>
         );
-    }
+    })
 );

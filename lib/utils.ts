@@ -101,8 +101,15 @@ export function getRandomColor(id: number) {
 }
 
 export function getRandomImage(id: number, type: "avatar" | "icon") {
+    if (!id) return "";
+
     const list = type === "avatar" ? defaultAvatars : defaultIcons;
     const index = id % list.length;
+
+    if (list[index] === undefined) {
+        return "";
+    }
+
     return `/assets/${type}s/${list[index]}.png`;
 }
 

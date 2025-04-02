@@ -3,5 +3,5 @@
 }
 
 .error {
-    fill: var(--error-1) !important;
+    fill: var(--danger-0) !important;
 }

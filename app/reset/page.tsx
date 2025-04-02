@@ -7,7 +7,7 @@ import { useState } from "react";
 export default function ResetPasswordPage() {
     const [password, setPassword] = useState("");
 
-    async function handlePasswordSubmit(e: Event) {
+    async function handlePasswordSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         // Function body
     }

@@ -8,7 +8,7 @@
     width: 240px;
     display: flex;
     flex-direction: column;
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
 }
 
 .sidebar {
@@ -23,7 +23,7 @@
     font-weight: 600;
     line-height: 1.2;
     align-items: center;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .sidebar > nav {
@@ -41,8 +41,8 @@
     cursor: pointer;
     border-radius: 4px;
     align-items: center;
-    color: var(--foreground-1);
-    background-color: var(--background-4);
+    color: var(--fg-1);
+    background-color: var(--bg-4);
 }
 
 .tab > div {
@@ -54,7 +54,7 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
 }
 
 .header {
@@ -89,7 +89,7 @@
     line-height: 0.955;
     margin-bottom: 24px;
     text-transform: uppercase;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-family: var(--font-heading);
 }
 
@@ -97,7 +97,7 @@
     font-size: 16px;
     font-weight: 400;
     line-height: 1.5;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .servers {
@@ -111,7 +111,7 @@
     font-size: 24px;
     font-weight: 600;
     margin-bottom: 12px;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .servers > ol {
@@ -128,7 +128,7 @@
     user-select: none;
     border-radius: 8px;
     flex-direction: column;
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
     will-change: transform, box-shadow, background, border, opacity;
     transition: box-shadow 0.2s ease-out, transform 0.2s ease-out, background 0.2s ease-out,
         border 0.2s ease-out, opacity 0.2s ease-in;
@@ -138,7 +138,7 @@
 .guild:focus-visible {
     transform: translate(0, -1px);
     box-shadow: var(--elevation-high);
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .guild > header {
@@ -161,13 +161,13 @@
 
 .guild .iconMask {
     padding: 4px;
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
     transition: background-color 0.2s ease-out;
 }
 
 .guild:hover .iconMask,
 .guild:focus-visible .iconMask {
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .guild > .content {
@@ -184,7 +184,7 @@
     display: -webkit-box;
     -webkit-line-clamp: 3;
     text-overflow: ellipsis;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     -webkit-box-orient: vertical;
 }
 
@@ -206,11 +206,11 @@
     height: 8px;
     flex-shrink: 0;
     border-radius: 50%;
-    background-color: var(--success-light);
+    background-color: var(--success-fg);
 }
 
 .guild .stats > div:nth-child(2) > div {
-    background-color: var(--foreground-2);
+    background-color: var(--fg-2);
 }
 
 .guild .stats > div > span {
@@ -234,16 +234,16 @@
 }
 
 .guild .badge > :first-child {
-    color: var(--success-light);
+    color: var(--success-fg);
 }
 
 .guild .badge > :last-child {
     top: 50%;
     left: 50%;
     position: absolute;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     transform: translate(-50%, -50%);
-    background-color: var(--success-light);
+    background-color: var(--success-fg);
 }
 
 .guild > .content > :first-child > h2 {
@@ -254,7 +254,7 @@
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 @media (max-width: 800px) {

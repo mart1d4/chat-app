@@ -12,6 +12,10 @@ export function EventManager() {
             setWidthThreshold(1200, false);
         } else if (window.innerWidth > 1200 && widthThresholds["1200"] === false) {
             setWidthThreshold(1200, true);
+        } else if (window.innerWidth <= 1024 && widthThresholds["1024"] === true) {
+            setWidthThreshold(1024, false);
+        } else if (window.innerWidth > 1024 && widthThresholds["1024"] === false) {
+            setWidthThreshold(1024, true);
         } else if (window.innerWidth <= 767 && widthThresholds["767"] === true) {
             setWidthThreshold(767, false);
         } else if (window.innerWidth > 767 && widthThresholds["767"] === false) {

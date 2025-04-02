@@ -5,7 +5,7 @@
     margin-top: 12px;
     border-radius: 3px;
     align-items: center;
-    background-color: var(--background-dark-1);
+    background-color: var(--bg-0);
 }
 
 .play,
@@ -18,7 +18,7 @@
     cursor: pointer;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     background-color: transparent;
     transition: transform 0.15s ease;
 }
@@ -28,7 +28,7 @@
 }
 
 .play:hover {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .play:active {
@@ -89,20 +89,20 @@
 
 .bar > .progress {
     z-index: 3;
-    background-color: var(--accent-1);
+    background-color: var(--accent-0);
 }
 
 .bar > .buffer {
     z-index: 1;
     opacity: 0.3;
-    background-color: var(--foreground-3);
+    background-color: var(--fg-3);
 }
 
 .bar > .preview {
     z-index: 2;
     opacity: 0;
     max-width: 100%;
-    background-color: var(--foreground-2);
+    background-color: var(--fg-2);
 }
 
 .progressContainer > div:hover .preview {
@@ -143,7 +143,7 @@
     pointer-events: none;
     transform: translateX(-50%);
     transition: opacity 0.2s ease-out;
-    background-color: var(--background-dark-2);
+    background-color: hsl(0, 0%, 0%, 0.9);
 }
 
 .bubble::before {
@@ -156,7 +156,7 @@
     position: absolute;
     pointer-events: none;
     border: 5px solid transparent;
-    border-top-color: var(--background-dark-2);
+    border-top-color: hsl(0, 0%, 0%, 0.9);
 }
 
 .progressContainer > div:hover .bubble {

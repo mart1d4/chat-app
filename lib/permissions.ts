@@ -1,4 +1,5 @@
 import type { GuildChannel, GuildMember, GuildRole } from "@/type";
+import type { PermissionOverwrites } from "./db/db.types";
 
 // Permission flags
 export const PERMISSIONS = {
@@ -553,4 +554,14 @@ export function getDefaultPermissions() {
         "SEND_VOICE_MESSAGES",
         "CREATE_INSTANT_INVITE",
     ]);
+}
+
+export function isChannelPrivate(overwrites: PermissionOverwrites[], everyoneRole: number) {
+    for (const overwrite of overwrites) {
+        if (overwrite.type === 0 && overwrite.id === everyoneRole) {
+            return hasPermission(overwrite.deny, PERMISSIONS.VIEW_CHANNEL);
+        }
+    }
+
+    return false;
 }

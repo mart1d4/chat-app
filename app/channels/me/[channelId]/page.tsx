@@ -1,4 +1,4 @@
-import { AppHeader, MemberList } from "@components";
+import { AppHeader, ChannelAside } from "@components";
 import { isUserInChannel } from "@/lib/db/helpers";
 import styles from "../FriendsPage.module.css";
 import { redirect } from "next/navigation";
@@ -19,7 +19,7 @@ export default async function ChannelPage({ params }: { params: { channelId: str
 
             <div className={styles.content}>
                 <Content channelId={id} />
-                <MemberList channelId={id} />
+                <ChannelAside channelId={id} />
             </div>
         </div>
     );

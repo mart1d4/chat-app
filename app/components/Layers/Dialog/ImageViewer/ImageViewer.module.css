@@ -17,7 +17,7 @@
     line-height: 18px;
     border-radius: 4px;
     text-decoration: none;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     transition: opacity 0.15s ease;
 }
 
@@ -45,7 +45,7 @@
     border-radius: 5px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     background-color: transparent;
     transition: opacity 0.15s ease;
     transform: translateY(-50%) rotate(-90deg);
@@ -76,15 +76,15 @@
     border-radius: 5px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     transition: opacity 0.15s ease;
-    border: 1px solid var(--border-light);
-    background-color: var(--background-dark-1);
+    border: 1px solid var(--border-0);
+    background-color: var(--bg-0);
 }
 
 .close:hover,
 .close:focus-visible {
-    background-color: var(--background-dark-2);
+    background-color: hsl(0, 0%, 0%, 0.9);
 }
 
 @keyframes popIn {

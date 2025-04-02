@@ -1,0 +1,116 @@
+.mentionPopover {
+    left: 0;
+    right: 0;
+    z-index: 3;
+    display: flex;
+    max-height: 490px;
+    position: absolute;
+    border-radius: 5px;
+    white-space: nowrap;
+    padding-bottom: 8px;
+    overflow: hidden auto;
+    flex-direction: column;
+    text-overflow: ellipsis;
+    bottom: calc(100% + 8px);
+    background-color: var(--bg-3);
+    border: 1px solid var(--border-1);
+}
+
+.mentionPopover::-webkit-scrollbar {
+    width: 8px;
+}
+
+.mentionPopover > :first-child {
+    padding: 8px;
+    border-radius: 3px;
+}
+
+.mentionPopover > :first-child > h3 {
+    padding: 4px 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--fg-3);
+    line-height: 1.333;
+    text-transform: uppercase;
+}
+
+.mentionContainer {
+    padding: 0 8px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 16px;
+    user-select: none;
+}
+
+.mentionContainer.small {
+    height: 31px;
+}
+
+.mentionContainer > div:hover,
+.mentionContainer[aria-selected="true"] > div {
+    background-color: var(--bg-4);
+}
+
+.mentionContainer.small > div > img {
+    margin-right: 8px;
+}
+
+.mentionContainer > div {
+    padding: 8px;
+    display: flex;
+    cursor: pointer;
+    min-height: 16px;
+    color: var(--fg-3);
+    border-radius: 3px;
+    align-items: center;
+}
+
+.mentionContainer.small > div {
+    height: 31px;
+    padding: 0 8px;
+}
+
+.mentionContainer .avatar {
+    flex: 0 0 auto;
+    margin-right: 8px;
+}
+
+.mentionContainer .displayName {
+    flex: 0 2 auto;
+    max-width: 100%;
+    min-width: 10ch;
+    font-size: 16px;
+    font-weight: 500;
+    overflow: hidden;
+    line-height: 1.25;
+    color: var(--fg-1);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.mentionContainer .username {
+    flex: 1 1 auto;
+    font-size: 12px;
+    font-weight: 400;
+    overflow: hidden;
+    margin-left: 16px;
+    text-align: right;
+    color: var(--fg-3);
+    line-height: 1.333;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.mention {
+    height: 22px;
+    padding: 0 2px;
+    font-size: 16px;
+    cursor: default;
+    font-weight: 500;
+    line-height: 22px;
+    color: var(--fg-2);
+    border-radius: 3px;
+    display: inline-block;
+    transition: all 0.05s ease-out;
+    background-color: var(--background-mention);
+}

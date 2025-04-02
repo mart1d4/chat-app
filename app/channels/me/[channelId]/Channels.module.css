@@ -74,7 +74,7 @@
     height: 80px;
     position: relative;
     border-radius: 50%;
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .imageWrapper img {
@@ -86,11 +86,11 @@
     margin: 8px 0;
     font-size: 32px;
     line-height: 40px;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .description {
-    color: var(--foreground-3);
+    color: var(--fg-3);
     font-size: 16px;
     line-height: 20px;
     font-weight: 400;
@@ -114,34 +114,34 @@
 }
 
 .divider {
-    margin-top: 1.5rem;
-    margin-bottom: 0.5rem;
-    position: relative;
+    height: 0;
+    z-index: 1;
     left: auto;
     right: auto;
-    z-index: 1;
-    height: 0;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
     user-select: none;
     margin-left: 1rem;
+    margin-top: 1.5rem;
+    position: relative;
+    align-items: center;
+    pointer-events: none;
+    margin-bottom: 0.5rem;
     margin-right: 0.875rem;
-    border-top: thin solid var(--border-light);
+    justify-content: center;
+    border-top: thin solid var(--border-1);
 }
 
 .divider span {
     display: block;
     flex: 0 0 auto;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: -1px;
     padding: 2px 4px;
     line-height: 13px;
-    font-size: 12px;
-    margin-top: -1px;
-    font-weight: 600;
     border-radius: 8px;
-    color: var(--foreground-3);
-    background-color: var(--background-4);
+    color: var(--fg-3);
+    background-color: var(--bg-3);
 }
 
 .mutualGuildIcons {
@@ -151,14 +151,14 @@
 
 .mutualGuildText {
     cursor: pointer;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     font-size: 14px;
     line-height: 18px;
     font-weight: 400;
 }
 
 .mutualGuildText:hover {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .mutualGuildDot {
@@ -166,7 +166,7 @@
     height: 4px;
     margin: 0 16px;
     border-radius: 50%;
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .mutualGuildIcons > img {

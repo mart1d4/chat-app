@@ -9,8 +9,6 @@ export { Loading } from "./Loading/Loading";
 
 export { MessageSk } from "./Skeletons/MessageSk";
 
-export { AddFriend } from "./AddFriend/AddFriend";
-
 export { AppHeader } from "./AppHeader/AppHeader";
 
 export { AppSpinner } from "./Loading/Spinner";
@@ -20,11 +18,11 @@ export { LoadingDots } from "./LoadingDots/LoadingDots";
 export { UserLists } from "./UserLists/UserLists";
 export { UserItem } from "./UserLists/UserItem";
 
-export { Avatar } from "./Avatar/Avatar";
+export { Avatar, Masks } from "./Avatar/Avatar";
 
 export { Checkbox } from "./Input/Checkbox/Checkbox";
 
-export { MemberList } from "./MemberList/MemberList";
+export { ChannelAside } from "./ChannelAside/ChannelAside";
 
 export { GuildChannels } from "./Channels/GuildChannels";
 export { UserChannels } from "./Channels/UserChannels";
@@ -65,7 +63,7 @@ export { Tooltip, TooltipTrigger, TooltipContent } from "./Layers/Tooltip/Toolti
 
 export { TabFocusHighlighter } from "./Layers/FocusOverlay/FocusOverlay";
 
-export { Alert } from "./Layers/Alert/Alert";
+export { AlertOverlay } from "./Layers/Alerts/AlertOverlay";
 
 export { Menu, MenuTrigger, MenuContent, MenuDivider, MenuItem } from "./Layers/Menu/Menu";
 export { UserMenu } from "./Layers/Menu/MenuContents/User";

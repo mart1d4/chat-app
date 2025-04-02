@@ -1,5 +1,5 @@
 .popover {
-    z-index: 100;
+    z-index: 1000;
     max-width: 100%;
     outline: none !important;
 }

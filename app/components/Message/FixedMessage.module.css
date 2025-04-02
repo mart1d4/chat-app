@@ -2,8 +2,8 @@
     list-style: none;
     position: relative;
     border-radius: 5px;
+    background-color: var(--bg-4);
     box-shadow: var(--elevation-high);
-    background-color: var(--background-5);
 }
 
 .messageContainer > div:last-child {
@@ -16,7 +16,7 @@
 
 .messageContent strong {
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageContent em {
@@ -51,7 +51,7 @@
     border-radius: 3px;
     font-size: 85%;
     font-family: var(--font-code);
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
     text-indent: 0;
     border: none;
     white-space: pre-wrap;
@@ -64,25 +64,25 @@
     line-height: 1.125rem;
     text-indent: 0;
     white-space: pre-wrap;
-    background-color: var(--background-3);
-    border: 1px solid var(--background-1);
+    background-color: var(--bg-3);
+    border: 1px solid var(--bg-1);
     display: block;
     overflow-x: auto;
     padding: 0.5rem;
     border-radius: 4px;
     text-size-adjust: none;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     font-family: var(--font-code);
 }
 
 .messageContent .spoiler {
     cursor: pointer;
     border-radius: 4px;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .messageContent .spoiler:hover {
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
 }
 
 .messageContent .spoiler > span {
@@ -91,7 +91,7 @@
 }
 
 .messageContent .spoiler.display {
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
     cursor: text;
 }
 
@@ -116,49 +116,49 @@
     bottom: 0;
     width: 4px;
     border-radius: 4px;
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
 }
 
 .messageContent h1 {
     font-size: 1.5rem;
     line-height: 1.375rem;
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageContent h2 {
     font-size: 1.25rem;
     line-height: 1.375rem;
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageContent h3 {
     font-size: 1.125rem;
     line-height: 1.375rem;
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageContent h4 {
     font-size: 1rem;
     line-height: 1.375rem;
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageContent h5 {
     font-size: 0.875rem;
     line-height: 1.375rem;
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageContent h6 {
     font-size: 0.75rem;
     line-height: 1.375rem;
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageContent li {
@@ -166,7 +166,7 @@
 }
 
 .messageContent li::marker {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageContent {
@@ -200,7 +200,7 @@
     display: inline;
     position: relative;
     overflow: hidden;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     user-select: text;
 }
 
@@ -208,7 +208,7 @@
     position: relative;
     font-size: 0.75rem;
     line-height: 1.375rem;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     margin-left: 0.25rem;
     display: inline-block;
     font-weight: 500;
@@ -228,7 +228,7 @@
     position: relative;
     text-indent: 0;
     cursor: default;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .messageTimestamp {
@@ -245,7 +245,7 @@
     text-indent: 0;
     font-weight: 500;
     display: inline-block;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .messageTimestamp > span {
@@ -258,12 +258,12 @@
     padding: 7px 0;
     font-size: 12px;
     font-weight: 400;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     user-select: none;
 }
 
 .editHint > span {
-    color: var(--accent-light);
+    color: var(--accent-fg);
 }
 
 .editHint > span:hover {
@@ -277,7 +277,7 @@
 .contentTimestamp > span {
     font-size: 0.75rem;
     line-height: 1.375rem;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     height: 1.25rem;
     font-weight: 500;
     user-select: none;
@@ -288,7 +288,7 @@
     display: flex;
     align-items: center;
     font-size: 0.875rem;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     line-height: 1.125rem;
     position: relative;
     white-space: pre;
@@ -334,7 +334,7 @@
     margin-right: 0.25rem;
     opacity: 0.64;
     font-weight: 500;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     position: relative;
     overflow: hidden;
 }
@@ -361,8 +361,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-2);
-    background-color: var(--background-2);
+    color: var(--fg-2);
+    background-color: var(--bg-2);
     flex: 0 0 auto;
     width: 16px;
     height: 16px;
@@ -415,24 +415,24 @@
     padding: 2px 8px;
     margin-right: 4px;
     margin-right: 6px;
-    color: var(--foreground-3);
-    background-color: var(--background-3);
+    color: var(--fg-3);
+    background-color: var(--bg-3);
     cursor: pointer;
 }
 
 .hoverContainer > div:first-child:hover {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .hoverContainer > svg {
     width: 16px;
     height: 16px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     cursor: pointer;
 }
 
 .hoverContainer > svg:hover {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 /* ATTACHEMENTS */
@@ -524,14 +524,14 @@
     padding: 6px;
     border-radius: 5px;
     overflow: hidden;
-    color: var(--foreground-3);
-    background-color: var(--background-4);
+    color: var(--fg-3);
+    background-color: var(--bg-4);
     z-index: 2;
 }
 
 .deleteImage:hover {
-    color: var(--foreground-1);
-    background-color: var(--error-1);
+    color: var(--fg-1);
+    background-color: var(--danger-0);
 }
 
 .image .spoilerButton {
@@ -555,13 +555,13 @@
     letter-spacing: 0.5px;
     font-size: 15px;
     user-select: none;
-    color: var(--foreground-2);
-    background-color: var(--background-dark-1);
+    color: var(--fg-2);
+    background-color: var(--bg-0);
     z-index: 1;
 }
 
 .image:hover .spoilerButton {
-    background-color: var(--background-dark-2);
+    background-color: hsl(0, 0%, 0%, 0.9);
 }
 
 .imageAlt {
@@ -570,7 +570,7 @@
     bottom: 4px;
     padding: 7px 8px;
     background-color: rgba(0, 0, 0, 0.6);
-    color: var(--foreground-1);
+    color: var(--fg-1);
     border-radius: 4px;
     font-weight: 600;
     font-size: 14px;
@@ -695,7 +695,7 @@
     padding: 0 2px;
     cursor: pointer;
     font-weight: 500;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     background-color: var(--background-mention);
     transition: all 0.05s ease-out;
     pointer-events: none;
@@ -703,8 +703,8 @@
 
 .mention:hover {
     text-decoration: underline;
-    color: var(--foreground-1);
-    background-color: var(--accent-1);
+    color: var(--fg-1);
+    background-color: var(--accent-0);
 }
 
 .imagesUpload {
@@ -712,10 +712,10 @@
     max-width: 520px;
     width: 100%;
     padding: 10px;
-    border: 1px solid var(--background-2);
+    border: 1px solid var(--bg-2);
     display: flex;
     align-items: center;
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
 }
 
 .imagesUpload > img {
@@ -738,13 +738,13 @@
 }
 
 .imagesUpload > div:first-of-type > div:first-child > div:first-child {
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-weight: 400;
     font-size: 16px;
 }
 
 .imagesUpload > div:first-of-type > div:first-child > div:last-child {
-    color: var(--foreground-4);
+    color: var(--fg-4);
     margin-left: 4px;
 }
 
@@ -762,7 +762,7 @@
     width: 100%;
     border-radius: 3px;
     height: 6px;
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
 }
 
 .imagesUpload > div:first-of-type > div:last-child > div > div {
@@ -770,20 +770,20 @@
     height: 6px;
     border-radius: 3px;
     transition: transform 0.2s ease-out;
-    background-color: var(--accent-1);
+    background-color: var(--accent-0);
     transform: translate3d(-100%, 0, 0);
 }
 
 .imagesUpload > div:last-of-type {
     display: flex;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     cursor: pointer;
 }
 
 .imagesUpload > div:last-of-type:hover {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .messageLink {
-    color: var(--accent-light);
+    color: var(--accent-fg);
 }

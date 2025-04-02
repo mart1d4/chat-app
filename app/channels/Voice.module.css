@@ -1,0 +1,88 @@
+.callOverlay {
+    top: 50%;
+    left: 50%;
+    width: 232px;
+    z-index: 100;
+    padding: 16px;
+    display: flex;
+    position: fixed;
+    user-select: none;
+    min-height: 267px;
+    border-radius: 8px;
+    align-items: center;
+    flex-direction: column;
+    background-color: var(--bg-7);
+    transform: translate(-50%, -50%);
+    box-shadow: var(--elevation-high);
+}
+
+.callOverlay > :first-child {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.callOverlay > :first-child > :first-child {
+    margin: 16px;
+}
+
+.callOverlay > :first-child > :last-child > :first-child {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin-bottom: 2px;
+    color: var(--fg-0);
+    text-align: center;
+    word-wrap: break-word;
+}
+
+.callOverlay > :first-child > :last-child > :last-child {
+    font-size: 16px;
+    line-height: 1.25;
+    color: var(--fg-3);
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.callOverlay > :last-child {
+    gap: 8px;
+    display: flex;
+}
+
+.callOverlay > :last-child > button {
+    width: 64px;
+    height: 48px;
+    display: flex;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 500;
+    line-height: 16px;
+    color: var(--fg-0);
+    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--danger-0);
+    transition: background-color 0.15s ease;
+}
+
+.callOverlay > :last-child > button:hover,
+.callOverlay > :last-child > button:focus-visible {
+    background-color: var(--danger-1);
+}
+
+.callOverlay > :last-child > button:active {
+    background-color: var(--danger-2);
+}
+
+.callOverlay > :last-child > button:last-child {
+    background-color: var(--success-0);
+}
+
+.callOverlay > :last-child > button:last-child:hover,
+.callOverlay > :last-child > button:last-child:focus-visible {
+    background-color: var(--success-1);
+}
+
+.callOverlay > :last-child > button:last-child:active {
+    background-color: var(--success-2);
+}

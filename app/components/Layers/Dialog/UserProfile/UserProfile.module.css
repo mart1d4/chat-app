@@ -124,14 +124,14 @@
     font-weight: 700;
     line-height: 1.25;
     user-select: text;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .content > header > span {
     font-size: 14px;
     font-weight: 400;
     line-height: 18px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .content > .request,
@@ -163,7 +163,7 @@
 }
 
 .content > .blocked > p > strong {
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .content > .request > div {
@@ -232,7 +232,7 @@ div.scrollContainer:hover::-webkit-scrollbar-thumb {
     font-weight: 600;
     user-select: text;
     cursor: auto;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .cardSection.name > div {
@@ -240,7 +240,7 @@ div.scrollContainer:hover::-webkit-scrollbar-thumb {
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .cardSection:not(.name) > h4 {
@@ -250,7 +250,7 @@ div.scrollContainer:hover::-webkit-scrollbar-thumb {
     margin-bottom: 8px;
     line-height: 1.333;
     letter-spacing: 0.02rem;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .cardSection:not(.name) > div {
@@ -265,7 +265,7 @@ div.scrollContainer:hover::-webkit-scrollbar-thumb {
     font-size: 14px;
     line-height: 18px;
     overflow: hidden;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .cardDivider {
@@ -282,7 +282,7 @@ div.scrollContainer:hover::-webkit-scrollbar-thumb {
     line-height: 1.333;
     letter-spacing: 0.02rem;
     text-transform: uppercase;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .cardSectionLarge > div {
@@ -301,7 +301,7 @@ div.scrollContainer:hover::-webkit-scrollbar-thumb {
     justify-content: center;
     border-radius: 8px;
     margin-right: 16px;
-    background-color: var(--accent-3);
+    background-color: var(--accent-2);
 }
 
 .cardTime {
@@ -314,14 +314,14 @@ div.scrollContainer:hover::-webkit-scrollbar-thumb {
     font-size: 14px;
     line-height: 18px;
     font-weight: 600;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .cardTime > div:last-child {
     font-size: 14px;
     line-height: 18px;
     font-weight: 400;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .cardTime > div:last-child > span {
@@ -353,19 +353,19 @@ div.scrollContainer:hover::-webkit-scrollbar-thumb {
     line-height: 18px;
     margin-right: 12px;
     border-radius: 3px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     border: 1px solid transparent;
     background-color: transparent;
 }
 
 .cardInput:hover,
 .cardInput:focus-visible {
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--border-0);
 }
 
 .cardInput::placeholder {
     user-select: none;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .cardInput:focus-visible {
@@ -378,7 +378,7 @@ textarea.cardInput::-webkit-scrollbar {
 
 textarea.cardInput::-webkit-scrollbar-thumb {
     border: 1px solid transparent;
-    background-color: var(--background-dark-1);
+    background-color: var(--bg-0);
 }
 
 textarea.cardInput::-webkit-scrollbar-track {
@@ -393,7 +393,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     height: 40px;
     width: 100%;
     border-radius: 3px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     border: none;
     outline: none;
     border: 1px solid transparent;
@@ -416,14 +416,14 @@ textarea.cardInput::-webkit-scrollbar-track {
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     transition: background-color 0.2s ease;
-    background-color: var(--background-hover-dark-1);
+    background-color: var(--bg-hover-0);
 }
 
 .topTools > button:hover,
 .topTools > button:focus-visible {
-    background-color: var(--background-hover-dark-2);
+    background-color: var(--bg-hover-5);
 }
 
 .nav {
@@ -434,7 +434,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     gap: 40px;
     display: flex;
     align-items: stretch;
-    border-bottom: thin solid var(--border-light);
+    border-bottom: thin solid var(--border-0);
 }
 
 .nav .item {
@@ -452,19 +452,19 @@ textarea.cardInput::-webkit-scrollbar-track {
     line-height: 1.285;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
     border-bottom: 1px solid transparent;
 }
 
 .nav .item:hover,
 .nav .item:focus-visible {
-    border-color: var(--foreground-1);
+    border-color: var(--fg-1);
 }
 
 .nav .item[aria-selected="true"] {
     cursor: default;
-    border-color: var(--foreground-1);
+    border-color: var(--fg-1);
 }
 
 .empty {
@@ -495,7 +495,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     line-height: 16px;
     margin-top: 12px;
     text-transform: uppercase;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     user-select: none;
 }
 
@@ -518,7 +518,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     border-radius: 4px;
     align-items: center;
     margin: 1px -6px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     justify-content: flex-start;
     background-color: transparent;
 }
@@ -558,7 +558,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     width: 40px;
     height: 40px;
     border-radius: 33%;
-    background-color: var(--accent-1);
+    background-color: var(--accent-0);
 }
 
 .divider {
@@ -605,7 +605,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     min-width: 56px;
     max-width: 184px;
     position: relative;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: var(--elevation-low);
     border: 1px solid hsla(1, 0%, 100%, 0.03);
     background: hsl(225 calc(1 * 6.667%) 23.529% / 1);
@@ -643,7 +643,7 @@ textarea.cardInput::-webkit-scrollbar-track {
 .statusContent {
     display: block;
     position: relative;
-    padding: 10px 12px;
+    padding: 8px 12px;
     border-radius: 12px;
     word-wrap: break-word;
     background: hsl(225 calc(1 * 6.667%) 23.529% / 1);
@@ -655,7 +655,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     align-items: center;
     word-wrap: break-word;
     word-break: break-word;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .statusContent > div > svg {
@@ -680,7 +680,7 @@ textarea.cardInput::-webkit-scrollbar-track {
 }
 
 .customStatus:not(.disabled):hover .statusContent > div {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .customStatus.active > div {
@@ -690,13 +690,13 @@ textarea.cardInput::-webkit-scrollbar-track {
 .customStatus.active:not(.disabled):hover .statusContent,
 .customStatus.active:not(.disabled):hover > div:not(.statusTools)::before,
 .customStatus.active:not(.disabled):hover > div:not(.statusTools)::after {
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
 }
 
 .customStatus.active .statusContent > div {
     cursor: text;
     user-select: text;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .statusTools {
@@ -713,7 +713,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     display: inline-flex;
     border-radius: 1000px;
     right: min(8px, 50% - 29px);
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
     transition: box-shadow 0.1s ease-in-out;
 }
 
@@ -730,7 +730,7 @@ textarea.cardInput::-webkit-scrollbar-track {
     padding-left: 6px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
     border-radius: 1000px 6px 6px 1000px;
 }
@@ -743,8 +743,8 @@ textarea.cardInput::-webkit-scrollbar-track {
 
 .statusTools > button:hover,
 .statusTools > button:focus-visible {
-    color: var(--foreground-2);
-    background-color: var(--background-6);
+    color: var(--fg-2);
+    background-color: var(--bg-6);
 }
 
 .statusTools > button > svg {

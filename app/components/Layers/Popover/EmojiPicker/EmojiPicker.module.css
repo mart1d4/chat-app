@@ -4,7 +4,7 @@
     border-radius: 8px;
     position: relative;
     max-width: calc(var(--dvw) - 32px);
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
     box-shadow: 0 0 0 1px hsl(none 0% 100% / 0.08);
 }
 
@@ -14,7 +14,7 @@
     padding: 12px;
     position: relative;
     align-items: center;
-    border-bottom: 1px solid var(--background-1);
+    border-bottom: 1px solid var(--bg-1);
 }
 
 .stylePicker {
@@ -42,8 +42,8 @@
 .stylePicker > .style:hover,
 .stylePicker > .style:focus-visible,
 .stylePicker > .style[aria-expanded="true"] {
-    border: 1px solid var(--background-1);
-    background-color: var(--background-2);
+    border: 1px solid var(--bg-1);
+    background-color: var(--bg-2);
     border-top-left-radius: 5px !important;
     border-top-right-radius: 5px !important;
 }
@@ -69,8 +69,8 @@
     flex-direction: column;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
-    background-color: var(--background-2);
-    border: 1px solid var(--background-1);
+    background-color: var(--bg-2);
+    border: 1px solid var(--bg-1);
     border-top: none;
 }
 
@@ -97,8 +97,8 @@
     overflow: hidden;
     margin-right: 8px;
     border-radius: 4px;
-    color: var(--foreground-3);
-    background-color: var(--background-2);
+    color: var(--fg-3);
+    background-color: var(--bg-2);
 }
 
 .input > input {
@@ -145,7 +145,7 @@
     flex-direction: column;
     overflow: hidden scroll;
     border-bottom-left-radius: 8px;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .nav::-webkit-scrollbar {
@@ -168,7 +168,7 @@
     margin-bottom: 2px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
 }
 
@@ -178,12 +178,12 @@
 
 .nav > button:hover,
 .nav > button:focus-visible {
-    color: var(--foreground-2);
+    color: var(--fg-2);
     background-color: hsl(228, 6%, 32.6%, 0.3);
 }
 
 .nav > button[data-active="true"] {
-    color: var(--foreground-1);
+    color: var(--fg-1);
     background-color: hsl(222.9, 6.7%, 20.6%);
 }
 
@@ -226,9 +226,9 @@ div.list::-webkit-scrollbar-track {
     margin-left: -8px;
     padding-left: 8px;
     align-items: center;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     background-color: transparent;
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
 }
 
 .category .title[aria-expanded="true"] > :last-child {
@@ -237,7 +237,7 @@ div.list::-webkit-scrollbar-track {
 
 .category .title:hover,
 .category .title:focus-visible {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .category .title > div {
@@ -282,7 +282,7 @@ div.list::-webkit-scrollbar-track {
     padding: 0 16px;
     align-items: center;
     border-bottom-right-radius: 8px;
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
 }
 
 .preview > div {

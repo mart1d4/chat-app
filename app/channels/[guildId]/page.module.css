@@ -22,7 +22,7 @@
 .content {
     flex: 0 1 auto;
     text-align: center;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .content > h2 {

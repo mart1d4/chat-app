@@ -7,9 +7,9 @@ import type { ChannelRecipient, DMChannel } from "@/type";
 import { usePathname, useRouter } from "next/navigation";
 import { useNotifications } from "@/store/notifications";
 import { useChannelSettings } from "@/store/settings";
-import useFetchHelper from "@/hooks/useFetchHelper";
+import { useRequests } from "@/hooks/useRequests";
 import styles from "./UserChannels.module.css";
-import { useMemo, useRef } from "react";
+import { memo, useMemo, useRef } from "react";
 import Link from "next/link";
 import {
     PopoverContent,
@@ -30,10 +30,10 @@ import {
     Menu,
 } from "@components";
 
-export function UserChannels() {
-    const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
-    const showChannels = useShowChannels((state) => state.showChannels);
-    const channels = useData((state) => state.channels);
+export const UserChannels = memo(function UserChannels() {
+    const widthLimitPassed = useWindowSettings((state) => state.widthThresholds[562]);
+    const { showChannels } = useShowChannels();
+    const { channels } = useData();
 
     if (!showChannels && !widthLimitPassed) return null;
 
@@ -71,7 +71,7 @@ export function UserChannels() {
             <UserSection />
         </div>
     );
-}
+});
 
 function Title() {
     return (
@@ -98,11 +98,15 @@ function Title() {
     );
 }
 
-function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelRecipient[] } }) {
+const ChannelItem = memo(function ChannelItem({
+    channel,
+}: {
+    channel?: DMChannel & { recipients: ChannelRecipient[] };
+}) {
     const requests = useData((state) => state.received).length;
     const { setShowChannels } = useShowChannels();
     const { notifications } = useNotifications();
-    const { sendRequest } = useFetchHelper();
+    const { deleteChannel } = useRequests();
     const { muted } = useChannelSettings();
     const { removeChannel } = useData();
     const user = useAuthenticatedUser();
@@ -154,9 +158,9 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
                 className={styles.liContainer}
                 onClick={() => setShowChannels(false)}
                 style={{
-                    color: sameUrl ? "var(--foreground-1)" : "",
-                    borderColor: sameUrl ? "var(--border-light)" : "",
-                    backgroundColor: sameUrl ? "var(--background-5)" : "",
+                    color: sameUrl ? "var(--fg-1)" : "",
+                    borderColor: sameUrl ? "var(--border-0)" : "",
+                    backgroundColor: sameUrl ? "var(--bg-5)" : "",
                 }}
             >
                 <div className={styles.liWrapper}>
@@ -195,9 +199,9 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
                     href={`/channels/me/${channel.id}`}
                     onClick={() => setShowChannels(false)}
                     style={{
-                        backgroundColor: sameUrl ? "var(--background-5)" : "",
-                        color: sameUrl || hasPing ? "var(--foreground-1)" : "",
-                        borderColor: sameUrl ? "var(--border-light)" : "",
+                        backgroundColor: sameUrl ? "var(--bg-5)" : "",
+                        color: sameUrl || hasPing ? "var(--fg-1)" : "",
+                        borderColor: sameUrl ? "var(--border-0)" : "",
                         opacity: isMuted ? 0.3 : undefined,
                     }}
                 >
@@ -208,6 +212,7 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
                                     <div>
                                         <Avatar
                                             size={32}
+                                            showStatusTooltip
                                             alt={channel.name}
                                             status={friend?.status}
                                             generateId={friend?.id || channel.id}
@@ -267,23 +272,24 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
                         <Dialog>
                             <DialogTrigger>
                                 <button
+                                    type="button"
                                     className={styles.closeButton}
-                                    onClick={async (e) => {
+                                    onClick={(e) => {
                                         e.preventDefault();
-                                        e.stopPropagation();
+
                                         if (channel.type === 0) {
-                                            const { errors } = await sendRequest({
-                                                query: "CHANNEL_DELETE",
-                                                params: { channelId: channel.id },
-                                            });
+                                            deleteChannel.send(
+                                                { channelId: channel.id },
+                                                {
+                                                    onComplete: () => {
+                                                        removeChannel(channel.id);
 
-                                            if (!errors) {
-                                                removeChannel(channel.id);
-
-                                                if (sameUrl) {
-                                                    router.push("/channels/me");
+                                                        if (sameUrl) {
+                                                            router.push("/channels/me");
+                                                        }
+                                                    },
                                                 }
-                                            }
+                                            );
                                         }
                                     }}
                                 >
@@ -315,4 +321,4 @@ function ChannelItem({ channel }: { channel?: DMChannel & { recipients: ChannelR
             />
         </Menu>
     );
-}
+});

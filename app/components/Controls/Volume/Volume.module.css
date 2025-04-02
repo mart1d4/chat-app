@@ -15,14 +15,14 @@
     cursor: pointer;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     background-color: transparent;
     transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .container > button:hover,
 .container > button:focus-visible {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .container > button:active {
@@ -43,7 +43,7 @@
     align-items: center;
     bottom: calc(100% + 6px);
     transform: translateX(-50%);
-    background-color: var(--background-dark-1);
+    background-color: var(--bg-0);
 }
 
 .bar {
@@ -67,7 +67,7 @@
     z-index: 3;
     max-height: 100%;
     transition: height 0.05s ease;
-    background-color: var(--accent-1);
+    background-color: var(--accent-0);
 }
 
 .grabber {

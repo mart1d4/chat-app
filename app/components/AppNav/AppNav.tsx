@@ -1,52 +1,46 @@
 "use client";
 
-import {
-    Dialog,
-    DialogContent,
-    DialogTrigger,
-    CreateGuild,
-    Menu,
-    MenuTrigger,
-    UserMenu,
-} from "@components";
-import { doesUserHaveGuildPermission, type PERMISSIONS } from "@/lib/permissions";
-import { useData, useShowChannels, useWindowSettings } from "@/store";
+import { useData, useShowChannels, useVoice, useWindowSettings } from "@/store";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { GuildMenu } from "../Layers/Menu/MenuContents/Guild";
 import { useNotifications } from "@/store/notifications";
 import { getCdnUrl } from "@/lib/uploadthing";
 import styles from "./AppNav.module.css";
-import NavIcon from "./NavIcon";
+import { NavIcon } from "./NavIcon";
+import { memo } from "react";
+import {
+    DialogContent,
+    DialogTrigger,
+    CreateGuild,
+    MenuTrigger,
+    UserMenu,
+    Dialog,
+    Menu,
+    Icon,
+} from "@components";
 
-export function AppNav() {
-    const guilds = useData((state) => state.guilds);
+export const AppNav = memo(function AppNav() {
     const { notifications } = useNotifications();
     const user = useAuthenticatedUser();
+    const { channelId } = useVoice();
+    const { guilds } = useData();
+
+    const chanNotifs = notifications.channels;
+    const guildNotifs = notifications.guilds;
 
     const dmChannelsWithPings = useData((state) => state.channels)
-        .filter((channel) => notifications.channels.find((c) => c.id === channel.id && c.pings > 0))
-        .map((channel) => ({
-            ...channel,
-            pings: notifications.channels.find((c) => c.id === channel.id)?.pings || 0,
+        .filter((ch) => chanNotifs.find((c) => c.id === ch.id && c.pings > 0))
+        .map((c) => ({
+            ...c,
+            pings: chanNotifs.find((ch) => ch.id === c.id)?.pings || 0,
         }));
+
+    const voiceChannel = useData((state) => state.channels).find((ch) => ch.id === channelId);
 
     const widthLimitPassed = useWindowSettings((state) => state.widthThresholds)[562];
     const { showChannels } = useShowChannels();
 
     if (!showChannels && !widthLimitPassed) return null;
-
-    const chatAppIcon = (
-        <svg
-            viewBox="0 0 24 24"
-            height="30"
-            width="30"
-        >
-            <path
-                fill="currentColor"
-                d="M19.73 4.87a18.2 18.2 0 0 0-4.6-1.44c-.21.4-.4.8-.58 1.21-1.69-.25-3.4-.25-5.1 0-.18-.41-.37-.82-.59-1.2-1.6.27-3.14.75-4.6 1.43A19.04 19.04 0 0 0 .96 17.7a18.43 18.43 0 0 0 5.63 2.87c.46-.62.86-1.28 1.2-1.98-.65-.25-1.29-.55-1.9-.92.17-.12.32-.24.47-.37 3.58 1.7 7.7 1.7 11.28 0l.46.37c-.6.36-1.25.67-1.9.92.35.7.75 1.35 1.2 1.98 2.03-.63 3.94-1.6 5.64-2.87.47-4.87-.78-9.09-3.3-12.83ZM8.3 15.12c-1.1 0-2-1.02-2-2.27 0-1.24.88-2.26 2-2.26s2.02 1.02 2 2.26c0 1.25-.89 2.27-2 2.27Zm7.4 0c-1.1 0-2-1.02-2-2.27 0-1.24.88-2.26 2-2.26s2.02 1.02 2 2.26c0 1.25-.88 2.27-2 2.27Z"
-            />
-        </svg>
-    );
 
     const addServerIcon = (
         <svg
@@ -85,9 +79,9 @@ export function AppNav() {
             <ul className={styles.list}>
                 <NavIcon
                     special={true}
-                    svg={chatAppIcon}
                     link={"/channels/me"}
                     name="Direct Messages"
+                    svg={<Icon name="message" />}
                 />
 
                 {dmChannelsWithPings.map((channel) => {
@@ -95,6 +89,8 @@ export function AppNav() {
                         channel.type === 0
                             ? channel.recipients.find((r) => r.id !== user.id)
                             : null;
+
+                    const hasVoice = voiceChannel?.id === channel.id;
 
                     return (
                         <Menu
@@ -106,6 +102,7 @@ export function AppNav() {
                             <MenuTrigger>
                                 <div>
                                     <NavIcon
+                                        voice={hasVoice}
                                         name={channel.name}
                                         pings={channel.pings}
                                         channelType={channel.type}
@@ -133,22 +130,57 @@ export function AppNav() {
                     );
                 })}
 
+                {voiceChannel && !dmChannelsWithPings.find((c) => c.id === voiceChannel.id) && (
+                    <Menu
+                        positionOnClick
+                        openOnRightClick
+                        key={voiceChannel.id}
+                        placement="right-start"
+                    >
+                        <MenuTrigger>
+                            <div>
+                                <NavIcon
+                                    voice
+                                    name={voiceChannel.name}
+                                    channelType={voiceChannel.type}
+                                    link={`/channels/me/${voiceChannel.id}`}
+                                    src={
+                                        voiceChannel.icon
+                                            ? `${getCdnUrl}${voiceChannel.icon}`
+                                            : voiceChannel.type === 0
+                                            ? (voiceChannel.type === 0
+                                                  ? voiceChannel.recipients.find(
+                                                        (r) => r.id !== user.id
+                                                    )
+                                                  : null
+                                              )?.id
+                                            : voiceChannel.id
+                                    }
+                                />
+                            </div>
+                        </MenuTrigger>
+
+                        <UserMenu
+                            user={
+                                voiceChannel.type === 0
+                                    ? voiceChannel.recipients.find((r) => r.id !== user.id)
+                                    : null
+                            }
+                            type="channel"
+                            channelId={voiceChannel.id}
+                            channelType={voiceChannel.type}
+                            channelName={voiceChannel.name}
+                            channelIcon={voiceChannel.icon}
+                        />
+                    </Menu>
+                )}
+
                 <div className={styles.listItem}>
                     <div className={styles.separator} />
                 </div>
 
                 {guilds.map((guild) => {
-                    function hasPerm(permission: keyof typeof PERMISSIONS) {
-                        return (
-                            doesUserHaveGuildPermission(
-                                guild.roles,
-                                guild.members.find((m) => m.id === user.id),
-                                permission
-                            ) || guild.ownerId === user.id
-                        );
-                    }
-
-                    const notificationGuild = notifications.guilds.find((g) => g.id === guild.id);
+                    const notificationGuild = guildNotifs.find((g) => g.id === guild.id);
 
                     const pings = notificationGuild?.pings || 0;
                     const hasUnread = notificationGuild?.hasUnread || false;
@@ -173,10 +205,7 @@ export function AppNav() {
                                 </div>
                             </MenuTrigger>
 
-                            <GuildMenu
-                                guild={guild}
-                                hasPerm={hasPerm}
-                            />
+                            <GuildMenu guild={guild} />
                         </Menu>
                     );
                 })}
@@ -207,4 +236,4 @@ export function AppNav() {
             </ul>
         </nav>
     );
-}
+});

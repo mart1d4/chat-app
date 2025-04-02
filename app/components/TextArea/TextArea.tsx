@@ -1,17 +1,12 @@
 "use client";
 
-import { type ChangeEvent, useCallback, useEffect, useState, useMemo, useRef } from "react";
-import { Editor, Transforms, Range, createEditor, Point, Node, addMark } from "slate";
-import { Slate, Editable, withReact, ReactEditor } from "slate-react";
-import type { Channel, ChannelRecipient, Message } from "@/type";
+import { type ChangeEvent, useEffect, useState, useRef, useCallback } from "react";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import type { MessageFunctions } from "../Message/Message";
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { lowercaseContains } from "@/lib/strings";
+import { useRequests } from "@/hooks/useRequests";
 import { fileTypeFromStream } from "file-type";
-import type { CustomEditor } from "@/slate";
-import { withHistory } from "slate-history";
-import { getNanoIdInt } from "@/lib/utils";
 import styles from "./TextArea.module.css";
+import { getNanoId } from "@/lib/utils";
 import { nanoid } from "nanoid";
 import {
     useDialogContext,
@@ -21,18 +16,15 @@ import {
     VoiceMessage,
     FilePreview,
     LoadingDots,
-    UserMention,
     MenuTrigger,
     MenuContent,
     EmojiButton,
     MenuItem,
     Tooltip,
-    Avatar,
     Menu,
     Icon,
 } from "@components";
 import {
-    useWindowSettings,
     useTriggerDialog,
     useEmojiPicker,
     useSettings,
@@ -40,203 +32,209 @@ import {
     useMention,
     useData,
 } from "@/store";
+import type {
+    DMChannelWithRecipients,
+    ChannelRecipient,
+    ResponseMessage,
+    Attachment,
+} from "@/type";
 
-const initialEditorValue = [{ type: "paragraph", children: [{ text: "" }] }];
+import { AutoLinkPlugin, createLinkMatcherWithRegExp } from "@lexical/react/LexicalAutoLinkPlugin";
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { ContentEditable } from "@lexical/react/LexicalContentEditable";
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { LexicalComposer } from "@lexical/react/LexicalComposer";
+import { InlineStylePlugin } from "./plugins/InlineStylePlugin";
+import EmojiPickerPlugin from "./plugins/EmojiPickerPlugin";
+import NewMentionsPlugin from "./plugins/MentionsPlugin";
+import { InlineStyleNode } from "./ui/InlineStyleNode";
+import { EmojisPlugin } from "./plugins/EmojisPlugin";
+import {
+    $getRoot,
+    $getSelection,
+    $isRangeSelection,
+    COMMAND_PRIORITY_CRITICAL,
+    INSERT_PARAGRAPH_COMMAND,
+    KEY_ENTER_COMMAND,
+} from "lexical";
+import { MentionNode } from "./ui/MentionNode";
+import { SymbolNode } from "./ui/SymbolNode";
+import { AutoLinkNode } from "@lexical/link";
+import { EmojiNode } from "./ui/EmojiNode";
 
-function serialize(nodes: Node[]) {
-    return nodes.map((n) => Node.string(n)).join("\n");
-}
-
-function withMentions(editor: CustomEditor) {
-    const { isInline, isVoid, markableVoid } = editor;
-
-    editor.isInline = (element) => {
-        return element.type === "mention" ? true : isInline(element);
-    };
-
-    editor.isVoid = (element) => {
-        return element.type === "mention" ? true : isVoid(element);
-    };
-
-    editor.markableVoid = (element) => {
-        return element.type === "mention" || markableVoid(element);
-    };
-
-    return editor;
-}
-
-function insertMention(editor: CustomEditor, recipient: ChannelRecipient) {
-    Transforms.insertNodes(editor, {
-        type: "mention",
-        recipient,
-        children: [{ text: `<@${recipient.id}>` }],
-    });
-    Transforms.move(editor);
-    Editor.insertText(editor, " ");
-}
-
-// Borrow Leaf renderer from the Rich Text example.
-// In a real project you would get this via `withRichText(editor)` or similar.
-function Leaf({ attributes, children, leaf }) {
-    if (leaf.bold) {
-        children = <strong>{children}</strong>;
-    }
-
-    if (leaf.code) {
-        children = <code>{children}</code>;
-    }
-
-    if (leaf.italic) {
-        children = <em>{children}</em>;
-    }
-
-    if (leaf.underline) {
-        children = <u>{children}</u>;
-    }
-
-    if (leaf.strikethrough) {
-        children = <s>{children}</s>;
-    }
-
-    if (leaf.spoiler) {
-        children = <span className={styles.spoiler}>{children}</span>;
-    }
-
-    if (leaf.link) {
-        children = <span className={styles.link}>{children}</span>;
-    }
-
-    return <span {...attributes}>{children}</span>;
-}
-
-function Element(props) {
-    const { attributes, children, element } = props;
-
-    if (element.type === "mention") {
-        return <Mention {...props} />;
-    }
-
-    if (element.type === "code") {
-        return (
-            <pre {...attributes}>
-                <code>{children}</code>
-            </pre>
-        );
-    }
-
-    return <p {...attributes}>{children}</p>;
-}
-
-function Mention({ attributes, children, element }) {
-    return (
-        <span
-            {...attributes}
-            contentEditable={false}
-            data-cy={`mention-${element.recipient.id}`}
-        >
-            <UserMention
-                user={element.recipient}
-                full
-                editor
-            />
-
-            <span style={{ display: "none" }}>{children}</span>
-        </span>
-    );
-}
+const URL_REGEX =
+    /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)(?<![-.+():%])/;
 
 export function TextArea({
+    edit,
     channel,
+    functions,
     setMessages,
     messageObject,
-    functions,
-    edit,
 }: {
-    channel: Channel;
-    setMessages: InfiniteKeyedMutator;
-    messageObject?: Message;
+    edit?: string;
     functions?: MessageFunctions;
-    edit?: {
-        messageId: number;
-        content: string | undefined;
-    };
+    messageObject?: ResponseMessage;
+    channel: DMChannelWithRecipients;
+    setMessages: (message: ResponseMessage) => void;
 }) {
-    const width562 = useWindowSettings((state) => state.widthThresholds)[562];
-    const setMention = useMention((state) => state.setMention);
-    const setDraft = useMessages((state) => state.setDraft);
-    const settings = useSettings((state) => state.settings);
+    const initialConfig = {
+        namespace: "Editor",
+        theme: {},
+        onError: (error: any) => console.error(error),
+        nodes: [EmojiNode, AutoLinkNode, InlineStyleNode, SymbolNode, MentionNode],
+    };
 
-    const setReply = useMessages((state) => state.setReply);
-    const replies = useMessages((state) => state.replies);
-    const setEdit = useMessages((state) => state.setEdit);
-    const mention = useMention((state) => state.userId);
-    const drafts = useMessages((state) => state.drafts);
-    const user = useData((state) => state.user);
-    const { sendRequest } = useFetchHelper();
+    return (
+        <LexicalComposer initialConfig={initialConfig}>
+            <TextAreaContent
+                edit={edit}
+                channel={channel}
+                functions={functions}
+                setMessages={setMessages}
+                messageObject={messageObject}
+            />
+        </LexicalComposer>
+    );
+}
 
-    const reply = replies.find((r) => r.channelId === channel.id);
-    const draft = drafts.find((d) => d.channelId === channel.id);
+export function TextAreaContent({
+    edit,
+    channel,
+    functions,
+    setMessages,
+    messageObject,
+}: {
+    edit?: string;
+    functions?: MessageFunctions;
+    messageObject?: ResponseMessage;
+    channel: DMChannelWithRecipients;
+    setMessages: (message: ResponseMessage) => void;
+}) {
+    const reply = useMessages((state) => state.replies).find((r) => r.channelId === channel.id);
+    const draft = useMessages.getState().drafts.find((d) => d.channelId === channel.id);
+    const editContent = useMessages
+        .getState()
+        .edits.find((d) => d.messageId === messageObject?.id)?.content;
 
-    const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
-    const [voiceMessage, setVoiceMessage] = useState<Blob | null>(null);
-    const [attachments, setAttachments] = useState<Attachment[]>([]);
-    const [usersTyping, setUsersTyping] = useState<string[]>([]);
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const textAreaRef = useRef<HTMLDivElement>(null);
-
-    const { blocked } = useData();
-    const friend = channel.recipients.find((r) => r.id !== user?.id);
-
-    const [target, setTarget] = useState<Range | null>(null);
-    const [index, setIndex] = useState(0);
-    const [search, setSearch] = useState("");
-
-    const renderElement = useCallback((props) => <Element {...props} />, []);
-    const renderLeaf = useCallback((props) => <Leaf {...props} />, []);
-    const editor = useMemo(() => withMentions(withReact(withHistory(createEditor()))), []);
+    const isEditing = typeof edit === "string";
 
     const { data: emojiPickerData, setData: setEmojiPickerData } = useEmojiPicker();
+    const { triggerDialog, removeDialog } = useTriggerDialog();
+    const { setDraft, setEdit, setReply } = useMessages();
+    const { userId: mention, setMention } = useMention();
+    const { updateMessage } = useRequests();
+    const { unblockUser } = useRequests();
+    const user = useAuthenticatedUser();
+    const { settings } = useSettings();
+    const { blocked } = useData();
 
-    const text = serialize(editor.children);
+    const [editor] = useLexicalComposerContext();
+    const [text, setText] = useState("");
+
+    const friend = channel.recipients.find((r) => r.id !== user?.id);
+    const placeholder = `Message ${channel.type === 0 ? friend?.username : channel.name}`;
+
+    const [voiceMessage, setVoiceMessage] = useState<Blob | null>(null);
+    const [attachments, setAttachments] = useState<Attachment[]>([]);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const canSend = text.length > 0 || attachments.length > 0;
+    const isFirstRender = useRef(true);
 
-    const recipients = channel.recipients.filter((r) => lowercaseContains(r.displayName, search));
+    useEffect(() => {
+        const removeListener = editor.registerCommand<KeyboardEvent | null>(
+            KEY_ENTER_COMMAND,
+            (event) => {
+                const selection = $getSelection();
 
-    const onKeyDown = useCallback(
-        (event: KeyboardEvent) => {
-            if (target && recipients.length > 0) {
-                if (["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(event.key)) {
+                if (!$isRangeSelection(selection)) {
+                    return false;
+                }
+
+                if (event !== null) {
+                    // if ((IS_IOS || IS_SAFARI || IS_APPLE_WEBKIT) && CAN_USE_BEFORE_INPUT) {
+                    //     return false;
+                    // }
+
                     event.preventDefault();
+
+                    if (event.shiftKey) {
+                        return editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined);
+                    }
                 }
 
-                switch (event.key) {
-                    case "ArrowDown":
-                        const prevIndex = index >= recipients.length - 1 ? 0 : index + 1;
-                        setIndex(prevIndex);
-                        break;
-                    case "ArrowUp":
-                        const nextIndex = index <= 0 ? recipients.length - 1 : index - 1;
-                        setIndex(nextIndex);
-                        break;
-                    case "Enter":
-                        Transforms.select(editor, target);
-                        insertMention(editor, recipients[index]);
-                        setTarget(null);
-                        break;
-                    case "Escape":
-                        setTarget(null);
-                        break;
+                if (isEditing) editMessage();
+                else sendMessage();
+
+                return true;
+            },
+            COMMAND_PRIORITY_CRITICAL
+        );
+
+        return () => {
+            removeListener();
+        };
+    }, [isEditing, text, attachments, channel, messageObject, reply]);
+
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+
+            if (typeof edit === "string") {
+                if (editContent) {
+                    const initialEditorState = editor.parseEditorState(editContent);
+
+                    if (initialEditorState && !initialEditorState.isEmpty()) {
+                        editor.setEditorState(initialEditorState);
+                    }
                 }
-            } else if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                sendMessage();
+            } else if (draft && draft.content) {
+                const initialEditorState = editor.parseEditorState(draft.content);
+
+                if (initialEditorState && !initialEditorState.isEmpty()) {
+                    editor.setEditorState(initialEditorState);
+                }
             }
-        },
-        [recipients, editor, index, target]
+        }
+    }, [isFirstRender.current, draft, editContent, edit]);
+
+    useEffect(() => {
+        editor.focus();
+    }, []);
+
+    function debounce<T extends (...args: any[]) => void>(func: T, delay: number): T {
+        let timer: ReturnType<typeof setTimeout>;
+        return ((...args: Parameters<T>) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => func(...args), delay);
+        }) as T;
+    }
+
+    const debouncedSetDraft = useCallback(
+        debounce((editorState: any) => {
+            const stringifiedEditorState = JSON.stringify(editorState.toJSON());
+
+            if (isEditing) {
+                setEdit(messageObject!.id, stringifiedEditorState);
+            } else {
+                setDraft(channel.id, stringifiedEditorState);
+            }
+        }, 500),
+        [channel.id, isEditing]
     );
 
-    const { triggerDialog, removeDialog } = useTriggerDialog();
+    function onChange(editorState: any) {
+        const parsedEditorState = editor.parseEditorState(JSON.stringify(editorState.toJSON()));
+        const editorStateTextString = parsedEditorState.read(() => $getRoot().getTextContent());
+
+        setText(editorStateTextString);
+        debouncedSetDraft(editorState);
+    }
 
     async function handleFileSubmit(files: File[], e: DragEvent | ChangeEvent<HTMLInputElement>) {
         if (files.length === 0) return;
@@ -251,7 +249,7 @@ export function TextArea({
             return;
         }
 
-        let checkedFiles = [];
+        let checkedFiles: Attachment[] = [];
         const maxFileSize = 1024 * 1024 * 8; // 8MB
 
         for (const file of files) {
@@ -282,12 +280,12 @@ export function TextArea({
             });
 
             checkedFiles.push({
-                id: getNanoIdInt(),
+                id: getNanoId(),
 
                 file,
                 ext: typeObj?.ext ?? file.name.split(".").pop() ?? "",
                 url: URL.createObjectURL(file),
-                type: type as AttachmentType,
+                type: type as Attachment["type"],
 
                 size: file.size,
                 filename: file.name ?? "",
@@ -300,6 +298,7 @@ export function TextArea({
         }
 
         setAttachments((prev) => [...prev, ...checkedFiles]);
+        editor.focus();
 
         if (e.target instanceof HTMLInputElement) {
             return (e.target.value = "");
@@ -360,13 +359,11 @@ export function TextArea({
             }
         }
 
-        // Add listeners
         document.addEventListener("dragover", handleDragOver);
         document.addEventListener("dragenter", handleDragEnter);
         document.addEventListener("dragleave", handleDragLeave);
         document.addEventListener("drop", handleDrop);
 
-        // Cleanup
         return () => {
             document.removeEventListener("dragover", handleDragOver);
             document.removeEventListener("dragenter", handleDragEnter);
@@ -375,23 +372,35 @@ export function TextArea({
         };
     }, [attachments]);
 
-    useEffect(() => {
-        if (!mention || edit) return;
+    if (mention && !edit) {
+        const user = channel.recipients.find((r) => r.id === mention);
 
-        insertMention(editor, mention);
+        if (user) {
+            editor.update(() => {
+                const selection = $getSelection();
+                if (!selection) return;
+
+                const mentionNode = new MentionNode(`<@${user.id}>`, user.displayName);
+                selection.insertNodes([mentionNode]);
+            });
+        }
+
         setMention(null);
-    }, [mention]);
+    }
 
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
             if (e.key === "Escape") {
-                if (edit) setEdit(edit.messageId, null);
+                if (edit) setEdit(messageObject?.id, null);
                 if (reply) setReply(channel.id, null);
             }
         }
 
         document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
+
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
     }, [edit, reply]);
 
     function sendMessage() {
@@ -410,7 +419,7 @@ export function TextArea({
             embeds: [],
             author: user,
             reference: reply?.messageId ?? null,
-            mentions: [],
+            mentions: [] as ChannelRecipient[],
             roleMentions: [],
             channelMentions: [],
             reactions: [],
@@ -423,24 +432,22 @@ export function TextArea({
 
         // Search for mentions, and add them to the mentions array if they exist
         const mentions = text.match(/<@(\d+)>/g) || [];
+
         for (const mention of mentions) {
             const id = parseInt(mention.replace(/<@|>/g, ""));
             const recipient = channel.recipients.find((r) => r.id === id);
-            if (recipient && !temp.mentions.map((m) => m.id).includes(recipient.id)) {
+
+            if (recipient && !temp.mentions.find((m) => m.id === recipient.id)) {
                 temp.mentions.push(recipient);
             }
         }
 
-        // Reset the editor state
-        // First set caret to the start of the editor and select nothing
+        editor.update(() => {
+            const root = $getRoot();
+            root.clear();
+        });
 
-        editor.selection = {
-            anchor: { path: [0, 0], offset: 0 },
-            focus: { path: [0, 0], offset: 0 },
-        };
-        editor.children = [{ type: "paragraph", children: [{ text: "" }] }];
-
-        if (edit && messageObject) {
+        if (isEditing && messageObject) {
             functions?.startEditingMessage();
             return;
         } else {
@@ -453,19 +460,36 @@ export function TextArea({
         if (reply?.messageId) setReply(channel.id, null);
     }
 
-    async function unblockUser() {
-        setLoading((prev) => ({ ...prev, unblockUser: true }));
+    async function editMessage() {
+        if (!messageObject) return;
+
+        if (text === messageObject.content) {
+            return setEdit(messageObject.id, null);
+        }
+
+        if (!text && messageObject.attachments.length === 0) {
+            return triggerDialog({ type: "DELETE_MESSAGE" });
+        }
+
+        if (text.length > 16000) {
+            return triggerDialog({ type: "MESSAGE_LIMIT" });
+        }
 
         try {
-            await sendRequest({
-                query: "UNBLOCK_USER",
-                params: { userId: friend?.id },
+            const data = await updateMessage.send({
+                channelId: channel.id,
+                messageId: messageObject.id,
+                message: {
+                    content: text,
+                },
             });
+
+            if (data) {
+                setEdit(messageObject.id, null);
+            }
         } catch (error) {
             console.error(error);
         }
-
-        setLoading((prev) => ({ ...prev, unblockUser: false }));
     }
 
     useEffect(() => {
@@ -499,9 +523,8 @@ export function TextArea({
                 pinned: null,
                 edited: null,
                 createdAt: new Date(),
-                send: true,
+                local: true,
                 error: false,
-                loading: true,
             };
 
             setMessages(temp);
@@ -511,187 +534,105 @@ export function TextArea({
         }
     }, [voiceMessage]);
 
-    const textContainer = useMemo(
-        () => (
-            <div
-                className={styles.textContainer}
-                ref={(el) => {
-                    if (el) {
-                        el.style.height = "auto";
-                        el.style.height = `${el.scrollHeight}px`;
-                    }
-                }}
-            >
-                <div
-                    ref={textAreaRef}
-                    className={styles.textbox}
-                    onContextMenu={() => {
-                        // setLayers({
-                        //     settings: { type: "MENU", event: e },
-                        //     content: {
-                        //         type: "INPUT",
-                        //         input: true,
-                        //         sendButton: true,
-                        //         pasteText,
-                        //     },
-                        // });
-                    }}
-                >
-                    <Slate
-                        editor={editor}
-                        initialValue={JSON.parse(
-                            edit?.content || draft?.content || JSON.stringify(initialEditorValue)
-                        )}
-                        onChange={(value) => {
-                            // Get current text at cursor
-                            // const currentWord = Editor.string(editor, editor.selection);
+    const textContainer = (
+        <div
+            className={styles.textContainer}
+            ref={(el) => {
+                if (el) {
+                    el.style.height = "auto";
+                    el.style.height = `${el.scrollHeight}px`;
+                }
+            }}
+        >
+            <AutoFocusPlugin />
+            <OnChangePlugin onChange={onChange} />
+            <AutoLinkPlugin matchers={[createLinkMatcherWithRegExp(URL_REGEX)]} />
 
-                            const json = JSON.stringify(value);
-
-                            if (edit && messageObject) {
-                                setEdit(messageObject.id, json);
-                            } else {
-                                setDraft(channel.id, json);
-                            }
-
-                            const { selection } = editor;
-
-                            if (selection && Range.isCollapsed(selection)) {
-                                const [start] = Range.edges(selection);
-
-                                const before = Editor.before(editor, start, { unit: "character" });
-                                const beforeRange = before && Editor.range(editor, before, start);
-                                const beforeText =
-                                    beforeRange && Editor.string(editor, beforeRange);
-
-                                const range =
-                                    beforeRange &&
-                                    word(editor, beforeRange, {
-                                        terminator: [" "],
-                                        directions: "both",
-                                        include: true,
-                                    });
-
-                                let text = range && Editor.string(editor, range);
-
-                                // If text includes spaces and text after those spaces,
-                                // only keep the text after the space
-                                if (
-                                    text &&
-                                    text.includes(" ") &&
-                                    text.split(" ").length > 1 &&
-                                    text.split(" ").pop() !== ""
-                                ) {
-                                    text = text.split(" ").pop() || "";
-                                }
-
-                                const match = text && text.match(/(?<=^|\s)@(\S*)/);
-
-                                if (match && beforeText !== " ") {
-                                    setTarget(beforeRange);
-                                    setSearch(match[1]);
-                                    setIndex(0);
-                                    return;
-                                }
-                            }
-
-                            setTarget(null);
-                        }}
-                    >
-                        <Editable
-                            autoFocus
-                            focus-id="text-area"
-                            onKeyDown={onKeyDown}
-                            onPaste={async (e) => {
-                                // If text is more than 16000 characters, prevent paste
-                                // and add a .txt file instead to the attachments, unless it's full alreaddy
-                                // and if user is pasting a file, well just add it to the attachments
-                                const items = Array.from(e.clipboardData.items);
-                                const textItem = items.find((i) => i.type === "text/plain");
-
-                                if (textItem) {
-                                    textItem.getAsString((text) => {
-                                        if (text.length > 16000) {
-                                            e.preventDefault();
-
-                                            const blob = new Blob([text], { type: "text/plain" });
-                                            const file = new File([blob], "message.txt", {
-                                                type: "text/plain",
-                                            });
-
-                                            return handleFileSubmit([file], e as any);
-                                        }
-                                    });
-                                }
-
-                                const fileItem = items.find((i) => i.kind === "file");
-
-                                if (fileItem) {
-                                    e.preventDefault();
-                                    const file = fileItem.getAsFile();
-                                    if (file) {
-                                        handleFileSubmit([file], e as any);
-                                    }
-                                }
-                            }}
-                            renderLeaf={renderLeaf}
-                            renderElement={renderElement}
-                            id={`textarea${edit ? "-edit" : ""}-${channel.id}`}
-                            placeholder={
-                                edit
-                                    ? "Edit Message"
-                                    : `Message ${
-                                          channel.type === 0 ? "@" : channel.type === 2 ? "#" : ""
-                                      }${channel.name}`
-                            }
-                        />
-                    </Slate>
-                </div>
-            </div>
-        ),
-        [text, attachments, edit, draft]
+            <RichTextPlugin
+                contentEditable={
+                    <ContentEditable
+                        aria-placeholder={placeholder}
+                        placeholder={<div className={styles.placeholder}>{placeholder}</div>}
+                    />
+                }
+                ErrorBoundary={LexicalErrorBoundary}
+            />
+        </div>
     );
 
     const container = document.getElementById(`text-area${edit ? "-edit" : ""}-${channel.id}`);
 
-    if (edit) {
+    if (isEditing) {
         return (
-            <form
-                className={styles.form}
-                id={`text-area-edit-${channel.id}`}
-                style={{ padding: "0 0 0 0", margin: "8px 0 0 0" }}
-            >
-                <div
-                    id="text-area"
-                    className={styles.textArea}
-                    style={{ marginBottom: "0" }}
+            <>
+                <form
+                    className={styles.form}
+                    id={`text-area-edit-${channel.id}`}
+                    style={{ padding: "0 0 0 0", margin: "8px 0 0 0" }}
                 >
-                    <div className={styles.scrollableContainer + " scrollbar"}>
-                        <div
-                            className={styles.input}
-                            style={{ borderRadius: "8px" }}
-                        >
-                            {textContainer}
+                    <NewMentionsPlugin members={channel.recipients} />
 
-                            <div className={styles.toolsContainer}>
-                                <EmojiButton
-                                    open={
-                                        emojiPickerData.open &&
-                                        emojiPickerData.container === container
-                                    }
-                                    setOpen={() => {
-                                        setEmojiPickerData({
-                                            open: true,
-                                            container,
-                                            placement: "top-end",
-                                        });
-                                    }}
-                                />
+                    <EmojisPlugin />
+                    <EmojiPickerPlugin />
+                    <InlineStylePlugin />
+
+                    <div
+                        id="text-area"
+                        className={styles.textArea}
+                        style={{ marginBottom: "0" }}
+                    >
+                        <div className={styles.scrollableContainer + " scrollbar"}>
+                            <div
+                                className={styles.input}
+                                style={{ borderRadius: "8px" }}
+                            >
+                                {textContainer}
+
+                                <div className={styles.toolsContainer}>
+                                    <EmojiButton
+                                        open={
+                                            emojiPickerData.open &&
+                                            emojiPickerData.container === container
+                                        }
+                                        setOpen={() => {
+                                            setEmojiPickerData({
+                                                open: true,
+                                                container,
+                                                placement: "top-end",
+                                                onClick: (emoji) => {
+                                                    editor.update(() => {
+                                                        const selection = $getSelection();
+                                                        if (!selection) return;
+
+                                                        selection.insertText(`:${emoji}: `);
+                                                    });
+                                                },
+                                            });
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
+                </form>
+
+                <div className={styles.editHint}>
+                    escape to{" "}
+                    <span
+                        tabIndex={0}
+                        onClick={() => setEdit(messageObject!.id, null)}
+                    >
+                        cancel{" "}
+                    </span>
+                    • enter to{" "}
+                    <span
+                        tabIndex={0}
+                        onClick={() => editMessage()}
+                    >
+                        save{" "}
+                    </span>
                 </div>
-            </form>
+            </>
         );
     } else if (!blocked.find((b) => b.id === friend?.id) || channel.type !== 0) {
         return (
@@ -699,6 +640,12 @@ export function TextArea({
                 className={styles.form}
                 id={`text-area-${channel.id}`}
             >
+                <NewMentionsPlugin members={channel.recipients} />
+
+                <EmojisPlugin />
+                <EmojiPickerPlugin />
+                <InlineStylePlugin />
+
                 {reply && !edit && (
                     <div className={styles.replyContainer}>
                         <div className={styles.replyName}>
@@ -725,55 +672,6 @@ export function TextArea({
                     className={styles.textArea}
                     style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}
                 >
-                    {target && recipients.length > 0 && (
-                        <div
-                            className={`${styles.mentionPopover} scrollbar`}
-                            data-cy="mentions-portal"
-                        >
-                            <div>
-                                <h3>Members</h3>
-                            </div>
-
-                            {recipients.map((recipient, i) => (
-                                <div
-                                    key={recipient.id}
-                                    className={styles.mentionContainer}
-                                >
-                                    <div
-                                        onMouseEnter={() => setIndex(i)}
-                                        onClick={() => {
-                                            Transforms.select(editor, target);
-                                            insertMention(editor, recipient);
-                                            setTarget(null);
-                                        }}
-                                        style={{
-                                            backgroundColor:
-                                                i === index ? "var(--background-4)" : "",
-                                        }}
-                                    >
-                                        <div className={styles.avatar}>
-                                            <Avatar
-                                                size={24}
-                                                type="user"
-                                                status={recipient.status}
-                                                fileId={recipient.avatar}
-                                                generateId={recipient.id}
-                                                alt={recipient.displayName}
-                                            />
-                                        </div>
-
-                                        <div className={styles.displayName}>
-                                            {recipient.displayName}
-                                        </div>
-                                        <div className={styles.username}>
-                                            {recipient.displayName}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
                     <div className={styles.scrollableContainer + " scrollbar"}>
                         {attachments.length > 0 && (
                             <>
@@ -860,11 +758,13 @@ export function TextArea({
                                     type="button"
                                     onClick={(e) => {
                                         e.preventDefault();
+
                                         setEmojiPickerData({
                                             open: true,
                                             container,
                                             placement: "top-end",
                                             tab: "gif",
+                                            onClick: (gif) => {},
                                         });
                                     }}
                                 >
@@ -882,6 +782,14 @@ export function TextArea({
                                                 open: true,
                                                 container,
                                                 placement: "top-end",
+                                                onClick: (emoji) => {
+                                                    editor.update(() => {
+                                                        const selection = $getSelection();
+                                                        if (!selection) return;
+
+                                                        selection.insertText(`:${emoji}: `);
+                                                    });
+                                                },
                                             });
                                         }}
                                     />
@@ -915,15 +823,15 @@ export function TextArea({
 
                 <div className={styles.bottomForm}>
                     <div className={styles.typingContainer}>
-                        {usersTyping.length > 0 && (
+                        {[].length > 0 && (
                             <>
                                 <LoadingDots />
                                 <span>
-                                    {usersTyping.map((username) => (
+                                    {[].map((username) => (
                                         <span>{username}, </span>
                                     ))}
 
-                                    {usersTyping.length > 0 ? "are typing..." : "is typing..."}
+                                    {[].length > 0 ? "are typing..." : "is typing..."}
                                 </span>
                             </>
                         )}
@@ -937,8 +845,8 @@ export function TextArea({
                                         style={{
                                             color:
                                                 text.length > 16000
-                                                    ? "var(--error-1)"
-                                                    : "var(--foreground-3)",
+                                                    ? "var(--danger-0)"
+                                                    : "var(--fg-3)",
                                         }}
                                     >
                                         {text.length}
@@ -966,91 +874,14 @@ export function TextArea({
                     <button
                         type="button"
                         className="button grey"
-                        onClick={() => unblockUser()}
+                        onClick={() => unblockUser.send({ userId: friend.id })}
                     >
-                        {loading.unblockUser ? <LoadingDots /> : "Unblock"}
+                        {unblockUser.isLoading ? <LoadingDots /> : "Unblock"}
                     </button>
                 </div>
             </form>
         );
     }
-}
-
-function word(
-    editor: ReactEditor,
-    location: Range,
-    options: {
-        terminator?: string[];
-        include?: boolean;
-        directions?: "both" | "left" | "right";
-    } = {}
-): Range | undefined {
-    const { terminator = [" "], include = false, directions = "both" } = options;
-
-    const { selection } = editor;
-    if (!selection) return;
-
-    // Get start and end, modify it as we move along.
-    let [start, end] = Range.edges(location);
-
-    let point: Point = start;
-
-    function move(direction: "right" | "left"): boolean {
-        const next =
-            direction === "right"
-                ? Editor.after(editor, point, {
-                      unit: "character",
-                  })
-                : Editor.before(editor, point, { unit: "character" });
-
-        const wordNext =
-            next &&
-            Editor.string(
-                editor,
-                direction === "right"
-                    ? { anchor: point, focus: next }
-                    : { anchor: next, focus: point }
-            );
-
-        const last = wordNext && wordNext[direction === "right" ? 0 : wordNext.length - 1];
-        if (next && last && !terminator.includes(last)) {
-            point = next;
-
-            if (point.offset === 0) {
-                // Means we've wrapped to beginning of another block
-                return false;
-            }
-        } else {
-            return false;
-        }
-
-        return true;
-    }
-
-    // Move point and update start & end ranges
-
-    // Move forwards
-    if (directions !== "left") {
-        point = end;
-        while (move("right"));
-        end = point;
-    }
-
-    // Move backwards
-    if (directions !== "right") {
-        point = start;
-        while (move("left"));
-        start = point;
-    }
-
-    if (include) {
-        return {
-            anchor: Editor.before(editor, start, { unit: "offset" }) ?? start,
-            focus: Editor.after(editor, end, { unit: "offset" }) ?? end,
-        };
-    }
-
-    return { anchor: start, focus: end };
 }
 
 export function RecordVoiceMessage({ setVoiceMessage }: { setVoiceMessage: (blob: Blob) => void }) {
@@ -1124,6 +955,7 @@ export function RecordVoiceMessage({ setVoiceMessage }: { setVoiceMessage: (blob
                 send();
                 setOpen(false);
             }}
+            confirmDisabled={!audioBlob}
             heading="Record Voice Message"
             description="Record a voice message for your friends. Press the button to start recording and press it again to stop."
         >
@@ -1144,7 +976,7 @@ export function RecordVoiceMessage({ setVoiceMessage }: { setVoiceMessage: (blob
                     <div className={styles.preview}>
                         <div
                             className={styles.dot}
-                            style={{ backgroundColor: recording ? "var(--error-1)" : "" }}
+                            style={{ backgroundColor: recording ? "var(--danger-0)" : "" }}
                         />
 
                         <span className={styles.time}>

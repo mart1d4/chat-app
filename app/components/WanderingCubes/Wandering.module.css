@@ -15,7 +15,7 @@
     top: 0;
     left: 0;
     animation: spinner 1.8s infinite ease-in-out;
-    background-color: var(--accent-1);
+    background-color: var(--accent-0);
 }
 
 .container > span:last-child {

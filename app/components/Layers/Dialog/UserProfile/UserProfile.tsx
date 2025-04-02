@@ -1,15 +1,16 @@
 "use client";
 
+import type { UserProfile, KnownUser, UserGuild, ChannelRecipient, GuildMember } from "@/type";
 import { getRandomImage, getStatusColor, getStatusLabel, getStatusMask } from "@/lib/utils";
 import { useData, useShowSettings, useTriggerDialog, useUrls } from "@/store";
-import type { UserProfile, KnownUser, User, UserGuild } from "@/type";
-import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
-import { useEffect, useRef, useState } from "react";
-import useFetchHelper from "@/hooks/useFetchHelper";
+import { useFetchNote, useFetchUser } from "@/hooks/useFetchData";
+import { useRelationships } from "@/hooks/useRelationships";
+import { useRequests } from "@/hooks/useRequests";
 import { getButtonColor } from "@/lib/getColors";
 import styles from "./UserProfile.module.css";
 import { getCdnUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
+import { useId, useState } from "react";
 import Image from "next/image";
 import {
     useDialogContext,
@@ -19,192 +20,69 @@ import {
     LoadingDots,
     MenuTrigger,
     MenuContent,
+    GuildMenu,
     MenuItem,
     UserMenu,
     Tooltip,
     Avatar,
+    Masks,
     Menu,
     Icon,
 } from "@components";
-import { GuildMenu } from "../../Menu/MenuContents/Guild";
-import { doesUserHaveGuildPermission, type PERMISSIONS } from "@/lib/permissions";
-import { hasGuildPermission } from "@/lib/db/permissions";
+
+type InitUser = KnownUser | ChannelRecipient | GuildMember;
 
 export function UserProfile({
     initUser,
     startingTab,
     focusNote,
 }: {
-    initUser: User["id"] & Partial<User>;
+    initUser: InitUser;
     startingTab?: 0 | 1 | 2;
     focusNote?: boolean;
 }) {
-    const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
-    const [activeNavItem, setActiveNavItem] = useState(startingTab ?? 0);
-    const [mutualFriendIds, setMutualFriendIds] = useState<number[]>([]);
-    const [mutualFriends, setMutualFriends] = useState<KnownUser[]>([]);
-    const [mutualGuilds, setMutualGuilds] = useState<UserGuild[]>([]);
-    const [user, setUser] = useState<UserProfile | null>(null);
-    const [originalNote, setOriginalNote] = useState("");
-    const [note, setNote] = useState("");
+    const { data: fData, isLoading: fLoading } = useFetchUser(initUser.id);
 
+    const user = (
+        fData?.user
+            ? {
+                  ...fData.user,
+                  status: initUser.status,
+              }
+            : initUser
+    ) as InitUser | UserProfile;
+
+    const { friends, guilds, setUser } = useData();
+
+    const mutualFriends = friends.filter((f) => fData.mutualFriends?.includes(f.id));
+    const mutualGuilds = guilds.filter((g) => fData.mutualGuilds?.includes(g.id));
+
+    const { data: nData } = useFetchNote(initUser.id);
+    const [note, setNote] = useState(nData ?? "");
+
+    if (note === "" && nData) {
+        setNote(nData);
+    }
+
+    const [activeNavItem, setActiveNavItem] = useState(startingTab ?? 0);
+
+    const { isCurrentUser, isFriend, hasRequested, wasRequested, isBlocked } = useRelationships(
+        initUser.id
+    );
     const { setShowSettings } = useShowSettings();
     const { triggerDialog } = useTriggerDialog();
-    const currentUser = useAuthenticatedUser();
-    const { sendRequest } = useFetchHelper();
     const { setOpen } = useDialogContext();
-    const hasRun = useRef(false);
     const router = useRouter();
-    const { setUser: setAppUser, channels, received, friends, blocked, sent } = useData();
+    const masksId = useId();
+    const {
+        setNote: updateNote,
+        createChannel,
+        removeFriend,
+        updateUser,
+        addFriend,
+    } = useRequests();
 
-    const isReceived = received.find((r) => r.id === initUser.id);
-    const isBlocked = blocked.find((b) => b.id === initUser.id);
-    const isFriend = friends.find((f) => f.id === initUser.id);
-    const isSent = sent.find((s) => s.id === initUser.id);
-    const isSameUser = currentUser.id === initUser.id;
-
-    async function deleteStatus() {
-        try {
-            const { data } = await sendRequest({
-                query: "UPDATE_USER",
-                body: {
-                    customStatus: "",
-                },
-            });
-
-            if (data?.user) {
-                setAppUser(data.user);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    async function getNote() {
-        if (!initUser) return;
-
-        const { data } = await sendRequest({
-            query: "GET_NOTE",
-            params: { userId: initUser.id },
-        });
-
-        if (data) {
-            setNote(data.note);
-            setOriginalNote(data.note);
-        }
-    }
-
-    async function getProfile() {
-        if (!initUser) return;
-
-        const { data } = await sendRequest({
-            query: "GET_USER_PROFILE",
-            params: {
-                userId: initUser.id,
-                withMutualGuilds: true,
-                withMutualFriends: true,
-            },
-        });
-
-        if (data?.user) {
-            setUser(data.user);
-            setMutualFriendIds(data.mutualFriends);
-            setMutualGuilds(data.mutualGuilds);
-        }
-    }
-
-    useEffect(() => {
-        if (!mutualFriendIds.length) return;
-        setMutualFriends(friends.filter((f) => mutualFriendIds.includes(f.id)));
-    }, [friends, mutualFriendIds]);
-
-    async function sendMessage() {
-        if (loading.message) return;
-        setLoading((prev) => ({ ...prev, message: true }));
-
-        try {
-            const channel = channels.find((channel) => {
-                if (channel.type === 0) {
-                    const first = channel.recipients[0];
-                    const second = channel.recipients[1];
-
-                    return (
-                        (first.id === initUser.id && second.id === currentUser.id) ||
-                        (first.id === currentUser.id && second.id === initUser.id)
-                    );
-                }
-
-                return false;
-            });
-
-            if (channel) {
-                setLoading((prev) => ({ ...prev, message: false }));
-                setOpen(false);
-                return router.push(`/channels/me/${channel.id}`);
-            }
-
-            const { errors } = await sendRequest({
-                query: "CHANNEL_CREATE",
-                body: { recipients: [initUser.id] },
-            });
-
-            if (!errors) {
-                setLoading((prev) => ({ ...prev, message: false }));
-                setOpen(false);
-            } else {
-                throw new Error("Failed to create channel");
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, message: false }));
-    }
-
-    async function addFriend() {
-        if (loading.add || !user) return;
-        setLoading((prev) => ({ ...prev, add: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "ADD_FRIEND",
-                body: { username: user.username },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, add: false }));
-    }
-
-    async function removeFriend() {
-        if (loading.remove || !user) return;
-        setLoading((prev) => ({ ...prev, remove: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "REMOVE_FRIEND",
-                body: { username: user.username },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, remove: false }));
-    }
-
-    useEffect(() => {
-        if (!hasRun?.current) {
-            getNote();
-            getProfile();
-        }
-
-        return () => {
-            hasRun.current = true;
-        };
-    }, []);
-
-    if (!user || !currentUser) {
+    if (fLoading) {
         return (
             <div className={styles.loading}>
                 <LoadingCubes />
@@ -215,7 +93,7 @@ export function UserProfile({
     const mFLength = mutualFriends.length;
     const mGLength = mutualGuilds.length;
 
-    const sectionNavItems = isSameUser
+    const sectionNavItems = isCurrentUser
         ? ["About Me"]
         : [
               "About Me",
@@ -227,24 +105,32 @@ export function UserProfile({
                   : "No Mutual Servers",
           ];
 
-    const showSimple = !user.accentColor;
+    const accentColor = "accentColor" in user ? user.accentColor : "#1a1a1a";
+    const bannerColor = "bannerColor" in user ? user.bannerColor : "#1a1a1a";
+    const customStatus = "customStatus" in user ? user.customStatus : null;
+    const description = "description" in user ? user.description : null;
+    const createdAt = "createdAt" in user ? user.createdAt : null;
+    const username = "username" in user ? user.username : null;
+    const banner = "banner" in user ? user.banner : null;
+
+    const showSimple = !accentColor;
 
     return (
         <div
             className={`${styles.container} ${showSimple ? styles.simple : ""}`}
             style={
                 {
-                    "--card-primary-color": user.bannerColor,
-                    "--card-accent-color": user.accentColor,
+                    "--card-primary-color": bannerColor,
+                    "--card-accent-color": accentColor,
                     "--card-overlay-color": "hsla(0, 0%, 0%, 0.6)",
                     "--card-background-color": "hsla(0, 0%, 0%, 0.45)",
                     "--card-background-hover": "hsla(0, 0%, 100%, 0.16)",
                     "--card-note-background": "hsla(0, 0%, 0%, 0.3)",
                     "--card-divider-color": "hsla(0, 0%, 100%, 0.24)",
-                    "--card-button-color": user.accentColor
-                        ? getButtonColor(user.bannerColor, user.accentColor)
+                    "--card-button-color": accentColor
+                        ? getButtonColor(bannerColor, accentColor)
                         : "",
-                    "--card-border-color": user.bannerColor,
+                    "--card-border-color": bannerColor,
                 } as React.CSSProperties
             }
         >
@@ -253,7 +139,7 @@ export function UserProfile({
                     viewBox="0 0 600 210"
                     className={styles.banner}
                 >
-                    <mask id="card-banner-mask">
+                    <mask id={`card-banner-mask-${masksId}`}>
                         <rect
                             x="0"
                             y="0"
@@ -261,6 +147,7 @@ export function UserProfile({
                             width="100%"
                             height="100%"
                         />
+
                         <circle
                             r="70"
                             cx="86"
@@ -275,16 +162,14 @@ export function UserProfile({
                         width="100%"
                         height="100%"
                         overflow="visible"
-                        mask="url(#card-banner-mask)"
+                        mask={`url(#card-banner-mask-${masksId})`}
                     >
                         <div>
                             <div
                                 className={styles.bannerContent}
                                 style={{
-                                    backgroundColor: !user.banner ? user.bannerColor : "",
-                                    backgroundImage: user.banner
-                                        ? `url(${getCdnUrl}${user.banner}`
-                                        : "",
+                                    backgroundColor: !banner ? bannerColor : "",
+                                    backgroundImage: banner ? `url(${getCdnUrl}${banner}` : "",
                                 }}
                             />
                         </div>
@@ -298,9 +183,11 @@ export function UserProfile({
                             height="138"
                             viewBox="0 0 138 138"
                         >
+                            <Masks id={masksId} />
+
                             <mask
                                 viewBox="0 0 1 1"
-                                id="status-mask-120-2"
+                                id={`status-mask-120-2-${masksId}`}
                                 maskContentUnits="objectBoundingBox"
                             >
                                 <circle
@@ -309,6 +196,7 @@ export function UserProfile({
                                     cy="0.5"
                                     fill="white"
                                 />
+
                                 <circle
                                     fill="black"
                                     cx="0.8333333333333334"
@@ -322,14 +210,14 @@ export function UserProfile({
                                 y="0"
                                 width="120"
                                 height="120"
-                                mask="url(#status-mask-120-2)"
+                                mask={`url(#status-mask-120-2-${masksId})`}
                             >
                                 <div>
                                     <Image
                                         width={120}
                                         height={120}
                                         draggable={false}
-                                        alt={`${user.username}'s avatar`}
+                                        alt={`${username}'s avatar`}
                                         src={
                                             user.avatar
                                                 ? `${getCdnUrl}${user.avatar}`
@@ -351,7 +239,7 @@ export function UserProfile({
                                         width="24"
                                         height="24"
                                         fill={getStatusColor(user.status)}
-                                        mask={`url(#${getStatusMask(user.status)})`}
+                                        mask={`url(#${getStatusMask(user.status)}-${masksId})`}
                                     />
                                 </TooltipTrigger>
 
@@ -361,24 +249,24 @@ export function UserProfile({
                     </div>
                 </div>
 
-                {(isSameUser || user.customStatus) && (
+                {(isCurrentUser || customStatus) && (
                     <div style={{ height: 0 }}>
                         <div
-                            tabIndex={user.customStatus ? -1 : 0}
-                            role={user.customStatus ? "div" : "button"}
+                            tabIndex={customStatus ? -1 : 0}
+                            role={customStatus ? "div" : "button"}
                             className={`${styles.customStatus} ${
-                                user.customStatus ? styles.active : ""
-                            } ${!isSameUser ? styles.disabled : ""}`}
+                                customStatus ? styles.active : ""
+                            } ${!isCurrentUser ? styles.disabled : ""}`}
                             onClick={() => {
-                                if (!isSameUser) return;
-                                if (!user.customStatus) {
+                                if (!isCurrentUser) return;
+                                if (!customStatus) {
                                     triggerDialog({ type: "USER_STATUS" });
                                     setOpen(false);
                                 }
                             }}
                             onKeyDown={(e) => {
-                                if (e.key === "Enter" && !user.customStatus) {
-                                    if (!isSameUser) return;
+                                if (e.key === "Enter" && !customStatus) {
+                                    if (!isCurrentUser) return;
                                     triggerDialog({ type: "USER_STATUS" });
                                     setOpen(false);
                                 }
@@ -387,19 +275,19 @@ export function UserProfile({
                             <div>
                                 <span className={styles.statusContent}>
                                     <div>
-                                        {!user.customStatus && (
+                                        {!customStatus && (
                                             <Icon
                                                 size={18}
                                                 name="add-circle"
                                             />
                                         )}
 
-                                        <div>{user.customStatus || "Add Status"}</div>
+                                        <div>{customStatus || "Add Status"}</div>
                                     </div>
                                 </span>
                             </div>
 
-                            {isSameUser && user.customStatus && (
+                            {isCurrentUser && customStatus && (
                                 <div className={styles.statusTools}>
                                     <Tooltip>
                                         <TooltipTrigger>
@@ -421,7 +309,18 @@ export function UserProfile({
 
                                     <Tooltip>
                                         <TooltipTrigger>
-                                            <button onClick={deleteStatus}>
+                                            <button
+                                                onClick={() => {
+                                                    updateUser.send(
+                                                        { customStatus: "" },
+                                                        {
+                                                            onComplete: (data: any) => {
+                                                                if (data.user) setUser(data.user);
+                                                            },
+                                                        }
+                                                    );
+                                                }}
+                                            >
                                                 <Icon
                                                     size={16}
                                                     name="delete"
@@ -511,50 +410,66 @@ export function UserProfile({
                 </div>
 
                 <div className={styles.tools}>
-                    {!isSameUser && !isBlocked && !isFriend && !isSent && !isReceived && (
-                        <>
-                            <Tooltip>
-                                <TooltipTrigger>
-                                    <button
-                                        onClick={sendMessage}
-                                        className="button grey"
-                                    >
-                                        {loading.message ? (
-                                            <LoadingDots />
-                                        ) : (
+                    {!isCurrentUser &&
+                        !isBlocked &&
+                        !isFriend &&
+                        !hasRequested &&
+                        !wasRequested && (
+                            <>
+                                <Tooltip>
+                                    <TooltipTrigger>
+                                        <button
+                                            onClick={() => {
+                                                createChannel.send(
+                                                    { recipients: [user.id] },
+                                                    {
+                                                        onComplete: ({ channelId }) => {
+                                                            router.push(
+                                                                `/channels/me/${channelId}`
+                                                            );
+                                                            setOpen(false);
+                                                        },
+                                                    }
+                                                );
+                                            }}
+                                            className="button grey"
+                                        >
+                                            {createChannel.isLoading ? (
+                                                <LoadingDots />
+                                            ) : (
+                                                <Icon
+                                                    size={16}
+                                                    name="message"
+                                                />
+                                            )}
+                                        </button>
+                                    </TooltipTrigger>
+
+                                    <TooltipContent>Message</TooltipContent>
+                                </Tooltip>
+
+                                <button
+                                    className="button blue"
+                                    onClick={() => addFriend.send({ username })}
+                                >
+                                    {addFriend.isLoading ? (
+                                        <LoadingDots />
+                                    ) : (
+                                        <>
                                             <Icon
                                                 size={16}
-                                                name="message"
+                                                name="user-add"
                                             />
-                                        )}
-                                    </button>
-                                </TooltipTrigger>
+                                            Add Friend{" "}
+                                        </>
+                                    )}
+                                </button>
+                            </>
+                        )}
 
-                                <TooltipContent>Message</TooltipContent>
-                            </Tooltip>
-
-                            <button
-                                onClick={addFriend}
-                                className="button blue"
-                            >
-                                {loading.add ? (
-                                    <LoadingDots />
-                                ) : (
-                                    <>
-                                        <Icon
-                                            size={16}
-                                            name="user-add"
-                                        />
-                                        Add Friend{" "}
-                                    </>
-                                )}
-                            </button>
-                        </>
-                    )}
-
-                    {!isSameUser && !isBlocked && (isFriend || isSent || isReceived) && (
+                    {!isCurrentUser && !isBlocked && (isFriend || hasRequested || wasRequested) && (
                         <>
-                            {(isSent || isReceived) && (
+                            {(hasRequested || wasRequested) && (
                                 <Tooltip>
                                     <TooltipTrigger>
                                         <button
@@ -573,10 +488,20 @@ export function UserProfile({
                             )}
 
                             <button
-                                onClick={sendMessage}
+                                onClick={() => {
+                                    createChannel.send(
+                                        { recipients: [user.id] },
+                                        {
+                                            onComplete: ({ channelId }) => {
+                                                router.push(`/channels/me/${channelId}`);
+                                                setOpen(false);
+                                            },
+                                        }
+                                    );
+                                }}
                                 className="button grey"
                             >
-                                {loading.message ? (
+                                {createChannel.isLoading ? (
                                     <LoadingDots />
                                 ) : (
                                     <>
@@ -591,7 +516,7 @@ export function UserProfile({
                         </>
                     )}
 
-                    {isSameUser && (
+                    {isCurrentUser && (
                         <button
                             className="button grey"
                             onClick={() => {
@@ -612,10 +537,10 @@ export function UserProfile({
             <section className={styles.content}>
                 <header>
                     <h1>{user.displayName}</h1>
-                    <span>{user.username}</span>
+                    <span>{username}</span>
                 </header>
 
-                {isReceived && (
+                {hasRequested && (
                     <section className={styles.request}>
                         <p>
                             <strong>{user.displayName}</strong> sent you a friend request.
@@ -623,16 +548,17 @@ export function UserProfile({
 
                         <div>
                             <button
-                                onClick={addFriend}
                                 className="button blue small"
+                                onClick={() => addFriend.send({ username })}
                             >
-                                {loading.add ? <LoadingDots /> : "Accept"}
+                                {addFriend.isLoading ? <LoadingDots /> : "Accept"}
                             </button>
+
                             <button
-                                onClick={removeFriend}
                                 className="button grey small"
+                                onClick={() => removeFriend.send({ username })}
                             >
-                                {loading.remove ? <LoadingDots /> : "Ignore"}
+                                {removeFriend.isLoading ? <LoadingDots /> : "Ignore"}
                             </button>
                         </div>
                     </section>
@@ -681,9 +607,9 @@ export function UserProfile({
                                 id="section-0"
                                 aria-labelledby="about-me"
                             >
-                                {user.description && (
+                                {description && (
                                     <div className={styles.cardSection}>
-                                        <div>{user.description}</div>
+                                        <div>{description}</div>
                                     </div>
                                 )}
 
@@ -694,7 +620,7 @@ export function UserProfile({
                                             year: "numeric",
                                             month: "short",
                                             day: "numeric",
-                                        }).format(new Date(user.createdAt))}
+                                        }).format(new Date(createdAt))}
                                     </div>
                                 </div>
 
@@ -717,18 +643,8 @@ export function UserProfile({
                                             className={styles.cardInput + " scrollbar"}
                                             onInput={(e) => setNote(e.currentTarget.value)}
                                             onBlur={async () => {
-                                                if (note !== originalNote) {
-                                                    const { errors } = await sendRequest({
-                                                        query: "SET_NOTE",
-                                                        params: { userId: user.id },
-                                                        body: { note },
-                                                    });
-
-                                                    if (errors) {
-                                                        console.error(errors);
-                                                    } else {
-                                                        setOriginalNote(note);
-                                                    }
+                                                if (note !== nData) {
+                                                    updateNote.send({ userId: user.id, note });
                                                 }
                                             }}
                                         />
@@ -793,32 +709,19 @@ export function UserProfile({
     );
 }
 
-function MutualItem({ friend, guild }: { friend?: KnownUser; guild?: UserGuild }) {
-    const urls = useUrls((state) => state.guilds);
+function MutualItem({ friend, guild: initGuild }: { friend?: KnownUser; guild?: UserGuild }) {
     const { triggerDialog } = useTriggerDialog();
-    const appUser = useAuthenticatedUser();
     const { setOpen } = useDialogContext();
+    const urls = useUrls((s) => s.guilds);
     const router = useRouter();
 
-    const appGuild = useData((state) => state.guilds.find((g) => g.id === guild?.id));
-    if (guild && !appGuild) return null;
+    const guild = useData((s) => s.guilds.find((g) => g.id === initGuild?.id));
+    if (!friend && !guild) return null;
 
     let url = null;
     if (guild) {
         const guildUrl = urls.find((u) => u.guildId == guild.id);
         if (guildUrl) url = `/channels/${guild.id}/${guildUrl.channelId}`;
-    }
-
-    function hasPerm(permission: keyof typeof PERMISSIONS) {
-        if (!appGuild) return false;
-
-        return (
-            doesUserHaveGuildPermission(
-                appGuild.roles,
-                appGuild.members.find((m) => m.id === appUser.id),
-                permission
-            ) || appGuild.ownerId === appUser.id
-        );
     }
 
     return (
@@ -883,13 +786,7 @@ function MutualItem({ friend, guild }: { friend?: KnownUser; guild?: UserGuild }
             </MenuTrigger>
 
             {friend && <UserMenu user={friend} />}
-
-            {guild && (
-                <GuildMenu
-                    guild={appGuild}
-                    hasPerm={hasPerm}
-                />
-            )}
+            {guild && <GuildMenu guild={guild} />}
         </Menu>
     );
 }

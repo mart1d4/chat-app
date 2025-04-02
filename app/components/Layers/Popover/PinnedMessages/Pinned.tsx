@@ -1,38 +1,18 @@
 "use client";
 
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { type Message, type Channel } from "@/type";
-import { usePopoverContext } from "../Popover";
-import { useEffect, useState } from "react";
+import { type DMChannelWithRecipients, type GuildChannel } from "@/type";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { useFetchPinnedMessages } from "@/hooks/useFetchData";
 import { FixedMessage, Icon } from "@components";
+import { usePopoverContext } from "../Popover";
 import styles from "./Pinned.module.css";
-import { useData } from "@/store";
 
-export function Pinned({ channel }: { channel: Channel }) {
-    const [pinned, setPinned] = useState<Message[]>([]);
-
-    const user = useData((state) => state.user);
-    const { sendRequest } = useFetchHelper();
+export function Pinned({ channel }: { channel: DMChannelWithRecipients | GuildChannel }) {
+    const { data: pinned } = useFetchPinnedMessages(channel.id);
     const { setOpen } = usePopoverContext();
+    const user = useAuthenticatedUser();
 
-    useEffect(() => {
-        async function fetchPinned() {
-            const { errors, data } = await sendRequest({
-                query: "CHANNEL_PINNED_MESSAGES",
-                params: {
-                    channelId: channel.id,
-                },
-            });
-
-            if (data) {
-                setPinned(data);
-            } else {
-                console.error(errors);
-            }
-        }
-
-        fetchPinned();
-    }, []);
+    const friend = channel.type === 0 && channel.recipients.find((r) => r.id !== user.id);
 
     return (
         <div
@@ -82,9 +62,8 @@ export function Pinned({ channel }: { channel: Channel }) {
 
                         <div>
                             {channel.type === 0 &&
-                                `You and ${
-                                    channel.recipients.find((r) => r.id !== user?.id)?.displayName
-                                } can pin a message from its cog menu.`}
+                                friend &&
+                                `You and ${friend.displayName} can pin a message from its cog menu.`}
 
                             {channel.type === 1 &&
                                 "Any group member can pin a message from its cog menu."}

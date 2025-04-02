@@ -2,14 +2,13 @@
 
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import type { ChannelInvite, ResponseMessage } from "@/type";
-import useFetchHelper from "@/hooks/useFetchHelper";
+import { useRequests } from "@/hooks/useRequests";
 import { Icon, LoadingDots } from "@components";
-import { getRandomImage } from "@/lib/utils";
 import { getCdnUrl } from "@/lib/uploadthing";
+import { getRandomImage } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import styles from "./Invite.module.css";
 import { useData } from "@/store";
-import { useState } from "react";
 
 export function MessageInvite({
     invite,
@@ -18,55 +17,32 @@ export function MessageInvite({
     invite: ChannelInvite | { error: true; code: string; inviterId: number };
     message: ResponseMessage;
 }) {
-    const [loading, setLoading] = useState(false);
-
-    const { sendRequest } = useFetchHelper();
+    const { acceptInvite } = useRequests();
     const user = useAuthenticatedUser();
-    const { addGuild } = useData();
     const router = useRouter();
 
     const isLocal = "error" in invite;
 
-    const inChannel = isLocal
-        ? null
-        : useData((state) => state.channels).find((c) => c.id == invite.channel.id);
+    const inChannel = !isLocal
+        ? useData((state) => state.channels).find((c) => c.id == invite.channel.id)
+        : null;
 
-    const inGuild = isLocal
-        ? null
-        : useData((state) => state.guilds).find((g) => g.id == invite.guild?.id);
+    const inGuild = !isLocal
+        ? useData((state) => state.guilds).find((g) => g.id == invite.guild?.id)
+        : null;
 
     async function handleAcceptInvite() {
-        if (loading || isLocal) return;
-        setLoading(true);
-
-        if (inChannel || inGuild) {
+        if ((inChannel || inGuild) && !isLocal) {
             let url = `/channels/${invite.guild?.id}/${invite.channel.id}`;
 
             if (inChannel) {
                 url = `/channels/me/${invite.channel.id}`;
             }
 
-            router.push(url);
-            setLoading(false);
-            return;
+            return router.push(url);
         }
 
-        try {
-            const { errors } = await sendRequest({
-                query: "ACCEPT_INVITE",
-                params: {
-                    inviteId: invite.code,
-                },
-            });
-
-            if (errors) {
-                console.error("Failed to accept invite");
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading(false);
+        acceptInvite.send({ inviteId: invite.code });
     }
 
     if (isLocal) {
@@ -99,7 +75,7 @@ export function MessageInvite({
                     {!isSender && (
                         <button
                             className="button blue"
-                            onClick={() => setMention(message.author.id)}
+                            // onClick={() => setMention(message.author.id)}
                         >
                             Mention
                         </button>
@@ -186,7 +162,13 @@ export function MessageInvite({
                     className="button green"
                     onClick={handleAcceptInvite}
                 >
-                    {loading ? <LoadingDots /> : inGuild || inChannel ? "Joined" : "Join"}
+                    {acceptInvite.isLoading ? (
+                        <LoadingDots />
+                    ) : inGuild || inChannel ? (
+                        "Joined"
+                    ) : (
+                        "Join"
+                    )}
                 </button>
             </div>
         </div>

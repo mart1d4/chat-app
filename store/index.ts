@@ -1,8 +1,141 @@
 import { persist, createJSONStorage } from "zustand/middleware";
-import { create } from "zustand";
-import { nanoid } from "nanoid";
 import { mostUsedEmojiCodes } from "@/lib/emojis";
 export { useData } from "./data";
+import { create } from "zustand";
+import { nanoid } from "nanoid";
+
+type ActiveVoiceState = {
+    rooms: {
+        channelId: number;
+        guildId: number | null;
+        participants: number[];
+        started: number;
+        startedBy: number;
+        hasJoined: number | null;
+        haveDismissed: number[];
+    }[];
+    setRooms: (rooms: ActiveVoiceState["rooms"]) => void;
+    addRoom: (room: ActiveVoiceState["rooms"][0]) => void;
+    removeRoom: (channelId: number) => void;
+    addParticipant: (channelId: number, userId: number) => void;
+    removeParticipant: (channelId: number, userId: number) => void;
+    setHasJoined: (channelId: number, hasJoined: number) => void;
+    addDismissed: (channelId: number, userId: number) => void;
+};
+
+export const useActiveVoice = create<ActiveVoiceState>()((set) => ({
+    rooms: [],
+    setRooms: (rooms) => set(() => ({ rooms })),
+    addRoom: (room) =>
+        set((state) => {
+            if (state.rooms.find((r) => r.channelId === room.channelId)) {
+                return {
+                    rooms: state.rooms.map((r) => {
+                        if (r.channelId === room.channelId) {
+                            return room;
+                        }
+
+                        return r;
+                    }),
+                };
+            } else {
+                return {
+                    rooms: [...state.rooms, room],
+                };
+            }
+        }),
+
+    removeRoom: (channelId) =>
+        set((state) => ({
+            rooms: state.rooms.filter((r) => r.channelId !== channelId),
+        })),
+
+    addParticipant: (channelId, userId) =>
+        set((state) => {
+            return {
+                rooms: state.rooms.map((r) => {
+                    if (r.channelId === channelId) {
+                        return { ...r, participants: [...r.participants, userId] };
+                    }
+
+                    return r;
+                }),
+            };
+        }),
+
+    removeParticipant: (channelId, userId) =>
+        set((state) => {
+            return {
+                rooms: state.rooms
+                    .map((r) => {
+                        if (r.channelId === channelId) {
+                            return {
+                                ...r,
+                                participants: r.participants.filter((p) => p !== userId),
+                            };
+                        }
+
+                        return r;
+                    })
+                    .filter((r) => r.participants.length > 0),
+            };
+        }),
+
+    setHasJoined: (channelId, hasJoined) =>
+        set((state) => {
+            return {
+                rooms: state.rooms.map((r) => {
+                    if (r.channelId === channelId) {
+                        return { ...r, hasJoined };
+                    }
+
+                    return r;
+                }),
+            };
+        }),
+
+    addDismissed: (channelId, userId) =>
+        set((state) => {
+            return {
+                rooms: state.rooms.map((r) => {
+                    if (r.channelId === channelId) {
+                        return { ...r, haveDismissed: [...r.haveDismissed, userId] };
+                    }
+
+                    return r;
+                }),
+            };
+        }),
+}));
+
+type VoiceState = {
+    channelId: number | null;
+    setChannelId: (channelId: number | null) => void;
+};
+
+export const useVoice = create<VoiceState>((set) => ({
+    channelId: null,
+    setChannelId: (channelId) => set(() => ({ channelId })),
+}));
+
+type TriggerAlertType = {
+    alert: null | {
+        type: "error" | "success" | "info";
+        message: string;
+    };
+    triggerAlert: (type: "error" | "success" | "info", message: string) => void;
+};
+
+export const useTriggerAlert = create<TriggerAlertType>((set) => ({
+    alert: null,
+    triggerAlert: (type, message) => {
+        set(() => ({ alert: { type, message } }));
+
+        setTimeout(() => {
+            set(() => ({ alert: null }));
+        }, 7500);
+    },
+}));
 
 type DialogOpenType = {
     id: string;
@@ -312,6 +445,7 @@ interface WindowSettingsState {
 export const useWindowSettings = create<WindowSettingsState>()((set) => ({
     widthThresholds: {
         1200: false,
+        1024: false,
         767: false,
         562: false,
     },
@@ -324,7 +458,9 @@ export const useWindowSettings = create<WindowSettingsState>()((set) => ({
                 [key]: val,
             },
         })),
-    setShiftKeyDown: (val) => set(() => ({ shiftKeyDown: val })),
+
+    setShiftKeyDown: (val) =>
+        set((state) => (state.shiftKeyDown !== val ? { shiftKeyDown: val } : state)),
 }));
 
 interface CollapsedCategoriesState {

@@ -1,9 +1,9 @@
 .disclaimer {
     width: 100%;
     padding: 4px 12px;
-    background-color: var(--error-1);
+    background-color: var(--danger-0);
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     display: flex;
     font-size: 14px;
     line-height: 24px;
@@ -14,7 +14,7 @@
 }
 
 .disclaimer a {
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-weight: 700;
 }
 

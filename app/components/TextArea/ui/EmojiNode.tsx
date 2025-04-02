@@ -32,7 +32,8 @@ export class EmojiNode extends TextNode {
     createDOM(config: EditorConfig): HTMLElement {
         const dom = document.createElement("img");
         dom.className = this.getClassName(); // Apply the class name
-        dom.src = `/assets/emojis/${this.__emoji}.svg`; // Use emoji image
+        const hex = this.__emoji.replace(/:/g, ""); // Remove colons
+        dom.src = `/assets/emojis/${hex}.svg`; // Use emoji image
         dom.alt = this.__emoji; // Set the alt text
         return dom;
     }

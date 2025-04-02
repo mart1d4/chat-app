@@ -131,15 +131,15 @@
     padding: 6px;
     border-radius: 5px;
     overflow: hidden;
-    color: var(--foreground-3);
-    background-color: var(--background-4);
+    color: var(--fg-3);
+    background-color: var(--bg-4);
     z-index: 2;
     cursor: pointer;
 }
 
 .deleteImage:hover {
-    color: var(--foreground-1);
-    background-color: var(--error-1);
+    color: var(--fg-1);
+    background-color: var(--danger-0);
 }
 
 .deleteImage > svg {
@@ -169,13 +169,13 @@
     flex-direction: column;
     justify-content: center;
     text-transform: uppercase;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     transform: translate(-50%, -50%);
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .attachment:hover .spoilerButton {
-    background-color: var(--background-dark-2);
+    background-color: hsl(0, 0%, 0%, 0.9);
 }
 
 .imageAlt {
@@ -188,7 +188,7 @@
     line-height: 18px;
     border-radius: 4px;
     position: absolute;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     background-color: rgba(0, 0, 0, 0.6);
 }
 
@@ -203,8 +203,8 @@
     max-width: 100%;
     border-radius: 8px;
     align-items: center;
-    border: 1px solid var(--background-2);
-    background-color: var(--background-3);
+    border: 1px solid var(--bg-1);
+    background-color: var(--bg-2);
 }
 
 .nonVisualAttachment {
@@ -231,7 +231,7 @@
 
 .nonVisualAttachment header > div > a {
     text-decoration: none;
-    color: var(--accent-light);
+    color: var(--accent-fg);
 }
 
 .nonVisualAttachment header > div > a:hover {
@@ -259,8 +259,8 @@
     overflow: hidden;
     min-height: 118px;
     border-radius: 8px 8px 0 0;
-    background-color: var(--background-3);
-    border: 1px solid var(--background-2);
+    background-color: var(--bg-2);
+    border: 1px solid var(--bg-1);
 }
 
 .text > .content > pre {
@@ -286,8 +286,8 @@
     align-items: center;
     justify-content: flex-end;
     border-radius: 0 0 8px 8px;
-    border: 1px solid var(--background-2);
-    background-color: var(--background-3);
+    border: 1px solid var(--bg-1);
+    background-color: var(--bg-2);
 }
 
 .tools > * {
@@ -302,7 +302,7 @@
 }
 
 .tools > button:hover {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .tools > :first-child {
@@ -310,12 +310,12 @@
     font-size: 14px;
     user-select: none;
     padding-right: 10px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .tools > :nth-child(2) {
     padding: 4px 10px 0 0;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .tools > div {
@@ -330,7 +330,7 @@
     text-align: right;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .tools > span:last-of-type {
@@ -339,12 +339,12 @@
     font-size: 14px;
     margin-left: 2px;
     text-align: right;
-    color: var(--foreground-5);
+    color: var(--fg-5);
 }
 
 .tools > span:hover {
     opacity: 1;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .tools > a {
@@ -352,18 +352,18 @@
     height: 28px;
     cursor: pointer;
     margin-left: 4px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .tools > a:hover {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .tools > :last-child {
     width: 28px;
     height: 28px;
     margin-left: 4px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .textModal > div::-webkit-scrollbar {
@@ -372,7 +372,7 @@
 
 .textModal > div::-webkit-scrollbar-track {
     border-color: transparent;
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
 }
 
 .textModal > :first-child {
@@ -380,9 +380,9 @@
     overflow: auto;
     min-height: 400px;
     border-radius: 8px 8px 0 0;
+    border: 1px solid var(--bg-1);
+    background-color: var(--bg-2);
     max-height: calc(var(--dvh) - 120px);
-    border: 1px solid var(--background-2);
-    background-color: var(--background-3);
     min-width: min(800px, calc(var(--dvw) - 32px));
     max-width: min(960px, calc(var(--dvw) - 32px));
 }
@@ -396,8 +396,8 @@
     overflow: hidden;
     position: absolute;
     border-radius: 5px;
-    background-color: var(--background-4);
-    outline: 1px solid var(--background-2);
+    background-color: var(--bg-4);
+    outline: 1px solid var(--bg-2);
 }
 
 .actions > button {
@@ -406,17 +406,17 @@
     cursor: pointer;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
 }
 
 .actions > button:hover {
-    background-color: var(--background-3);
+    background-color: var(--bg-2);
 }
 
 .actions > .delete:hover {
-    color: var(--foreground-1);
-    background-color: var(--error-1);
+    color: var(--fg-1);
+    background-color: var(--danger-0);
 }
 
 .nonVisualAttachment:hover:not(:has(.volumeContainer:hover)) > .actions {

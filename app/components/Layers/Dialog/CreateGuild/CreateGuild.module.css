@@ -6,9 +6,9 @@
     min-height: 200px;
     border-radius: 4px;
     position: relative;
+    background-color: var(--bg-3);
     box-shadow: var(--elevation-high);
     transition: height 0.2s ease-in-out;
-    background-color: var(--background-4);
     animation: popIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -72,7 +72,7 @@
     font-size: 24px;
     font-weight: 700;
     line-height: 1.25;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-family: var(--font-display);
 }
 
@@ -80,7 +80,7 @@
     font-size: 16px;
     margin-top: 8px;
     line-height: 1.25;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .header > button {
@@ -96,7 +96,7 @@
     border-radius: 3px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     background-color: transparent;
     transition: opacity 0.15s ease-in-out;
 }
@@ -110,8 +110,8 @@
     padding: 16px;
     display: flex;
     align-items: center;
+    background-color: var(--bg-2);
     justify-content: space-between;
-    background-color: var(--background-3);
 }
 
 .footer.centered {
@@ -124,7 +124,7 @@
     line-height: 1.2;
     font-weight: 600;
     margin-bottom: 8px;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-family: var(--font-display);
 }
 
@@ -145,7 +145,7 @@
     border-radius: 8px;
     align-items: center;
     background-color: transparent;
-    border: 1px solid var(--background-6);
+    border: 1px solid var(--bg-4);
 }
 
 .type:last-of-type {
@@ -153,18 +153,19 @@
 }
 
 .type.discover {
+    text-decoration: none;
     border-color: transparent;
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
 }
 
 .type:hover,
 .type:focus-visible {
-    background-color: var(--background-5);
+    background-color: var(--bg-4);
 }
 
 .type.discover:hover,
 .type.discover:focus-visible {
-    background-color: var(--background-3);
+    background-color: var(--bg-4);
 }
 
 .type > img {
@@ -178,12 +179,12 @@
     font-weight: 700;
     line-height: 1.25;
     text-overflow: ellipsis;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .type > svg {
     margin: 0 16px 0 auto;
-    color: var(--foreground-5);
+    color: var(--fg-5);
 }
 
 .type > div > h2 {
@@ -193,7 +194,7 @@
     overflow: hidden;
     line-height: 1.25;
     text-overflow: ellipsis;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     font-family: var(--font-display);
 }
 
@@ -202,7 +203,7 @@
     overflow: hidden;
     line-height: 1.33;
     text-overflow: ellipsis;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .type + p {
@@ -211,7 +212,7 @@
     line-height: 1.33;
     margin: 16px 0 8px 0;
     text-transform: uppercase;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .type + span {
@@ -227,7 +228,7 @@
 .type + span > a {
     cursor: pointer;
     text-decoration: none;
-    color: var(--accent-light);
+    color: var(--accent-fg);
 }
 
 .type + span > a:hover,
@@ -246,7 +247,7 @@
     margin-bottom: 8px;
     letter-spacing: 0.02rem;
     text-transform: uppercase;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .invite > ul {
@@ -257,7 +258,7 @@
 .invite > ul > li {
     font-size: 14px;
     line-height: 18px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .invite > ul > li > button {
@@ -302,13 +303,13 @@
     margin-top: 8px;
     line-height: 1.33;
     padding-bottom: 4px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .customize > form > p > a {
     cursor: pointer;
     text-decoration: none;
-    color: var(--accent-light);
+    color: var(--accent-fg);
 }
 
 .customize > form > p > a:hover,

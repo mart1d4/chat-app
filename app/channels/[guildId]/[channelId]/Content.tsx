@@ -1,17 +1,15 @@
 "use client";
 
-import { useRef, useEffect, useMemo, type RefObject, useState, useLayoutEffect } from "react";
 import type { GuildChannel, GuildMember, ResponseMessage, UserGuild } from "@/type";
+import { useRef, useEffect, useMemo, useState, useLayoutEffect } from "react";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import { useData, useShowSettings, useUrls } from "@/store";
 import { isInline, isLarge, isNewDay } from "@/lib/message";
-import { useIntersection } from "@/hooks/useIntersection";
-import type { SWRInfiniteKeyLoader } from "swr/infinite";
 import { useNotifications } from "@/store/notifications";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useFetchMessages } from "@/hooks/useFetchData";
 import { useSocket } from "@/store/socket";
 import styles from "./Channels.module.css";
-import useSWRInfinite from "swr/infinite";
-import fetchHelper from "@/hooks/useSwr";
 import { getDayDate } from "@/lib/time";
 import Link from "next/link";
 import {
@@ -29,47 +27,29 @@ import {
 const LIMIT = 50;
 
 export default function Content({ guildId, channelId }: { guildId: number; channelId: number }) {
-    const getKey: SWRInfiniteKeyLoader = (_, previousData) => {
-        const baseUrl = `/channels/${channelId}/messages?limit=`;
-
-        if (previousData) {
-            if (previousData.length < LIMIT) {
-                return null;
-            }
-
-            const last = previousData[previousData.length - 1];
-            return `${baseUrl}${LIMIT}&before=${last.createdAt}`;
-        }
-
-        return `${baseUrl}${LIMIT}`;
-    };
-
-    const { data, isLoading, mutate, size, setSize } = useSWRInfinite<ResponseMessage[], Error>(
-        getKey,
-        fetchHelper().request,
-        {
-            errorRetryCount: 0,
-            revalidateIfStale: true,
-            revalidateOnFocus: false,
-            revalidateOnReconnect: true,
-        }
-    );
-
+    const { data, isLoading, mutate, size, setSize } = useFetchMessages(channelId, LIMIT);
     const [isAtBottom, setIsAtBottom] = useState(true);
 
     const messages = useMemo(() => (data ? data.flat().reverse() : []), [data]);
     const hasMore = useMemo(() => (data ? data[data.length - 1].length === LIMIT : false), [data]);
 
-    const skeletonEl = useRef<HTMLDivElement>(null);
     const scrollEl = useRef<HTMLDivElement>(null);
     const spacerEl = useRef<HTMLDivElement>(null);
 
     const guild = useData((state) => state.guilds).find((g) => g.id === guildId) as UserGuild;
-    const shouldLoad = useIntersection(skeletonEl as RefObject<HTMLDivElement>, -200);
     const setGuildUrl = useUrls((state) => state.setGuild);
     const { removeNotification } = useNotifications();
     const { socket } = useSocket();
     const members = guild.members;
+
+    const [skeletonEl, entry] = useIntersectionObserver({
+        root: null,
+        threshold: 0.1,
+        rootMargin: "0px",
+    });
+
+    // @ts-ignore - Works
+    const shouldLoad = entry?.isIntersecting;
 
     const channel = {
         ...(guild.channels?.find((c) => c.id === channelId) as GuildChannel),
@@ -86,38 +66,153 @@ export default function Content({ guildId, channelId }: { guildId: number; chann
         const chan = socket.subscribe(`private-channel-${channelId}-receive`);
         const userId = Number(socket.user.user_data?.id);
 
-        chan.bind("message-received", ({ message }: { message: ResponseMessage }) => {
-            if (message.author.id === userId && !isInline(message.type)) return;
+        chan.bind(
+            "message-received",
+            ({
+                message,
+                senderShouldReceive,
+            }: {
+                message: ResponseMessage;
+                senderShouldReceive?: boolean;
+            }) => {
+                if (
+                    message.author.id === userId &&
+                    !isInline(message.type) &&
+                    !senderShouldReceive
+                ) {
+                    return;
+                }
 
-            mutate(
-                (prev: any) => {
-                    if (prev.some((a) => a.some((m) => m.id === message.id))) {
-                        return prev;
-                    }
+                handleUpdateMessages("add", message.id, message);
+            }
+        );
 
-                    if (!prev || prev.length === 0) {
-                        return [[message]];
-                    }
+        chan.bind(
+            "message-edited",
+            ({ messageId, updates }: { messageId: number; updates: Partial<ResponseMessage> }) => {
+                console.log("Message Edited: ", messageId, updates);
+                handleUpdateMessages("update", messageId, updates);
+            }
+        );
 
-                    return [[message, ...prev[0]], ...prev.slice(1)];
-                },
-                { revalidate: false }
-            );
-        });
+        chan.bind(
+            "message-reaction-added",
+            ({
+                messageId,
+                reactorId,
+                reaction,
+            }: {
+                messageId: number;
+                reactorId: number;
+                reaction: {
+                    id: number | null;
+                    name: string;
+                    count: number;
+                };
+            }) => {
+                mutate(
+                    (prev) => {
+                        return prev?.map((a) =>
+                            a.map((m) => {
+                                if (m.id === messageId) {
+                                    const existing = m.reactions.find((r) =>
+                                        !reaction.id
+                                            ? r.name === reaction.name
+                                            : r.id === reaction.id
+                                    );
 
-        chan.bind("message-edited", ({ message }: { message: ResponseMessage }) => {
-            if (message.author.id === userId) return;
+                                    return {
+                                        ...m,
+                                        reactions: !existing
+                                            ? [
+                                                  ...m.reactions,
+                                                  {
+                                                      ...reaction,
+                                                      me: reactorId === userId,
+                                                  },
+                                              ]
+                                            : m.reactions.map((r) => {
+                                                  const isSame = !reaction.id
+                                                      ? r.name === reaction.name
+                                                      : r.id === reaction.id;
 
-            mutate(
-                (prev: any) => {
-                    if (!prev || prev.length === 0) {
-                        return [[message]];
-                    }
+                                                  return isSame
+                                                      ? {
+                                                            ...r,
+                                                            count: r.count + 1,
+                                                            me: existing.me || reactorId === userId,
+                                                        }
+                                                      : r;
+                                              }),
+                                    };
+                                }
 
-                    return prev.map((a) => a.map((m) => (m.id === message.id ? message : m)));
-                },
-                { revalidate: false }
-            );
+                                return m;
+                            })
+                        );
+                    },
+                    { revalidate: false }
+                );
+            }
+        );
+
+        chan.bind(
+            "message-reaction-removed",
+            ({
+                messageId,
+                reactorId,
+                reaction,
+            }: {
+                messageId: number;
+                reactorId: number;
+                reaction: string;
+            }) => {
+                mutate(
+                    (prev) => {
+                        return prev?.map((a) =>
+                            a.map((m) => {
+                                if (m.id === messageId) {
+                                    const existing = m.reactions.find((r) => {
+                                        if (typeof reaction === "string") {
+                                            return r.name === reaction;
+                                        }
+
+                                        return r.id === reaction;
+                                    });
+
+                                    return {
+                                        ...m,
+                                        reactions:
+                                            existing?.count === 1
+                                                ? m.reactions.filter((r) => r !== existing)
+                                                : m.reactions.map((r) => {
+                                                      const isSame =
+                                                          typeof reaction === "string"
+                                                              ? r.name === reaction
+                                                              : r.id === reaction;
+
+                                                      return isSame
+                                                          ? {
+                                                                ...r,
+                                                                count: r.count - 1,
+                                                                me: r.me && reactorId !== userId,
+                                                            }
+                                                          : r;
+                                                  }),
+                                    };
+                                }
+
+                                return m;
+                            })
+                        );
+                    },
+                    { revalidate: false }
+                );
+            }
+        );
+
+        chan.bind("message-deleted", ({ messageId }: { messageId: number }) => {
+            handleUpdateMessages("delete", messageId);
         });
 
         return () => {
@@ -139,7 +234,7 @@ export default function Content({ guildId, channelId }: { guildId: number; chann
         const container = scrollEl.current;
         if (!container) return;
 
-        removeNotification(channel.id, guild.id);
+        // removeNotification(channel.id, guild.id);
         container.scrollTop = container.scrollHeight;
     };
 
@@ -191,40 +286,35 @@ export default function Content({ guildId, channelId }: { guildId: number; chann
     function handleUpdateMessages(
         type: "add" | "update" | "delete",
         id: number,
-        message?: Partial<ResponseMessage>
+        message?: Partial<ResponseMessage> | ResponseMessage,
+        fullyReplace?: boolean
     ) {
         if (type === "add") {
             mutate(
                 (prev: any) => {
-                    if (!prev || prev.length === 0) {
-                        return [[message]];
-                    }
-
-                    // Add the message to the beginning of the first inner array
+                    if (!prev || prev.length === 0) return [[message]];
                     return [[message, ...prev[0]], ...prev.slice(1)];
                 },
                 { revalidate: false }
             );
-        } else if (type === "update") {
+        } else if (type === "update" && message) {
             mutate(
-                (prev: any) => {
-                    // Find the message and update it
-                    if (!prev || prev.length === 0) {
-                        return [[message]];
-                    }
-
-                    return prev.map((a) => a.map((m) => (m.id === id ? message : m)));
-                },
+                (prev) =>
+                    prev?.map((a) =>
+                        a.map((m) =>
+                            m.id === id
+                                ? fullyReplace
+                                    ? (message as ResponseMessage)
+                                    : { ...m, ...message }
+                                : m
+                        )
+                    ),
                 { revalidate: false }
             );
         } else if (type === "delete") {
-            mutate(
-                (prev: any) => {
-                    // Find the message and remove it
-                    return prev.map((a) => a.filter((m) => m.id !== id));
-                },
-                { revalidate: false }
-            );
+            mutate((prev) => prev?.map((a) => a.filter((m) => m.id !== id)), {
+                revalidate: false,
+            });
         }
     }
 
@@ -311,7 +401,7 @@ export function FirstMessage({
     canInvite: boolean;
     canManageGuild: boolean;
 }) {
-    const setShowSettings = useShowSettings((s) => s.setShowSettings);
+    const { setShowSettings } = useShowSettings();
 
     const content = [
         {

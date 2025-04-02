@@ -1,17 +1,20 @@
 "use client";
 
 import { MenuContent, MenuDivider, MenuTrigger, MenuItem, Menu } from "@components";
-import { useData, useMention, useTriggerDialog } from "@/store";
+import { useData, useMention, useTriggerAlert, useTriggerDialog, useVoice } from "@/store";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { useRelationships } from "@/hooks/useRelationships";
 import { getDateUntilEnd, isStillMuted } from "@/lib/mute";
+import { usePopoverContext } from "../../Popover/Popover";
+import { useNotifications } from "@/store/notifications";
 import { useChannelSettings } from "@/store/settings";
-import useRequestHelper from "@/hooks/useFetchHelper";
+import { useRequests } from "@/hooks/useRequests";
+import { useCallback, useContext, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
 import { useMenuContext } from "../Menu";
 import styles from "../Menu.module.css";
-import type { User } from "@/type";
-import { useNotifications } from "@/store/notifications";
+import type { GuildChannel, User } from "@/type";
+import { isChannelPrivate } from "@/lib/permissions";
 
 export function UserMenu({
     user,
@@ -30,26 +33,29 @@ export function UserMenu({
     channelOwnerId?: number;
     channelIcon?: string;
 }) {
-    const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
-
+    const { removeChannelRecipient: removeChannelR, guilds, channels, updateGuild } = useData();
     const { muted, muteChannel, unmuteChannel } = useChannelSettings();
     const { notifications, removeNotification } = useNotifications();
+    const { channelId: voiceId, setChannelId } = useVoice();
+    const { setOpen: setPopoverOpen } = usePopoverContext();
     const { triggerDialog } = useTriggerDialog();
-    const { sendRequest } = useRequestHelper();
+    const { triggerAlert } = useTriggerAlert();
     const appUser = useAuthenticatedUser();
     const { setOpen } = useMenuContext();
     const { setMention } = useMention();
     const router = useRouter();
     const {
         removeChannelRecipient,
-        removeChannel,
-        channels,
-        received,
-        friends,
-        blocked,
-        guilds,
-        sent,
-    } = useData();
+        getGuildChannels,
+        createChannel,
+        deleteChannel,
+        updateChannel,
+        createInvite,
+        removeFriend,
+        sendMessage,
+        unblockUser,
+        addFriend,
+    } = useRequests();
 
     const {
         isMuted,
@@ -67,194 +73,54 @@ export function UserMenu({
         } else {
             return { isMuted: true, dateUntil: getDateUntilEnd(is.duration, is.started) };
         }
-    }, [muted, channelId]);
+    }, [muted]);
 
     const hasUnread = notifications.channels.find((c) => c.id === channelId)?.hasUnread || false;
 
-    const isSameUser = user?.id === appUser.id;
-    const isFriend = friends.find((friend) => friend.id === user?.id);
-    const isReceived = received.find((friend) => friend.id === user?.id);
-    const isSent = sent.find((friend) => friend.id === user?.id);
-    const isBlocked = blocked.find((friend) => friend.id === user?.id);
+    const { isCurrentUser, isFriend, hasRequested, wasRequested, isBlocked } = useRelationships(
+        user?.id
+    );
 
-    const dmWithUser = channels.find((channel) => {
-        const recipient = channel.recipients.find((r) => r.id === user?.id);
-        return recipient && channel.recipients.length === 2;
-    });
-
-    async function addFriend() {
-        if (loading.addFriend || !user?.username) return;
-        setLoading((prev) => ({ ...prev, addFriend: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "ADD_FRIEND",
-                body: { username: user.username },
-            });
-
-            if (!errors) {
-                setOpen(false);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, addFriend: false }));
+    function messageUser() {
+        if (!user?.id) return;
+        createChannel.send({ recipients: [user.id] }, { onComplete: () => setOpen(false) });
     }
 
-    async function removeFriend() {
-        if (loading.removeFriend || !user?.username) return;
-        setLoading((prev) => ({ ...prev, removeFriend: true }));
+    const callUser = useCallback(() => {
+        if (!user?.id) return;
 
-        try {
-            const { errors } = await sendRequest({
-                query: "REMOVE_FRIEND",
-                body: { username: user.username },
-            });
+        const users = [user.id, appUser.id];
 
-            if (!errors) {
-                setOpen(false);
+        const channelExists = channels.find(
+            (c) =>
+                c.type === 0 &&
+                c.recipients.every((r) => users.includes(r.id)) &&
+                c.recipients.length === 2
+        );
+
+        if (channelExists) {
+            if (channelExists.id !== voiceId) {
+                setChannelId(channelExists.id);
             }
-        } catch (error) {
-            console.error(error);
-        }
 
-        setLoading((prev) => ({ ...prev, removeFriend: false }));
-    }
-
-    async function blockUser() {
-        if (loading.blockUser || !user?.id) return;
-        setLoading((prev) => ({ ...prev, blockUser: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "BLOCK_USER",
-                params: { userId: user.id },
-            });
-
-            if (!errors) {
-                setOpen(false);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, blockUser: false }));
-    }
-
-    async function unblockUser() {
-        if (loading.unblockUser || !user?.id) return;
-        setLoading((prev) => ({ ...prev, unblockUser: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "UNBLOCK_USER",
-                params: { userId: user.id },
-            });
-
-            if (!errors) {
-                setOpen(false);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, unblockUser: false }));
-    }
-
-    async function messageUser() {
-        if (loading.message || !user?.id) return;
-
-        if (dmWithUser) {
             setOpen(false);
-            router.push(`/channels/me/${dmWithUser.id}`);
-            return;
+            router.push(`/channels/me/${channelExists.id}`);
+        } else {
+            createChannel.send(
+                { recipients: [user.id] },
+                {
+                    onComplete: (data) => {
+                        if (data.channelId !== voiceId) {
+                            setChannelId(data.channelId);
+                        }
+
+                        setOpen(false);
+                        router.push(`/channels/me/${data.channelId}`);
+                    },
+                }
+            );
         }
-
-        setLoading((prev) => ({ ...prev, message: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "CHANNEL_CREATE",
-                body: { recipients: [user.id] },
-            });
-
-            if (!errors) {
-                setOpen(false);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, message: false }));
-    }
-
-    async function closeDM() {
-        if (loading.closeDM || !dmWithUser) return;
-        setLoading((prev) => ({ ...prev, closeDM: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "CHANNEL_DELETE",
-                params: {
-                    channelId: dmWithUser.id,
-                },
-            });
-
-            if (!errors) {
-                setOpen(false);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, closeDM: false }));
-    }
-
-    async function removeFromChannel() {
-        if (loading.removeFromChannel || !channelId || !user?.id) return;
-        setLoading((prev) => ({ ...prev, removeFromChannel: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "CHANNEL_RECIPIENT_REMOVE",
-                params: {
-                    channelId,
-                    recipientId: user.id,
-                },
-            });
-
-            if (!errors) {
-                setOpen(false);
-                removeChannelRecipient(channelId, user.id);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, removeFromChannel: false }));
-    }
-
-    async function removeChannelIcon() {
-        if (loading.removeChannelIcon || !channelId) return;
-        setLoading((prev) => ({ ...prev, removeChannelIcon: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "CHANNEL_UPDATE",
-                params: { channelId },
-                body: { icon: null },
-            });
-
-            if (!errors) {
-                setOpen(false);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, removeChannelIcon: false }));
-    }
+    }, [channels, user, appUser, voiceId]);
 
     function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
         if (event.target.files && event.target.files[0]) {
@@ -280,11 +146,129 @@ export function UserMenu({
         }
     }
 
+    function fetchGuildChannels(guildId: number) {
+        const guild = guilds.find((g) => g.id === guildId);
+
+        if (guild && guild.channels.length === 0) {
+            getGuildChannels.send(
+                { guildId },
+                {
+                    onComplete: (data: { channels: GuildChannel[] }) => {
+                        console.log("Received data: ", data);
+
+                        if (data.channels) {
+                            const everyoneRole = guild.roles.find(
+                                (role) => role.name === "@everyone"
+                            )?.id;
+
+                            const channels = data.channels
+                                .map((channel) => {
+                                    const overwrites = channel.permissionOverwrites || [];
+
+                                    const newOverwrites = overwrites.map(
+                                        (o: { allow: string; deny: string }) => ({
+                                            ...o,
+                                            allow: BigInt(o.allow),
+                                            deny: BigInt(o.deny),
+                                        })
+                                    );
+
+                                    const isPrivate = everyoneRole
+                                        ? isChannelPrivate(
+                                              channel.permissionOverwrites,
+                                              everyoneRole
+                                          )
+                                        : false;
+
+                                    return {
+                                        ...channel,
+                                        permissionOverwrites: newOverwrites,
+                                        isPrivate,
+                                    };
+                                })
+                                .sort((a, b) => a.position - b.position);
+
+                            updateGuild(guild.id, { channels });
+                        }
+                    },
+                }
+            );
+        }
+    }
+
+    function inviteToGuild(guildId: number) {
+        const guild = guilds.find((g) => g.id === guildId);
+        if (!guild) return;
+
+        const inviteChannel =
+            guild.channels.find((c) => c.id === guild.systemChannelId) ||
+            guild.channels.find((c) => c.type === 2) ||
+            guild.channels.find((c) => c.type === 3);
+
+        if (!inviteChannel) {
+            return triggerAlert("info", "No channel found to send the invite to.");
+        }
+
+        createInvite.send(
+            {
+                channelId: inviteChannel.id,
+                body: {
+                    maxUses: 100,
+                    maxAge: 86400,
+                    temporary: false,
+                },
+            },
+            {
+                onComplete: (data) => {
+                    if (data.invite.code) {
+                        const sameChannel = channels.find((c) => {
+                            return (
+                                c.type === 0 &&
+                                c.recipients.every((r) => [appUser.id, user.id].includes(r.id))
+                            );
+                        });
+
+                        let channelId = sameChannel?.id;
+                        if (!channelId) {
+                            createChannel.send(
+                                { recipients: [user.id] },
+                                { onComplete: (data) => (channelId = data.channelId) }
+                            );
+                        }
+
+                        if (!channelId) return;
+
+                        sendMessage.send({
+                            channelId,
+                            message: { content: `${window.location.origin}/${data.invite.code}` },
+                            senderShouldReceive: true,
+                        });
+                    }
+                },
+            }
+        );
+    }
+
     if (type === "small") {
         return (
             <MenuContent>
-                <MenuItem>Start Video Call</MenuItem>
-                <MenuItem>Start Voice Call</MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        setOpen(false);
+                        callUser();
+                    }}
+                >
+                    Start Video Call
+                </MenuItem>
+
+                <MenuItem
+                    onClick={() => {
+                        setOpen(false);
+                        callUser();
+                    }}
+                >
+                    Start Voice Call
+                </MenuItem>
 
                 <MenuItem
                     danger
@@ -322,10 +306,15 @@ export function UserMenu({
                     <MenuItem
                         onClick={() => {
                             setOpen(false);
+
                             triggerDialog({
                                 type: "USER_PROFILE",
                                 data: { user },
                             });
+
+                            if (setPopoverOpen) {
+                                setPopoverOpen(false);
+                            }
                         }}
                     >
                         View Full Profile
@@ -348,7 +337,15 @@ export function UserMenu({
 
                         <MenuContent>
                             {guilds.map((guild) => (
-                                <MenuItem key={guild.id}>
+                                <MenuItem
+                                    key={guild.id}
+                                    onClick={() => inviteToGuild(guild.id)}
+                                    onFocus={() => fetchGuildChannels(guild.id)}
+                                    onMouseEnter={() => fetchGuildChannels(guild.id)}
+                                    disabled={
+                                        !guilds.find((g) => g.id === guild.id)?.channels?.length
+                                    }
+                                >
                                     <p>{guild.name}</p>
                                 </MenuItem>
                             ))}
@@ -361,7 +358,7 @@ export function UserMenu({
                 {isBlocked ? (
                     <MenuItem
                         danger
-                        onClick={unblockUser}
+                        onClick={() => unblockUser.send({ userId: user.id })}
                     >
                         Unblock
                     </MenuItem>
@@ -392,7 +389,7 @@ export function UserMenu({
         );
     }
 
-    if (type === "author" && isSameUser) {
+    if (type === "author" && isCurrentUser) {
         return (
             <MenuContent>
                 {channelType === 0 && (
@@ -409,10 +406,15 @@ export function UserMenu({
                 <MenuItem
                     onClick={() => {
                         setOpen(false);
+
                         triggerDialog({
                             type: "USER_PROFILE",
                             data: { user },
                         });
+
+                        if (setPopoverOpen) {
+                            setPopoverOpen(false);
+                        }
                     }}
                 >
                     Profile
@@ -422,7 +424,15 @@ export function UserMenu({
                     <MenuItem onClick={() => setMention(user.id)}>Mention</MenuItem>
                 )}
 
-                {channelType === 0 && <MenuItem onClick={closeDM}>Close DM</MenuItem>}
+                {channelType === 0 && (
+                    <MenuItem
+                        onClick={() => {
+                            deleteChannel.send({ channelId }, { onComplete: () => setOpen(false) });
+                        }}
+                    >
+                        Close DM
+                    </MenuItem>
+                )}
 
                 <MenuDivider />
 
@@ -476,7 +486,13 @@ export function UserMenu({
                     />
                 </MenuItem>
 
-                {channelIcon && <MenuItem onClick={removeChannelIcon}>Remove Icon</MenuItem>}
+                {channelIcon && (
+                    <MenuItem
+                        onClick={() => updateChannel.send({ channelId, body: { icon: null } })}
+                    >
+                        Remove Icon
+                    </MenuItem>
+                )}
 
                 <MenuDivider />
 
@@ -605,8 +621,11 @@ export function UserMenu({
             )}
 
             <MenuItem
-                onClick={messageUser}
                 disabled={!!isBlocked}
+                onClick={() => {
+                    setOpen(false);
+                    callUser();
+                }}
             >
                 Call
             </MenuItem>
@@ -626,7 +645,13 @@ export function UserMenu({
             {isFriend && <MenuItem>Add Friend Nickname</MenuItem>}
 
             {((type === "author" && channelType === 0) || type === "channel") && (
-                <MenuItem onClick={closeDM}>Close DM</MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        deleteChannel.send({ channelId }, { onComplete: () => setOpen(false) });
+                    }}
+                >
+                    Close DM
+                </MenuItem>
             )}
 
             {channelOwnerId === appUser.id && (
@@ -635,7 +660,17 @@ export function UserMenu({
 
                     <MenuItem
                         danger
-                        onClick={removeFromChannel}
+                        onClick={() => {
+                            removeChannelRecipient.send(
+                                { channelId, recipientId: user.id },
+                                {
+                                    onComplete: () => {
+                                        removeChannelR(channelId as number, user.id);
+                                        setOpen(false);
+                                    },
+                                }
+                            );
+                        }}
                     >
                         Remove From Group
                     </MenuItem>
@@ -673,7 +708,13 @@ export function UserMenu({
 
                     <MenuContent>
                         {guilds.map((guild) => (
-                            <MenuItem key={guild.id}>
+                            <MenuItem
+                                key={guild.id}
+                                onClick={() => inviteToGuild(guild.id)}
+                                onFocus={() => fetchGuildChannels(guild.id)}
+                                onMouseEnter={() => fetchGuildChannels(guild.id)}
+                                disabled={!guilds.find((g) => g.id === guild.id)?.channels?.length}
+                            >
                                 <p>{guild.name}</p>
                             </MenuItem>
                         ))}
@@ -693,13 +734,33 @@ export function UserMenu({
                 >
                     Remove Friend
                 </MenuItem>
-            ) : isReceived ? (
-                <MenuItem onClick={addFriend}>Accept Friend Request</MenuItem>
-            ) : isSent ? (
-                <MenuItem onClick={removeFriend}>Cancel Friend Request</MenuItem>
+            ) : hasRequested ? (
+                <MenuItem
+                    onClick={() => {
+                        addFriend.send({ userId: user.id }, { onComplete: () => setOpen(false) });
+                    }}
+                >
+                    Accept Friend Request
+                </MenuItem>
+            ) : wasRequested ? (
+                <MenuItem
+                    onClick={() => {
+                        removeFriend.send(
+                            { username: user.username },
+                            { onComplete: () => setOpen(false) }
+                        );
+                    }}
+                >
+                    Cancel Friend Request
+                </MenuItem>
             ) : (
                 <MenuItem
-                    onClick={addFriend}
+                    onClick={() => {
+                        addFriend.send(
+                            { username: user.username },
+                            { onComplete: () => setOpen(false) }
+                        );
+                    }}
                     disabled={!!isBlocked}
                 >
                     Add Friend
@@ -707,7 +768,13 @@ export function UserMenu({
             )}
 
             {isBlocked ? (
-                <MenuItem onClick={unblockUser}>Unblock</MenuItem>
+                <MenuItem
+                    onClick={() => {
+                        unblockUser.send({ userId: user.id }, { onComplete: () => setOpen(false) });
+                    }}
+                >
+                    Unblock
+                </MenuItem>
             ) : (
                 <MenuItem
                     onClick={() => {

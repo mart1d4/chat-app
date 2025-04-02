@@ -92,6 +92,7 @@ export type GuildChannel = Pick<
     "id" | "type" | "name" | "topic" | "position" | "parentId" | "nsfw" | "permissionOverwrites"
 > & {
     isPrivate: boolean;
+    recipients: GuildChannelRecipient[];
 };
 
 export type GuildChannelRecipient = Pick<

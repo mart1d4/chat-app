@@ -1,12 +1,13 @@
 "use client";
 
-import { Alert, Icon, Input, LoadingDots, useDialogContext } from "@components";
+import { Icon, Input, LoadingDots, useDialogContext } from "@components";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { Fragment, useEffect, useState } from "react";
-import useFetchHelper from "@/hooks/useFetchHelper";
 import { useUploadThing } from "@/lib/uploadthing";
 import { useKeenSlider } from "keen-slider/react";
+import { useRequests } from "@/hooks/useRequests";
 import styles from "./CreateGuild.module.css";
+import Link from "next/link";
 
 const types = [
     {
@@ -66,14 +67,14 @@ const slides = [
     ["Enter an invite below to join an existing server", "Join a Server"],
 ];
 
-const linkTypes = [
-    "hTKzmak",
-    "https://spark.mart1d4.dev/hTKzmak",
-    "https://spark.mart1d4.dev/cool-people",
-];
-
 export function CreateGuild() {
-    const { sendRequest } = useFetchHelper();
+    const linkTypes = [
+        "hTKzmak",
+        `${typeof window !== undefined ? window.location.origin : ""}/hTKzmak`,
+        `${typeof window !== undefined ? window.location.origin : ""}/cool-people`,
+    ];
+
+    const { createGuild, acceptInvite } = useRequests();
     const { setOpen } = useDialogContext();
     const user = useAuthenticatedUser();
 
@@ -122,9 +123,7 @@ export function CreateGuild() {
         if (current !== currentOld) {
             if (currentOld === 1 && current === 0) {
                 // To prevent layout shift
-                setTimeout(() => {
-                    setType(null);
-                }, 200);
+                setTimeout(() => setType(null), 200);
             }
 
             setCurrentOld(current);
@@ -134,83 +133,38 @@ export function CreateGuild() {
     }, [current, currentOld, instanceRef]);
 
     async function createServer(iconId: string | null = null) {
-        if (loading && !iconId) return;
+        if (createGuild.isLoading && !iconId) return;
 
-        setLoading(true);
-
-        try {
-            if (icon && !iconId) {
-                startUpload([icon]);
-                return;
-            }
-
-            const { errors } = await sendRequest({
-                query: "GUILD_CREATE",
-                body: {
-                    name,
-                    icon: iconId,
-                },
-            });
-
-            if (!errors) {
-                setOpen(false);
-            } else if (errors) {
-                console.error(errors);
-                setError("An error occurred while creating the server.");
-            }
-        } catch (e) {
-            console.error(e);
+        if (icon && !iconId) {
+            setLoading(true);
+            startUpload([icon]);
+            setLoading(false);
+            return;
         }
 
-        setLoading(false);
+        createGuild.send({ name, icon: iconId }, { onComplete: () => setOpen(false) });
     }
 
     async function joinServer() {
-        if (loading) return;
+        if (acceptInvite.isLoading) return;
 
-        const regex = /^(https?:\/\/)?(spark.mart1d4.dev\/)?[a-zA-Z0-9\-]{7,32}$/;
+        const regex = /^(https?:\/\/)?(mart1d4.xyz\/)?[a-zA-Z0-9\-]{7,32}$/;
 
         if (!invite.match(regex)) {
             setError("Please enter a valid invite link or code.");
             return;
         }
 
-        setError("");
-        setLoading(true);
+        const actualInvite = invite.replace(/(https?:\/\/)?spark.mart1d4.dev\//, "");
 
-        try {
-            const { errors } = await sendRequest({
-                query: "ACCEPT_INVITE",
-                params: {
-                    inviteId: invite.replace(/(https?:\/\/)?spark.mart1d4.dev\//, ""),
-                },
-                body: {
-                    isGuild: true,
-                },
-            });
-
-            if (!errors) {
-                setOpen(false);
-            } else if (errors) {
-                console.error(errors);
-                setError("The invite is invalid or has expired.");
-            }
-        } catch (e) {
-            console.error(e);
-        }
-
-        setLoading(false);
+        acceptInvite.send(
+            { inviteId: actualInvite, isGuild: true },
+            { onComplete: () => setOpen(false) }
+        );
     }
 
     return (
         <>
-            {error && (
-                <Alert
-                    type="danger"
-                    message={error}
-                />
-            )}
-
             <div
                 ref={sliderRef}
                 style={{ width: 440 }}
@@ -317,14 +271,19 @@ export function CreateGuild() {
                                             ))}
                                         </ul>
 
-                                        <div className={`${styles.type} ${styles.discover}`}>
+                                        <Link
+                                            href="/channels/discover"
+                                            onClick={() => setOpen(false)}
+                                            className={`${styles.type} ${styles.discover}`}
+                                        >
                                             <img
-                                                src="/assets/system/discover.svg"
                                                 alt="Discover Servers"
+                                                src="/assets/system/discover.svg"
                                             />
 
                                             <div>
                                                 <h2>Don't have an invite?</h2>
+
                                                 <p>
                                                     Check out Discoverable communities in Server
                                                     Discovery.
@@ -335,7 +294,7 @@ export function CreateGuild() {
                                                 size={20}
                                                 name="caret"
                                             />
-                                        </div>
+                                        </Link>
                                     </div>
                                 ) : i === 1 ? (
                                     <div>
@@ -524,7 +483,9 @@ export function CreateGuild() {
                                                 else joinServer();
                                             }}
                                         >
-                                            {loading ? (
+                                            {createGuild.isLoading ||
+                                            acceptInvite.isLoading ||
+                                            loading ? (
                                                 <LoadingDots />
                                             ) : i === 2 ? (
                                                 "Create"

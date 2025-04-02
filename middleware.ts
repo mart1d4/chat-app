@@ -11,13 +11,17 @@ export async function middleware(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
     // Return early with 200 for CORS preflight
-    if (req.method === "OPTIONS") {
-        return new NextResponse(null, {
-            status: 200,
-        });
-    }
+    // if (req.method === "OPTIONS") {
+    //     return new NextResponse(null, {
+    //         status: 200,
+    //     });
+    // }
 
     const publicPaths = ["/", "/login", "/register", "/reset", "/verify", "/invite", "/download"];
+
+    if (process.env.NODE_ENV === "development") {
+        publicPaths.push("/channels/test");
+    }
 
     const authorizedRegex = /^\/channels\/discover\/?$/;
     const channelsRegex = /^\/channels\/me(\/[0-9]{14})?\/?$/;
@@ -47,8 +51,9 @@ export async function middleware(req: NextRequest) {
             });
 
             if (!payload?.id) {
-                req.cookies.delete("token");
-                return NextResponse.redirect(new URL("/login", req.url));
+                const response = NextResponse.redirect(new URL("/login", req.url));
+                response.cookies.delete("token");
+                return response;
             }
 
             if (
@@ -72,9 +77,11 @@ export async function middleware(req: NextRequest) {
             response.headers.set("x-user-id", payload.id.toString());
             return response;
         } catch (error) {
-            console.error(error);
-            req.cookies.delete("token");
-            return NextResponse.redirect(new URL("/login", req.url));
+            console.error("[MIDDLEWARE] ", error);
+
+            const response = NextResponse.redirect(new URL("/login", req.url));
+            response.cookies.delete("token");
+            return response;
         }
     }
 

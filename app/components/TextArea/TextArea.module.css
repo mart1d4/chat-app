@@ -1,33 +1,33 @@
 .form {
-    position: relative;
     flex-shrink: 0;
+    position: relative;
     margin: -8px 16px 0 16px;
 }
 
 .wrapperBlocked {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    width: 100%;
     height: 52px;
+    display: flex;
+    padding: 16px 0;
     position: relative;
     border-radius: 5px;
     margin-bottom: 24px;
-    padding: 16px 0;
-    width: 100%;
-    background-color: var(--background-1);
+    align-items: center;
+    background-color: var(--bg-1);
+    justify-content: space-between;
 }
 
 .wrapperBlocked > div:first-child {
+    height: 20px;
     display: flex;
+    font-size: 16px;
+    font-weight: 600;
+    margin-left: 16px;
+    line-height: 20px;
+    user-select: none;
+    color: var(--fg-1);
     align-items: center;
     justify-content: space-between;
-    margin-left: 16px;
-    height: 20px;
-    color: var(--foreground-1);
-    font-size: 16px;
-    line-height: 20px;
-    font-weight: 600;
-    user-select: none;
 }
 
 .wrapperBlocked > button {
@@ -36,20 +36,20 @@
 
 .bottomForm {
     height: 24px;
+    resize: none;
+    display: flex;
     font-size: 14px;
     font-weight: 500;
     line-height: 24px;
-    resize: none;
-    display: flex;
+    color: var(--fg-3);
     align-items: center;
     justify-content: space-between;
-    color: var(--foreground-3);
 }
 
 .typingContainer {
     display: flex;
-    align-items: center;
     overflow: hidden;
+    align-items: center;
     text-overflow: ellipsis;
 }
 
@@ -57,18 +57,18 @@
     flex: 0 0 auto;
     display: block;
     margin-left: 9px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     pointer-events: none;
 }
 
 .typingContainer span {
-    display: block;
     min-width: 0;
-    white-space: nowrap;
+    display: block;
     overflow: hidden;
-    text-overflow: ellipsis;
     margin-left: 4px;
     user-select: none;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .typingContainer strong {
@@ -84,13 +84,14 @@
     text-indent: 0;
     position: relative;
     border-radius: 8px;
-    background-color: var(--background-5);
+    background-color: var(--bg-4);
 }
 
 .scrollableContainer {
     max-height: 50vh;
     border-radius: 8px;
     overflow: hidden scroll !important;
+    clip-path: inset(0px 0px 0px 0px);
 }
 
 div.scrollableContainer::-webkit-scrollbar {
@@ -98,51 +99,51 @@ div.scrollableContainer::-webkit-scrollbar {
 }
 
 div.scrollableContainer::-webkit-scrollbar-track {
-    border: 4px var(--background-5) solid;
-    background-color: var(--background-5);
+    border: 4px var(--bg-4) solid;
+    background-color: var(--bg-4);
 }
 
 div.scrollableContainer::-webkit-scrollbar-thumb {
-    border: 4px var(--background-5) solid;
-    background-color: var(--background-1);
+    border: 4px var(--bg-4) solid;
+    background-color: var(--bg-1);
 }
 
 .input {
-    padding-left: 16px;
     display: flex;
+    padding-left: 16px;
     position: relative;
 }
 
 .attachWrapper {
-    position: sticky;
     flex: 0 0 auto;
+    position: sticky;
     align-self: stretch;
 }
 
 .attachWrapper > button {
+    top: 0;
     margin: 0;
     border: 0;
-    cursor: pointer;
-    height: 44px;
-    padding: 10px 16px;
-    position: sticky;
-    top: 0;
-    margin-left: -16px;
     width: auto;
-    background: transparent;
+    height: 44px;
     display: flex;
+    cursor: pointer;
+    position: sticky;
+    user-select: none;
+    padding: 10px 16px;
+    margin-left: -16px;
+    border-radius: 3px;
     align-items: center;
     justify-content: center;
-    border-radius: 3px;
-    user-select: none;
+    background: transparent;
 }
 
 .attachWrapper > button path {
-    fill: var(--foreground-3);
+    fill: var(--fg-3);
 }
 
 .attachWrapper > button:hover path {
-    fill: var(--foreground-2);
+    fill: var(--fg-2);
 }
 
 .attachWrapper > button > div {
@@ -160,31 +161,21 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     width: 100%;
     resize: none;
     height: 44px;
+    padding: 10px 0;
     font-size: 16px;
     appearance: none;
     font-weight: 400;
-    position: relative;
+    color: var(--fg-2);
     line-height: 1.375rem;
-    color: var(--foreground-2);
     font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-.textContainer [data-slate-placeholder="true"] {
-    overflow: hidden;
-    user-select: none;
-    white-space: nowrap;
-}
-
 .placeholder {
-    left: 0;
-    right: 10px;
-    overflow: hidden;
+    top: 10px;
     user-select: none;
     position: absolute;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    padding: 11px 10px 11px 0;
-    color: var(--foreground-light);
+    color: var(--fg-6);
+    pointer-events: none;
 }
 
 .textbox {
@@ -221,7 +212,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     padding: 4px;
     height: 44px;
     width: 40px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
     cursor: pointer;
     display: flex;
@@ -231,7 +222,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 .toolsContainer > button:not(:last-child):hover {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .toolsContainer > button:focus-visible {
@@ -239,56 +230,56 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 .filesList {
-    display: flex;
     gap: 24px;
-    margin: 0 0 2px 6px;
-    padding: 20px 10px 10px;
-    overflow: auto hidden;
+    display: flex;
     list-style: none;
+    margin: 0 0 2px 6px;
+    overflow: auto hidden;
+    padding: 20px 10px 10px;
 }
 
 .filesList::-webkit-scrollbar-track {
-    border-color: var(--background-5);
+    border-color: var(--bg-5);
 }
 
 .formDivider {
     height: 0;
-    border-top: thin solid var(--border-light);
     display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
     flex: 0 0 auto;
+    position: relative;
+    align-items: center;
     pointer-events: none;
+    justify-content: center;
+    border-top: thin solid var(--bg-5);
 }
 
 .replyContainer {
-    border-radius: 8px 8px 0 0;
-    background-color: var(--background-3);
+    display: grid;
+    cursor: pointer;
     overflow: hidden;
     padding-top: 3px;
     margin-top: -3px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    cursor: pointer;
     user-select: none;
+    align-items: center;
+    border-radius: 8px 8px 0 0;
+    background-color: var(--bg-2);
+    grid-template-columns: 1fr auto;
 }
 
 .replyName {
-    color: var(--foreground-4);
+    font-size: 14px;
     overflow: hidden;
+    font-weight: 400;
+    line-height: 18px;
+    margin-left: 16px;
+    color: var(--fg-4);
     white-space: nowrap;
     text-overflow: ellipsis;
-    margin-left: 16px;
-    font-size: 14px;
-    line-height: 18px;
-    font-weight: 400;
 }
 
 .replyName > span {
-    color: var(--foreground-3);
     font-weight: 500;
+    color: var(--fg-3);
 }
 
 .replyClose {
@@ -297,20 +288,20 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 .replyClose:hover path {
-    fill: var(--foreground-2);
+    fill: var(--fg-2);
 }
 
 .replyClose > div {
     width: 44px;
     display: flex;
-    align-items: center;
-    justify-content: center;
     flex: 0 0 auto;
     line-height: 0;
     cursor: pointer;
-    color: var(--foreground-3);
-    padding: 8px 0px 8px 0px;
     margin-right: 4px;
+    color: var(--fg-3);
+    align-items: center;
+    justify-content: center;
+    padding: 8px 0px 8px 0px;
 }
 
 .buttonContainer {
@@ -333,10 +324,12 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 .emoji {
     width: 22px;
     height: 22px;
+    overflow: hidden;
     filter: grayscale(100%);
     background-size: 242px 110px;
     background-size: 242px 110px;
     background-repeat: no-repeat;
+    will-change: filter, transform;
     background-position: -176px -66px;
     background-image: url("/assets/app/emoji-picker.png");
     transition: filter 0.15s ease-in-out, transform 0.15s ease-in-out;
@@ -358,7 +351,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     width: 200px;
     height: 200px;
     aspect-ratio: 1;
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
 }
 
 .fileMenu {
@@ -378,7 +371,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     position: relative;
     overflow: hidden;
     box-shadow: var(--elevation-low);
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
     transition: box-shadow 0.15s ease-in-out;
 }
 
@@ -400,12 +393,12 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     flex: 0 0 auto;
     cursor: pointer;
     position: relative;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
 }
 
 .fileMenuButton:nth-child(3) {
-    color: var(--error-1);
+    color: var(--danger-0);
 }
 
 .fileMenuButton svg {
@@ -413,21 +406,21 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 .fileMenuButton:hover {
-    background-color: var(--background-4);
-    color: var(--foreground-2);
+    background-color: var(--bg-4);
+    color: var(--fg-2);
 }
 
 .fileMenuButton:nth-child(3):hover {
-    color: var(--error-1);
+    color: var(--danger-0);
 }
 
 .fileMenuButton:active {
-    background-color: var(--background-5);
-    color: var(--foreground-1);
+    background-color: var(--bg-5);
+    color: var(--fg-1);
 }
 
 .fileMenuButton:nth-child(3):active {
-    color: var(--error-1);
+    color: var(--danger-0);
 }
 
 .fileMenuButton:active svg {
@@ -482,13 +475,13 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     letter-spacing: 0.5px;
     font-size: 15px;
     user-select: none;
-    color: var(--foreground-2);
-    background-color: var(--background-4);
+    color: var(--fg-2);
+    background-color: var(--bg-4);
     z-index: 1;
 }
 
 .fileItemContainer > .image:hover > .spoilerButton {
-    background-color: var(--background-dark-1);
+    background-color: var(--bg-0);
 }
 
 .fileItemContainer > .image > .imageTags {
@@ -500,7 +493,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 .fileItemContainer > .image > .imageTags > span {
     color: #000000;
     mix-blend-mode: screen;
-    background-color: var(--foreground-3);
+    background-color: var(--fg-3);
     margin-right: 4px;
     text-transform: uppercase;
     font-size: 10px;
@@ -521,7 +514,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     font-size: 14px;
     line-height: 18px;
     font-weight: 400;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     user-select: none;
 }
 
@@ -540,7 +533,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 
 .send::before {
     content: "";
-    border-left: 1px solid var(--foreground-2);
+    border-left: 1px solid var(--fg-2);
     margin-right: 12px;
     opacity: 0.1;
     height: 65%;
@@ -551,7 +544,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 .send.empty {
     cursor: not-allowed;
     opacity: 0.3;
-    color: var(--foreground-5);
+    color: var(--fg-5);
 }
 
 .send > div {
@@ -560,7 +553,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-5);
+    color: var(--fg-5);
     transition: opacity 0.15s ease-in-out, color 0.15s ease-in-out;
 }
 
@@ -573,7 +566,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 .send:not(.empty):active > div {
-    color: var(--accent-1);
+    color: var(--accent-0);
 }
 
 @media screen and (max-width: 562px) {
@@ -595,7 +588,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     text-overflow: ellipsis;
     z-index: 3;
     box-shadow: 0 0 0 1px hsl(0, 0%, 0.8%, 0.15), var(--elevation-high);
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
     max-height: 490px;
     padding-bottom: 8px;
     display: flex;
@@ -615,7 +608,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     font-size: 12px;
     line-height: 1.333;
     font-weight: 600;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     padding: 4px 0;
     text-transform: uppercase;
 }
@@ -629,7 +622,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 .mentionContainer > div:hover {
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
 }
 
 .mentionContainer > div {
@@ -639,7 +632,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     display: flex;
     align-items: center;
     min-height: 16px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .mentionContainer .avatar {
@@ -651,7 +644,7 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     flex: 0 2 auto;
     overflow: hidden;
     min-width: 10ch;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-size: 16px;
     line-height: 1.25;
     font-weight: 400;
@@ -661,41 +654,41 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 .mentionContainer .username {
-    color: var(--foreground-3);
-    font-size: 12px;
-    line-height: 1.333;
-    font-weight: 400;
     flex: 1 1 auto;
-    margin-left: 16px;
+    font-size: 12px;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-weight: 400;
     text-align: right;
+    margin-left: 16px;
+    color: var(--fg-3);
+    line-height: 1.333;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .voiceRecording .label {
     font-size: 12px;
     font-weight: 700;
+    color: var(--fg-3);
     margin: 24px 0 8px 0;
     text-transform: uppercase;
-    color: var(--foreground-3);
 }
 
 .preview {
     height: 48px;
     display: flex;
     padding: 0 16px;
+    color: var(--fg-3);
     align-items: center;
     border-radius: 24px;
-    color: var(--foreground-3);
-    background-color: var(--background-3);
+    background-color: var(--bg-2);
 }
 
 .preview > .dot {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
     transition: background-color 0.15s ease-in-out;
 }
 
@@ -716,4 +709,23 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
     align-items: center;
     justify-content: center;
     text-transform: uppercase;
+}
+
+.editHint {
+    width: 100%;
+    display: flex;
+    padding: 7px 0;
+    font-size: 12px;
+    font-weight: 400;
+    user-select: none;
+    color: var(--fg-2);
+}
+
+.editHint > span {
+    color: var(--accent-fg);
+    cursor: pointer;
+}
+
+.editHint > span:hover {
+    text-decoration: underline;
 }

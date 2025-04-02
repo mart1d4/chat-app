@@ -308,6 +308,7 @@ export const DialogContent = forwardRef<
                                 width: props.width || "",
                                 minHeight: props.hideFooter ? "unset" : "",
                                 animationName: !floatingContext.open ? styles.popOut : "",
+                                overflow: !props.headingIcon ? "hidden auto" : "",
                             }}
                             className={styles.dialog}
                         >

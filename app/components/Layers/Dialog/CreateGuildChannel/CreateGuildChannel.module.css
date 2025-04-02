@@ -9,7 +9,7 @@
     margin-bottom: 8px;
     letter-spacing: 0.02rem;
     text-transform: uppercase;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .typePick {
@@ -18,20 +18,20 @@
     user-select: none;
     border-radius: 3px;
     margin-bottom: 8px;
-    color: var(--foreground-3);
-    background-color: var(--background-3);
+    color: var(--fg-3);
+    background-color: var(--bg-2);
 }
 
 .typePick:hover,
 .typePick:focus-visible {
-    color: var(--foreground-2);
-    background-color: var(--background-hover-1);
+    color: var(--fg-2);
+    background-color: var(--bg-hover-1);
 }
 
 .typePick:active,
 .typePick.active {
-    color: var(--foreground-1);
-    background-color: var(--background-hover-2);
+    color: var(--fg-1);
+    background-color: var(--bg-hover-2);
 }
 
 .typePick > div {
@@ -72,7 +72,7 @@
     font-weight: 500;
     line-height: 20px;
     align-items: center;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .typePick .content > div {
@@ -81,7 +81,7 @@
     font-weight: 400;
     line-height: 18px;
     white-space: pre-wrap;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .privateCheck {
@@ -101,7 +101,7 @@
     flex: 1;
     display: block;
     overflow: hidden;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     line-height: 24px;
     font-size: 16px;
     font-weight: 500;
@@ -125,7 +125,7 @@
 
 .privateCheck > div:last-child {
     margin-top: 8px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     user-select: none;
     font-size: 14px;
     line-height: 20px;
@@ -133,5 +133,5 @@
 }
 
 .channelType + div svg {
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }

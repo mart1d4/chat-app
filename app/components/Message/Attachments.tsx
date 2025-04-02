@@ -382,7 +382,7 @@ export function DisplayableAttachment({
                         e.stopPropagation();
                     }}
                     style={{
-                        backgroundColor: couldntLoad ? "var(--background-3)" : "",
+                        backgroundColor: couldntLoad ? "var(--bg-3)" : "",
                         maxHeight: `min(${maxHeight}px, 100%)`,
                         maxWidth: `min(${maxWidth}px, 100%)`,
                         cursor: couldntLoad ? "default" : "",

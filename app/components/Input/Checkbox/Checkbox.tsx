@@ -19,8 +19,8 @@ export const Checkbox = ({
             <div
                 className={styles.box}
                 style={{
-                    borderColor: checked ? "var(--accent-border)" : "",
-                    backgroundColor: checked ? "var(--accent-1)" : "",
+                    borderColor: checked ? "var(--accent-3)" : "",
+                    backgroundColor: checked ? "var(--accent-0)" : "",
                     height: `${size}px`,
                     width: `${size}px`,
                 }}
@@ -61,7 +61,7 @@ export const Checkbox = ({
         <InteractiveElement
             className={styles.container}
             onClick={onChange ? onChange : () => {}}
-            style={{ backgroundColor: checked ? "var(--success-light)" : "var(--default-2)" }}
+            style={{ backgroundColor: checked ? "var(--success-fg)" : "var(--default-2)" }}
         >
             <svg
                 aria-hidden="true"

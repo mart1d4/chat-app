@@ -1,3 +1,4 @@
+import { handleChannelDeletion } from "@/lib/channels";
 import { getFullChannel } from "../lib/strings";
 import { create } from "zustand";
 import type {
@@ -10,7 +11,6 @@ import type {
     GuildMember,
     GuildChannel,
 } from "@/type";
-import { handleChannelDeletion } from "@/lib/channels";
 export interface UseDataState {
     user: AppUser | null;
     token: string | null;

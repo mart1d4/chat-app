@@ -1,90 +1,95 @@
 "use client";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { $createInlineStyleNode, InlineStyleNode } from "../ui/InlineStyleNode";
-import { $createSymbolNode, SymbolNode } from "../ui/SymbolNode";
-import { TextNode, type LexicalEditor } from "lexical";
+import { $getSelection, ElementNode, TextNode, type LexicalEditor } from "lexical";
 import { useEffect } from "react";
 
-const SYMBOL_ELEMENTS = {
-    "*": "em",
-    "**": "strong",
-    ">": "q",
-    "`": "code",
-    __: "u",
-    "~~": "s",
+type Format = "italic" | "bold" | "underline" | "strikethrough" | "code";
+
+const matches: {
+    [key: string]: {
+        format: Format[];
+        regexp: RegExp;
+        numOfChars: number;
+        style?: string;
+    };
+} = {
+    italic: {
+        format: ["italic"],
+        regexp: /\*([^*]+)\*/,
+        numOfChars: 2,
+    },
+    bold: {
+        format: ["bold"],
+        regexp: /\*\*([^*]+)\*\*/,
+        numOfChars: 4,
+    },
+    italicAndBold: {
+        format: ["italic", "bold"],
+        regexp: /\*\*\*([^*]+)\*\*\*/,
+        numOfChars: 6,
+    },
+    underline: {
+        format: ["underline"],
+        regexp: /__([^_]+)__/,
+        numOfChars: 4,
+        style: "text-decoration: underline",
+    },
+    strikethrough: {
+        format: ["strikethrough"],
+        regexp: /~~([^~]+)~~/,
+        numOfChars: 4,
+        style: "text-decoration: line-through",
+    },
+    code: {
+        format: ["code"],
+        regexp: /`([^`]+)`/,
+        numOfChars: 2,
+    },
 };
 
-function $findAndTransformInlineStyle(node: TextNode): null | TextNode {
-    const text = node.getTextContent();
-
-    // Check for specific inline styles like bold (e.g., **bold** or *italic*)
-    const match = text.match(/(\*\*|\*|>)([^\*\*|*|>]+)(\*\*|\*|>)/);
-
-    if (match !== null) {
-        const startSymbol = match[1] as keyof typeof SYMBOL_ELEMENTS; // Beginning symbol
-        const content = match[2]; // Text inside the symbols
-        const endSymbol = match[3]; // Ending symbol
-
-        // Create nodes for symbols and inline content
-        const startSymbolNode = $createSymbolNode(startSymbol);
-        const inlineStyleNode = $createInlineStyleNode(content, SYMBOL_ELEMENTS[startSymbol]); // Type based on start symbol
-        const endSymbolNode = $createSymbolNode(endSymbol);
-
-        // Split and transform the nodes as needed
-        let beforeNode: TextNode | null = null;
-        let targetNode: TextNode | null = null;
-        let afterNode: TextNode | null = null;
-
-        const matchStart = match.index!;
-        const matchEnd = matchStart + match[0].length;
-
-        if (matchStart > 0) {
-            [beforeNode, targetNode] = node.splitText(matchStart);
-        } else {
-            targetNode = node;
-        }
-
-        if (matchEnd < text.length) {
-            [targetNode, afterNode] = targetNode!.splitText(matchEnd - matchStart);
-        }
-
-        targetNode!.replace(startSymbolNode);
-        startSymbolNode.insertAfter(inlineStyleNode);
-        inlineStyleNode.insertAfter(endSymbolNode);
-
-        if (afterNode) {
-            endSymbolNode.insertAfter(afterNode);
-        }
-
-        inlineStyleNode.selectNext();
-        return inlineStyleNode;
-    }
-
+function $findAndTransformInlineStyle(node: TextNode): null | ElementNode {
     return null;
+    // const parent = node?.getParent();
+    // if (!parent || !parent.getChildren().length) return null;
+
+    // const textNodes = parent.getChildren();
+    // if (!textNodes.length) return null;
+
+    // let fullText = textNodes.map((n) => n.getTextContent()).join("");
+
+    // // Get the RangeSelection for each match, and use the formatText method on that range
+    // // to apply the inline style
+    // Object.keys(matches).forEach((key) => {
+    //     const { regexp, numOfChars, format, style } = matches[key];
+
+    //     let match: RegExpExecArray | null;
+
+    //     while ((match = regexp.exec(fullText))) {
+    //         const [fullMatch, text] = match;
+    //         const start = match.index;
+    //         const end = start + fullMatch.length;
+
+    //         const range = node.
+    //         range.formatText(format, style);
+
+    //         // Remove the match from the text
+    //         fullText = fullText.slice(0, start) + fullText.slice(end);
+    //     }
+    // });
 }
 
-function $textNodeTransform(node: TextNode): void {
+function $paragraphNodeTransform(node: TextNode): void {
     let targetNode: TextNode | null = node;
 
     while (targetNode !== null) {
-        if (!targetNode.isSimpleText()) {
-            return;
-        }
-
         targetNode = $findAndTransformInlineStyle(targetNode);
     }
 }
 
 function useInlineStyles(editor: LexicalEditor): void {
     useEffect(() => {
-        if (!editor.hasNodes([InlineStyleNode, SymbolNode])) {
-            throw new Error(
-                "InlineStylePlugin: InlineStyleNode or SymbolNode not registered on editor"
-            );
-        }
-
-        return editor.registerNodeTransform(TextNode, $textNodeTransform);
+        return editor.registerNodeTransform(TextNode, $paragraphNodeTransform);
     }, [editor]);
 }
 

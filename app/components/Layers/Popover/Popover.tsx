@@ -119,7 +119,8 @@ export const usePopoverContext = () => {
     const context = useContext(PopoverContext);
 
     if (context == null) {
-        throw new Error("Popover components must be wrapped in <Popover />");
+        console.warn("Popover components must be wrapped in <Popover />");
+        return {} as ContextType;
     }
 
     return context;
@@ -198,23 +199,18 @@ export const PopoverContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
 
         return (
             <FloatingPortal>
-                <FloatingOverlay
-                    lockScroll
-                    style={{ zIndex: 1000 }}
-                >
-                    <FloatingFocusManager context={floatingContext}>
-                        <div
-                            ref={ref}
-                            className={styles.popover}
-                            style={{ ...context.floatingStyles, ...style }}
-                            aria-labelledby={context.labelId}
-                            aria-describedby={context.descriptionId}
-                            {...context.getFloatingProps(props)}
-                        >
-                            {props.children}
-                        </div>
-                    </FloatingFocusManager>
-                </FloatingOverlay>
+                <FloatingFocusManager context={floatingContext}>
+                    <div
+                        ref={ref}
+                        className={styles.popover}
+                        aria-labelledby={context.labelId}
+                        aria-describedby={context.descriptionId}
+                        style={{ ...context.floatingStyles, ...style }}
+                        {...context.getFloatingProps(props)}
+                    >
+                        {props.children}
+                    </div>
+                </FloatingFocusManager>
             </FloatingPortal>
         );
     }

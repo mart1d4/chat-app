@@ -1,6 +1,6 @@
 .container {
     max-height: calc(100dvh - 60px);
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
     width: 420px;
     overflow: hidden;
     display: flex;
@@ -12,12 +12,12 @@
 
 .container > div:first-child {
     padding: 16px;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
     box-shadow: var(--elevation-low);
 }
 
 .container > div:first-child > h1 {
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-weight: 500;
     font: 16px;
     line-height: 20px;
@@ -42,14 +42,14 @@
 }
 
 .container > div:nth-child(2)::-webkit-scrollbar-track {
-    border: 2px var(--background-3) solid;
-    background-color: var(--background-3);
+    border: 2px var(--bg-3) solid;
+    background-color: var(--bg-3);
 }
 
 .container > div:nth-child(2)::-webkit-scrollbar-thumb {
-    border: 2px var(--background-3) solid;
+    border: 2px var(--bg-3) solid;
     border-color: transparent;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .noPinnedContent {
@@ -74,13 +74,13 @@
     line-height: 20px;
     font-weight: 500;
     text-align: center;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .noPinnedBottom {
     padding: 16px;
     text-align: center;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
     height: 53px;
     box-sizing: content-box;
 }
@@ -90,7 +90,7 @@
 }
 
 .noPinnedBottom > div > div:first-child {
-    color: var(--success-light);
+    color: var(--success-fg);
     font-size: 14px;
     text-transform: uppercase;
     font-weight: 700;
@@ -102,12 +102,12 @@
     line-height: 16px;
     opacity: 0.6;
     font-weight: 400;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .message {
     position: relative;
-    border: 1px solid var(--background-1);
+    border: 1px solid var(--bg-1);
     border-radius: 4px;
     user-select: none;
     margin: 0 0 6px;
@@ -116,7 +116,7 @@
 
 .message > div {
     padding: 10px 0;
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
 }
 
 .message > div > div {
@@ -141,12 +141,12 @@
     position: absolute;
     visibility: hidden;
     border-radius: 4px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
 }
 
 .close:hover {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 @media screen and (max-width: 562px) {

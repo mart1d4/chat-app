@@ -67,8 +67,7 @@ export function ImageViewer({
         window.open(url);
     }
 
-    const { widthThresholds } = useWindowSettings();
-    const isWidth562 = widthThresholds[562];
+    const isWidth562 = useWindowSettings((s) => s.widthThresholds[562]);
 
     useEffect(() => {
         // Recalculate dimensions

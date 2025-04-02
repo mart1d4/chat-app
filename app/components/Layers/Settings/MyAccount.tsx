@@ -1,7 +1,10 @@
-import useFetchHelper from "@/hooks/useFetchHelper";
+"use client";
+
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { useRequests } from "@/hooks/useRequests";
 import { getCdnUrl } from "@/lib/uploadthing";
 import styles from "./Settings.module.css";
-import { useData } from "@/store";
+import { useData, useTriggerAlert } from "@/store";
 import { useState } from "react";
 import {
     DialogContent,
@@ -11,20 +14,15 @@ import {
     Dialog,
     Avatar,
     Input,
-    Alert,
     Menu,
     Icon,
 } from "@components";
 
-const defaultTooltip = {
-    text: "Copy user ID",
-    color: "var(--background-dark-1)",
-};
-
 export function MyAccount({ setActiveTab }: any) {
+    const { updateUser, getEmailVerificationCode, verifyEmailCode } = useRequests();
     const setUser = useData((state) => state.setUser);
-    const user = useData((state) => state.user);
-    const { sendRequest } = useFetchHelper();
+    const { triggerAlert } = useTriggerAlert();
+    const user = useAuthenticatedUser();
 
     const [confirmPassword, setConfirmPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -42,12 +40,8 @@ export function MyAccount({ setActiveTab }: any) {
     const [revealPhone, setRevealPhone] = useState(false);
     const [phone, setPhone] = useState("");
 
-    const [errors, setErrors] = useState<{
-        [key: string]: string;
-    }>({});
-    const [loading, setLoading] = useState<{
-        [key: string]: boolean;
-    }>({});
+    const [loading, setLoading] = useState<Record<string, boolean>>({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     if (!user) return null;
 
@@ -68,31 +62,25 @@ export function MyAccount({ setActiveTab }: any) {
             return setErrors({ password: "Your current password cannot be empty." });
         }
 
-        setLoading({ password: true });
-
-        try {
-            const { data, errors } = await sendRequest({
-                query: "UPDATE_USER",
-                body: {
-                    password,
-                    newPassword,
+        updateUser.send(
+            {
+                password,
+                newPassword,
+            },
+            {
+                onComplete: () => {
+                    setPassword("");
+                    setNewPassword("");
+                    setConfirmPassword("");
+                    setErrors({});
+                    document.getElementById("change-password")?.click();
                 },
-            });
-
-            if (data) {
-                setPassword("");
-                setNewPassword("");
-                setConfirmPassword("");
-                setErrors({});
-                document.getElementById("change-password")?.click();
-            } else if (errors) {
-                setErrors(errors);
+                onFail: (error) => {
+                    console.log(error);
+                    setErrors((prev) => ({ ...prev, password: error }));
+                },
             }
-        } catch (err) {
-            console.error(err);
-        }
-
-        setLoading({ password: false });
+        );
     }
 
     async function handleUsernameChange() {
@@ -114,86 +102,44 @@ export function MyAccount({ setActiveTab }: any) {
             return setErrors({ password: "Your current password cannot be empty." });
         }
 
-        setLoading({ username: true });
-
-        try {
-            const { data, errors } = await sendRequest({
-                query: "UPDATE_USER",
-                body: {
-                    password,
-                    username,
+        updateUser.send(
+            {
+                username,
+                password,
+            },
+            {
+                onComplete: () => {
+                    setErrors({});
+                    setPassword("");
+                    setUser({ ...user, username });
+                    document.getElementById("change-username")?.click();
                 },
-            });
-
-            if (data) {
-                setUser({ ...user, username });
-                setPassword("");
-                setErrors({});
-                document.getElementById("change-username")?.click();
-            } else if (errors) {
-                setErrors(errors);
+                onFail: (error) => {
+                    setErrors((prev) => ({ ...prev, username: error }));
+                },
             }
-        } catch (err) {
-            console.error(err);
-        }
-
-        setLoading({ username: false });
+        );
     }
 
     async function sendEmailVerificationCode(alertOnSuccess = false) {
-        if (loading.email) return;
-        setLoading({ email: true });
+        getEmailVerificationCode.send(
+            {},
+            {
+                onComplete: () => {
+                    setVerificationCodeSent(true);
 
-        try {
-            const { data, errors } = await sendRequest({
-                query: "GET_EMAIL_VERIFICATION_CODE",
-            });
-
-            if (data) {
-                setVerificationCodeSent(true);
-
-                if (alertOnSuccess) {
-                    setErrors({ server: "Verification code sent." });
-                }
-            } else if (errors) {
-                setErrors(errors);
-            }
-        } catch (err) {
-            console.error(err);
-            setErrors({ server: "Failed to send verification code." });
-        }
-
-        setLoading({ email: false });
-    }
-
-    async function verifyEmailCode() {
-        if (loading.email) return;
-        setLoading({ email: true });
-
-        try {
-            const { data, errors } = await sendRequest({
-                query: "VERIFY_EMAIL_CODE",
-                body: {
-                    code: emailCode,
+                    if (alertOnSuccess) {
+                        triggerAlert("success", "Verification code sent");
+                    }
                 },
-            });
-
-            if (data?.token) {
-                setEmailCode("");
-                setEmailToken(data.token);
-            } else if (errors) setErrors(errors);
-        } catch (err) {
-            console.error(err);
-            setErrors({ email: "Failed to verify code." });
-        }
-
-        setLoading({ email: false });
+                onFail: (error) => {
+                    setErrors({ email: error });
+                },
+            }
+        );
     }
 
     async function updateEmail() {
-        if (loading.email) return;
-        setLoading({ email: true });
-
         if (!email) {
             setErrors({ email: "Your new email cannot be empty." });
             setLoading({ email: false });
@@ -212,30 +158,24 @@ export function MyAccount({ setActiveTab }: any) {
             return;
         }
 
-        try {
-            const { data, errors } = await sendRequest({
-                query: "UPDATE_USER",
-                body: {
-                    email,
-                    password,
-                    emailToken,
+        updateUser.send(
+            {
+                email,
+                password,
+                emailToken,
+            },
+            {
+                onComplete: () => {
+                    setErrors({});
+                    setPassword("");
+                    setEmailToken("");
+                    setVerificationLinkSent(true);
                 },
-            });
-
-            if (data) {
-                setPassword("");
-                setEmailToken("");
-                setErrors({});
-                setVerificationLinkSent(true);
-            } else if (errors) {
-                setErrors(errors);
+                onFail: (error) => {
+                    setErrors({ email: error });
+                },
             }
-        } catch (err) {
-            console.error(err);
-            setErrors({ email: "Failed to update email." });
-        }
-
-        setLoading({ email: false });
+        );
     }
 
     const askForNewEmail = (!user.email || emailToken) && !verificationLinkSent;
@@ -244,13 +184,6 @@ export function MyAccount({ setActiveTab }: any) {
     return (
         <>
             <div>
-                {errors.server && (
-                    <Alert
-                        type="danger"
-                        message={errors.server}
-                    />
-                )}
-
                 <div className={styles.sectionTitle}>
                     <h2>My Account</h2>
                 </div>
@@ -322,7 +255,7 @@ export function MyAccount({ setActiveTab }: any) {
                                     heading="Change your username"
                                     description="Enter a new username and your existing password."
                                     confirmLabel="Done"
-                                    confirmLoading={loading.username}
+                                    confirmLoading={updateUser.isLoading}
                                     onConfirm={handleUsernameChange}
                                 >
                                     <Input
@@ -407,7 +340,15 @@ export function MyAccount({ setActiveTab }: any) {
                                             ? "Okay"
                                             : "Send Verification Code"
                                     }
-                                    confirmLoading={loading.email}
+                                    confirmLoading={
+                                        askForNewEmail
+                                            ? updateUser.isLoading
+                                            : askForEmailCode
+                                            ? verifyEmailCode.isLoading
+                                            : verificationLinkSent
+                                            ? false
+                                            : getEmailVerificationCode.isLoading
+                                    }
                                     description={
                                         askForNewEmail
                                             ? "Enter a new email address and your existing password."
@@ -416,13 +357,23 @@ export function MyAccount({ setActiveTab }: any) {
                                             : undefined
                                     }
                                     hideCancel={
-                                        verificationLinkSent || (user.email && verificationCodeSent)
+                                        verificationLinkSent ||
+                                        (!!user.email && verificationCodeSent)
                                     }
                                     onConfirm={() => {
                                         if (askForNewEmail) {
                                             updateEmail();
                                         } else if (askForEmailCode) {
-                                            verifyEmailCode();
+                                            verifyEmailCode.send(
+                                                { code: emailCode },
+                                                {
+                                                    onComplete: (data) => {
+                                                        setEmailCode("");
+                                                        setErrors({});
+                                                        setEmailToken(data.token);
+                                                    },
+                                                }
+                                            );
                                         } else if (user.email && !verificationCodeSent) {
                                             sendEmailVerificationCode();
                                         } else {
@@ -567,7 +518,7 @@ export function MyAccount({ setActiveTab }: any) {
                         heading="Update your password"
                         description="Enter your current password and a new password."
                         confirmLabel="Done"
-                        confirmLoading={loading.password}
+                        confirmLoading={updateUser.isLoading}
                         onConfirm={handlePasswordChange}
                     >
                         <Input

@@ -1,26 +1,35 @@
 "use client";
 
-import { useRef, useEffect, useMemo, type RefObject, useState, useLayoutEffect } from "react";
+import type { ChannelRecipient, DMChannel, Guild, ResponseMessage } from "@/type";
 import { Message, TextArea, MessageSk, Avatar, LoadingDots } from "@components";
-import type { DMChannel, Guild, KnownUser, ResponseMessage } from "@/type";
+import { useRef, useEffect, useMemo, useState, useLayoutEffect } from "react";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { useData, useTriggerDialog, useUrls } from "@/store";
 import { isInline, isLarge, isNewDay } from "@/lib/message";
-import { useIntersection } from "@/hooks/useIntersection";
-import type { SWRInfiniteKeyLoader } from "swr/infinite";
+import { useRelationships } from "@/hooks/useRelationships";
 import { useNotifications } from "@/store/notifications";
-import useFetchHelper from "@/hooks/useFetchHelper";
+import { useFetchMessages } from "@/hooks/useFetchData";
+import { useRequests } from "@/hooks/useRequests";
 import { getCdnUrl } from "@/lib/uploadthing";
-import { useData, useUrls } from "@/store";
 import styles from "./Channels.module.css";
 import { useSocket } from "@/store/socket";
-import useSWRInfinite from "swr/infinite";
-import fetchHelper from "@/hooks/useSwr";
 import { getDayDate } from "@/lib/time";
 import Image from "next/image";
+
+export type HandleMessageUpdate = {
+    (
+        type: "add" | "update" | "delete",
+        id: number,
+        message?: Partial<ResponseMessage> | ResponseMessage,
+        fullyReplace?: boolean
+    ): void;
+};
 
 const LIMIT = 50;
 
 export default function Content({ channelId }: { channelId: number }) {
+    const { data, isLoading, mutate, size, setSize } = useFetchMessages(channelId, LIMIT);
     const [isAtBottom, setIsAtBottom] = useState(true);
 
     const channel = useData((state) => state.channels).find((c) => c.id === channelId);
@@ -28,57 +37,32 @@ export default function Content({ channelId }: { channelId: number }) {
 
     if (!channel) return null;
 
-    const friend = channel.type === 0 ? channel.recipients.find((r) => r.id !== user!.id) : null;
+    const friend =
+        channel.type === 0 ? channel.recipients.find((r) => r.id !== user!.id) : undefined;
 
-    const getKey: SWRInfiniteKeyLoader = (_, previousData) => {
-        const baseUrl = `/channels/${channel.id}/messages?limit=`;
-
-        if (previousData) {
-            if (previousData.length < LIMIT) {
-                return null;
-            }
-
-            const last = previousData[previousData.length - 1];
-            return `${baseUrl}${LIMIT}&before=${last.createdAt}`;
-        }
-
-        return `${baseUrl}${LIMIT}`;
-    };
-
-    const { data, isLoading, mutate, size, setSize } = useSWRInfinite<ResponseMessage[], Error>(
-        getKey,
-        fetchHelper().request,
-        {
-            errorRetryCount: 0,
-            revalidateIfStale: true,
-            revalidateOnFocus: false,
-            revalidateOnReconnect: true,
-        }
-    );
-
-    const messages = useMemo(
-        () =>
-            data
-                ? data
-                      .flat()
-                      .reverse()
-                      .map((m) => ({
-                          ...m,
-                          createdAt: new Date(m.createdAt).toISOString(),
-                      }))
-                : [],
-        [data]
-    );
+    const messages = useMemo(() => (data ? data.flat().reverse() : []), [data]);
     const hasMore = useMemo(() => (data ? data[data.length - 1].length === LIMIT : false), [data]);
 
-    const skeletonEl = useRef<HTMLDivElement>(null);
     const scrollEl = useRef<HTMLDivElement>(null);
     const spacerEl = useRef<HTMLDivElement>(null);
 
-    const shouldLoad = useIntersection(skeletonEl as RefObject<HTMLDivElement>, -200);
+    const [skeletonEl, entry] = useIntersectionObserver({
+        root: null,
+        threshold: 0.1,
+        rootMargin: "0px",
+    });
+
+    // @ts-ignore - Works
+    const shouldLoad = entry?.isIntersecting;
+
     const setChannelUrl = useUrls((state) => state.setMe);
     const { removeNotification } = useNotifications();
     const { socket } = useSocket();
+
+    useEffect(() => {
+        document.title = `Spark | @${channel.name}`;
+        setChannelUrl(channel.id.toString());
+    }, [channel]);
 
     useEffect(() => {
         if (!socket) return;
@@ -86,10 +70,26 @@ export default function Content({ channelId }: { channelId: number }) {
         const chan = socket.subscribe(`private-channel-${channel.id}-receive`);
         const userId = Number(socket.user.user_data?.id);
 
-        chan.bind("message-received", ({ message }: { message: ResponseMessage }) => {
-            if (message.author.id === userId && !isInline(message.type)) return;
-            handleUpdateMessages("add", message.id, message);
-        });
+        chan.bind(
+            "message-received",
+            ({
+                message,
+                senderShouldReceive,
+            }: {
+                message: ResponseMessage;
+                senderShouldReceive?: boolean;
+            }) => {
+                if (
+                    message.author.id === userId &&
+                    !isInline(message.type) &&
+                    !senderShouldReceive
+                ) {
+                    return;
+                }
+
+                handleUpdateMessages("add", message.id, message);
+            }
+        );
 
         chan.bind(
             "message-edited",
@@ -108,14 +108,14 @@ export default function Content({ channelId }: { channelId: number }) {
                 messageId: number;
                 reactorId: number;
                 reaction: {
-                    id?: number;
+                    id: number | null;
                     name: string;
                     count: number;
                 };
             }) => {
                 mutate(
-                    (prev: any) => {
-                        return prev.map((a) =>
+                    (prev) => {
+                        return prev?.map((a) =>
                             a.map((m) => {
                                 if (m.id === messageId) {
                                     const existing = m.reactions.find((r) =>
@@ -171,8 +171,8 @@ export default function Content({ channelId }: { channelId: number }) {
                 reaction: string;
             }) => {
                 mutate(
-                    (prev: any) => {
-                        return prev.map((a) =>
+                    (prev) => {
+                        return prev?.map((a) =>
                             a.map((m) => {
                                 if (m.id === messageId) {
                                     const existing = m.reactions.find((r) => {
@@ -224,11 +224,6 @@ export default function Content({ channelId }: { channelId: number }) {
     }, [socket]);
 
     useEffect(() => {
-        document.title = `Spark | @${channel.name}`;
-        setChannelUrl(channel.id.toString());
-    }, [channel]);
-
-    useEffect(() => {
         const load = shouldLoad && hasMore && !isLoading && messages.length > 0;
         if (load) setSize(size + 1);
     }, [shouldLoad]);
@@ -237,7 +232,7 @@ export default function Content({ channelId }: { channelId: number }) {
         const container = scrollEl.current;
         if (!container) return;
 
-        removeNotification(channel.id);
+        // removeNotification(channel.id);
         container.scrollTop = container.scrollHeight;
     };
 
@@ -289,7 +284,7 @@ export default function Content({ channelId }: { channelId: number }) {
     function handleUpdateMessages(
         type: "add" | "update" | "delete",
         id: number,
-        message?: Partial<ResponseMessage>,
+        message?: Partial<ResponseMessage> | ResponseMessage,
         fullyReplace?: boolean
     ) {
         if (type === "add") {
@@ -300,27 +295,22 @@ export default function Content({ channelId }: { channelId: number }) {
                 },
                 { revalidate: false }
             );
-        } else if (type === "update") {
+        } else if (type === "update" && message) {
             mutate(
-                (prev: any) =>
-                    prev.map((a) =>
+                (prev) =>
+                    prev?.map((a) =>
                         a.map((m) =>
                             m.id === id
                                 ? fullyReplace
-                                    ? message
-                                    : {
-                                          ...m,
-                                          ...message,
-                                      }
+                                    ? (message as ResponseMessage)
+                                    : { ...m, ...message }
                                 : m
                         )
                     ),
-                {
-                    revalidate: false,
-                }
+                { revalidate: false }
             );
         } else if (type === "delete") {
-            mutate((prev: any) => prev.map((a) => a.filter((m) => m.id !== id)), {
+            mutate((prev) => prev?.map((a) => a.filter((m) => m.id !== id)), {
                 revalidate: false,
             });
         }
@@ -337,6 +327,7 @@ export default function Content({ channelId }: { channelId: number }) {
                         <div>
                             <ol>
                                 {hasMore || (isLoading && !messages.length) ? (
+                                    // @ts-ignore - Works
                                     <div ref={hasMore ? skeletonEl : undefined}>
                                         <MessageSk />
                                     </div>
@@ -351,7 +342,9 @@ export default function Content({ channelId }: { channelId: number }) {
                                     <div key={message.id}>
                                         {isNewDay(messages, index) && (
                                             <div className={styles.divider}>
-                                                <span>{getDayDate(message.createdAt)}</span>
+                                                <span>
+                                                    {getDayDate(new Date(message.createdAt))}
+                                                </span>
                                             </div>
                                         )}
 
@@ -365,8 +358,8 @@ export default function Content({ channelId }: { channelId: number }) {
                                 ))}
 
                                 <div
-                                    className={styles.spacer}
                                     ref={spacerEl}
+                                    className={styles.spacer}
                                 />
                             </ol>
                         </div>
@@ -385,84 +378,13 @@ export default function Content({ channelId }: { channelId: number }) {
     );
 }
 
-function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: KnownUser }) {
-    const [loading, setLoading] = useState<{
-        [key: string]: boolean;
-    }>({});
-
-    const { friends, blocked, received, sent } = useData();
-    const { sendRequest } = useFetchHelper();
+function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: ChannelRecipient }) {
+    const { isFriend, hasRequested, wasRequested, isBlocked } = useRelationships(friend?.id);
+    const { addFriend, removeFriend, blockUser, unblockUser } = useRequests();
+    const { triggerDialog } = useTriggerDialog();
 
     const mutualGuilds: Guild[] = [];
     const guildIcons = mutualGuilds.filter((guild) => !!guild.icon);
-
-    const isFriend = friends.find((f) => f.id === friend?.id);
-    const isSent = sent.find((f) => f.id === friend?.id);
-    const isReceived = received.find((f) => f.id === friend?.id);
-    const isBlocked = blocked.find((f) => f.id === friend?.id);
-
-    async function addFriend() {
-        if (!friend) return;
-        setLoading((prev) => ({ ...prev, addFriend: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "ADD_FRIEND",
-                body: { username: friend?.username },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, addFriend: false }));
-    }
-
-    async function removeFriend() {
-        if (!friend) return;
-        setLoading((prev) => ({ ...prev, removeFriend: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "REMOVE_FRIEND",
-                body: { username: friend.username },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, removeFriend: false }));
-    }
-
-    async function blockUser() {
-        if (!friend) return;
-        setLoading((prev) => ({ ...prev, blockUser: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "BLOCK_USER",
-                params: { userId: friend.id },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, blockUser: false }));
-    }
-
-    async function unblockUser() {
-        setLoading((prev) => ({ ...prev, unblockUser: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "UNBLOCK_USER",
-                params: { userId: friend?.id },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, unblockUser: false }));
-    }
 
     return (
         <div className={styles.header}>
@@ -513,10 +435,10 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: KnownU
                             <div
                                 className={styles.mutualGuildText}
                                 onClick={() => {
-                                    // setLayers({
-                                    //     settings: { type: "USER_PROFILE" },
-                                    //     content: { user: friend, guilds: true },
-                                    // });
+                                    triggerDialog({
+                                        type: "USER_PROFILE",
+                                        data: { user: friend, startingTab: 2 },
+                                    });
                                 }}
                             >
                                 {mutualGuilds.length} Mutual Server{mutualGuilds.length > 1 && "s"}
@@ -528,31 +450,31 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: KnownU
                         {isFriend ? (
                             <button
                                 className="button grey"
-                                onClick={() => removeFriend()}
+                                onClick={() => removeFriend.send({ username: friend.username })}
                             >
-                                {loading.removeFriend ? <LoadingDots /> : "Remove Friend"}
+                                {removeFriend.isLoading ? <LoadingDots /> : "Remove Friend"}
                             </button>
-                        ) : isSent ? (
+                        ) : wasRequested ? (
                             <button
                                 tabIndex={-1}
                                 className="button blue disabled"
                             >
-                                {loading.addFriend ? <LoadingDots /> : "Friend Request Sent"}
+                                {addFriend.isLoading ? <LoadingDots /> : "Friend Request Sent"}
                             </button>
-                        ) : isReceived ? (
+                        ) : hasRequested ? (
                             <button
                                 className="button grey"
-                                onClick={() => addFriend()}
+                                onClick={() => addFriend.send({ username: friend.username })}
                             >
-                                {loading.addFriend ? <LoadingDots /> : "Accept Friend Request"}
+                                {addFriend.isLoading ? <LoadingDots /> : "Accept Friend Request"}
                             </button>
                         ) : (
                             !isBlocked && (
                                 <button
                                     className="button blue"
-                                    onClick={() => addFriend()}
+                                    onClick={() => addFriend.send({ username: friend.username })}
                                 >
-                                    {loading.addFriend ? <LoadingDots /> : "Add Friend"}
+                                    {addFriend.isLoading ? <LoadingDots /> : "Add Friend"}
                                 </button>
                             )
                         )}
@@ -560,16 +482,16 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: KnownU
                         {!isBlocked ? (
                             <button
                                 className="button grey"
-                                onClick={() => blockUser()}
+                                onClick={() => blockUser.send({ userId: friend.id })}
                             >
-                                {loading.blockUser ? <LoadingDots /> : "Block"}
+                                {blockUser.isLoading ? <LoadingDots /> : "Block"}
                             </button>
                         ) : (
                             <button
                                 className="button grey"
-                                onClick={() => unblockUser()}
+                                onClick={() => unblockUser.send({ userId: friend.id })}
                             >
-                                {loading.unblockUser ? <LoadingDots /> : "Unblock"}
+                                {unblockUser.isLoading ? <LoadingDots /> : "Unblock"}
                             </button>
                         )}
                     </div>

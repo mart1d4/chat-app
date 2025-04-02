@@ -2,25 +2,24 @@
 
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { ImageUpload } from "./ImageUpload/ImageUpload";
-import useRequestHelper from "@/hooks/useFetchHelper";
-import type { KnownUser, UnknownUser } from "@/type";
-import { useData, useTriggerDialog } from "@/store";
+import { useRequests } from "@/hooks/useRequests";
 import { getRelativeDate } from "@/lib/time";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useTriggerDialog } from "@/store";
 import styles from "./Dialog.module.css";
 import { useState } from "react";
 import {
     RecordVoiceMessage,
+    CreateGuildChannel,
     DialogContent,
     DialogProtip,
     UpdateStatus,
     FixedMessage,
+    InviteDialog,
     UserProfile,
     LeaveGroup,
     Dialog,
     Avatar,
-    InviteDialog,
-    CreateGuildChannel,
 } from "@components";
 
 const warnings = {
@@ -53,15 +52,21 @@ const warnings = {
 };
 
 export function DialogOverlay() {
-    const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
+    const [loading, setLoading] = useState<Record<string, boolean>>({});
     const [close, setClose] = useState(false);
 
     const { open, removeDialog } = useTriggerDialog();
-    const { sendRequest } = useRequestHelper();
     const appUser = useAuthenticatedUser();
-    const pathname = usePathname();
-    const { friends } = useData();
     const router = useRouter();
+    const {
+        addChannelRecipients,
+        deleteGuildChannel,
+        deleteChannel,
+        createChannel,
+        removeFriend,
+        changeOwner,
+        blockUser,
+    } = useRequests();
 
     function remove(id: string) {
         // If the dialog is the last one, close the overlay before removing it
@@ -73,112 +78,6 @@ export function DialogOverlay() {
             }, 300);
         } else {
             removeDialog(id);
-        }
-    }
-
-    async function removeFriend(user: KnownUser | UnknownUser, id: string) {
-        if (loading.removeFriend) return;
-        setLoading((prev) => ({ ...prev, removeFriend: true }));
-
-        const friend = friends.find((friend) => friend.id === user.id);
-
-        if (!friend) {
-            setLoading((prev) => ({ ...prev, removeFriend: false }));
-            return;
-        }
-
-        try {
-            const { errors } = await sendRequest({
-                query: "REMOVE_FRIEND",
-                body: { username: friend.username },
-            });
-
-            if (!errors) {
-                remove(id);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, removeFriend: false }));
-    }
-
-    async function blockUser(user: KnownUser | UnknownUser, id: string) {
-        if (loading.blockUser) return;
-        setLoading((prev) => ({ ...prev, blockUser: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "BLOCK_USER",
-                params: { userId: user.id },
-            });
-
-            if (!errors) {
-                remove(id);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, blockUser: false }));
-    }
-
-    async function changeOwner(channelId: number, userId: number, id: string) {
-        if (loading.ownerChange) return;
-        setLoading((prev) => ({ ...prev, ownerChange: true }));
-
-        try {
-            const { errors } = await sendRequest({
-                query: "CHANNEL_RECIPIENT_OWNER",
-                params: {
-                    channelId: channelId,
-                    recipientId: userId,
-                },
-            });
-
-            if (!errors) {
-                remove(id);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, ownerChange: false }));
-    }
-
-    async function createChannel(recipients: number[], id: string) {
-        if (loading.createChannel) return;
-        setLoading((prev) => ({ ...prev, createChannel: true }));
-
-        try {
-            const { errors, data } = await sendRequest({
-                query: "CHANNEL_CREATE",
-                body: { recipients },
-                skipChannelCheck: true,
-            });
-
-            if (!errors && data?.channel) {
-                remove(id);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading((prev) => ({ ...prev, createChannel: false }));
-    }
-
-    async function deleteChannel(channelId: number, id: string) {
-        try {
-            const { errors } = await sendRequest({
-                query: "GUILD_CHANNEL_DELETE",
-                params: { channelId },
-            });
-
-            if (!errors) {
-                remove(id);
-            }
-        } catch (error) {
-            console.error(error);
         }
     }
 
@@ -199,9 +98,15 @@ export function DialogOverlay() {
                 >
                     <DialogContent
                         confirmColor="red"
-                        onConfirm={() => deleteChannel(data.channel.id, id)}
+                        confirmLoading={deleteChannel.isLoading}
                         heading={`Delete ${data.channel.type === 4 ? "Category" : "Channel"}`}
                         confirmLabel={`Delete ${data.channel.type === 4 ? "Category" : "Channel"}`}
+                        onConfirm={() =>
+                            deleteGuildChannel.send(
+                                { channelId: data.channel.id },
+                                { onComplete: () => remove(id) }
+                            )
+                        }
                     >
                         Are you sure you want to delete <strong>{data.channel.name}</strong>? This
                         cannot be undone.
@@ -295,9 +200,14 @@ export function DialogOverlay() {
                         <DialogContent
                             confirmColor="red"
                             confirmLabel="Block"
-                            confirmLoading={loading.blockUser}
+                            confirmLoading={blockUser.isLoading}
                             heading={`Block ${data?.user.username}?`}
-                            onConfirm={() => blockUser(data.user, id)}
+                            onConfirm={() =>
+                                blockUser.send(
+                                    { userId: data.user.id },
+                                    { onComplete: () => remove(id) }
+                                )
+                            }
                         >
                             <p>
                                 Are you sure you want to block{" "}
@@ -323,9 +233,16 @@ export function DialogOverlay() {
                         <DialogContent
                             confirmColor="red"
                             confirmLabel="Remove Friend"
-                            confirmLoading={loading.removeFriend}
+                            confirmLoading={removeFriend.isLoading}
                             heading={`Remove '${data?.user.username}'`}
-                            onConfirm={() => removeFriend(data.user, id)}
+                            onConfirm={() =>
+                                removeFriend.send(
+                                    { username: data.user.username },
+                                    {
+                                        onComplete: () => remove(id),
+                                    }
+                                )
+                            }
                         >
                             <p>
                                 Are you sure you want to remove{" "}
@@ -421,8 +338,8 @@ export function DialogOverlay() {
                             onConfirm={async () => {
                                 setLoading((prev) => ({ ...prev, deleteMessage: true }));
                                 await data.functions.deleteMessage();
-                                remove(id);
                                 setLoading((prev) => ({ ...prev, deleteMessage: false }));
+                                remove(id);
                             }}
                         >
                             <FixedMessage message={data.message} />
@@ -464,8 +381,13 @@ export function DialogOverlay() {
                     <DialogContent
                         confirmColor="red"
                         heading="Transfer Group Ownership"
-                        confirmLoading={loading.ownerChange}
-                        onConfirm={() => changeOwner(data.channelId, data.user.id, id)}
+                        confirmLoading={changeOwner.isLoading}
+                        onConfirm={() =>
+                            changeOwner.send(
+                                { channelId: data.channelId, recipientId: data.user.id },
+                                { onComplete: () => remove(id) }
+                            )
+                        }
                     >
                         <div className={styles.ownerChange}>
                             <svg
@@ -481,7 +403,7 @@ export function DialogOverlay() {
                                 >
                                     <path d="m0 0h80v16h-80z" />
 
-                                    <g stroke="var(--foreground-3)">
+                                    <g stroke="var(--fg-3)">
                                         <path d="m71 1h4v4.16" />
                                         <path
                                             d="m2 1h4v4.16"
@@ -554,8 +476,24 @@ export function DialogOverlay() {
                     <DialogContent
                         heading="Confirm New Group"
                         confirmLabel="Create New Group"
-                        confirmLoading={loading.createChannel}
-                        onConfirm={() => createChannel(data.recipients, id)}
+                        confirmLoading={createChannel.isLoading || addChannelRecipients.isLoading}
+                        onConfirm={() => {
+                            if (data?.isAdd) {
+                                addChannelRecipients.send(
+                                    {
+                                        channelId: data.channel.id,
+                                        recipients: data.recipients,
+                                        skipWarning: true,
+                                    },
+                                    { onComplete: () => remove(id) }
+                                );
+                            } else {
+                                createChannel.send(
+                                    { recipients: data.recipients, skipWarning: true },
+                                    { onComplete: () => remove(id) }
+                                );
+                            }
+                        }}
                         description="You already have a group with these people! Are you sure you want to create a new one?"
                     >
                         <div
@@ -610,7 +548,7 @@ export function DialogOverlay() {
                         <DialogContent blank>
                             <div
                                 className={styles.warning}
-                                style={{ backgroundColor: "var(--accent-1)" }}
+                                style={{ backgroundColor: "var(--accent-0)" }}
                             >
                                 <div>
                                     <div className={styles.icons}>

@@ -1,8 +1,8 @@
 "use client";
 
 import { Checkbox } from "./Checkbox/Checkbox";
-import { useEffect, useState } from "react";
 import styles from "./Input.module.css";
+import { useId } from "react";
 
 export function Input({
     label,
@@ -30,12 +30,7 @@ export function Input({
     noBox?: boolean;
     onChange?: (value: string) => void;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
-    const [id, setId] = useState<string>("");
-
-    useEffect(() => {
-        const randomId = Math.random().toString(36).substring(7);
-        setId(randomId);
-    }, []);
+    const id = useId();
 
     const classnames = [
         leftItem && styles.leftItem,

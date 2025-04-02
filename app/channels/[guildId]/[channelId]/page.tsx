@@ -1,5 +1,5 @@
 import { DefaultGuildChannelSelect, DefaultGuildRoleSelect } from "@/lib/default-selects";
-import { AppHeader, ClickLayer, GuildChannels, MemberList } from "@/app/components";
+import { AppHeader, ClickLayer, GuildChannels, ChannelAside } from "@/app/components";
 import { hasChannelPermission, isChannelPrivate } from "@/lib/db/permissions";
 import type { GuildChannel, GuildRole } from "@/type";
 import styles from "../../me/FriendsPage.module.css";
@@ -48,6 +48,7 @@ export default async function GuildChannelPage({
         .selectFrom("channels")
         .select(DefaultGuildChannelSelect)
         .where("guildId", "=", guildId)
+        .where("isDeleted", "=", false)
         .execute()) as GuildChannel[];
 
     const channels = channelsQuery
@@ -55,13 +56,11 @@ export default async function GuildChannelPage({
             const everyoneRole = roles.find((role) => role.name === "@everyone")?.id;
             const overwrites = channel.permissionOverwrites || [];
 
-            const newOverwrites = overwrites.map((overwrite: { allow: string; deny: string }) => {
-                return {
-                    ...overwrite,
-                    allow: BigInt(overwrite.allow),
-                    deny: BigInt(overwrite.deny),
-                };
-            });
+            const newOverwrites = overwrites.map((o: { allow: string; deny: string }) => ({
+                ...o,
+                allow: BigInt(o.allow),
+                deny: BigInt(o.deny),
+            }));
 
             const isPrivate = everyoneRole
                 ? isChannelPrivate(channel.permissionOverwrites, everyoneRole)
@@ -133,25 +132,27 @@ export default async function GuildChannelPage({
                     <AppHeader
                         initChannel={{
                             ...channel,
-                            recipients: [],
+                            recipients: guildMembers,
                         }}
                     />
 
-                    <div className={styles.content}>
-                        <Content
-                            guildId={guildId}
-                            channelId={channel.id}
-                        />
+                    {channel.type !== 3 && (
+                        <div className={styles.content}>
+                            <Content
+                                guildId={guildId}
+                                channelId={channel.id}
+                            />
 
-                        <MemberList
-                            guildId={guildId}
-                            channelId={channel.id}
-                            initChannel={{
-                                ...channel,
-                                recipients: [],
-                            }}
-                        />
-                    </div>
+                            <ChannelAside
+                                guildId={guildId}
+                                channelId={channelId}
+                                initChannel={{
+                                    ...channel,
+                                    recipients: [],
+                                }}
+                            />
+                        </div>
+                    )}
                 </div>
             </ClickLayer>
         </>

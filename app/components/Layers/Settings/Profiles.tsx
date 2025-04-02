@@ -1,11 +1,11 @@
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
-import useFetchHelper from "@/hooks/useFetchHelper";
 import { useUploadThing } from "@/lib/uploadthing";
+import { useRequests } from "@/hooks/useRequests";
 import styles from "./Settings.module.css";
 import type Cropper from "cropperjs";
-import { useData } from "@/store";
+import { useData, useTriggerAlert } from "@/store";
 import {
     InteractiveElement,
     TooltipContent,
@@ -21,18 +21,18 @@ import {
     Tooltip,
     Popover,
     Dialog,
-    Alert,
     Icon,
 } from "@components";
 
 export function Profiles() {
-    const setUser = useData((state) => state.setUser);
-    const { sendRequest } = useFetchHelper();
+    const { triggerAlert } = useTriggerAlert();
+    const { updateUser } = useRequests();
     const user = useAuthenticatedUser();
+    const { setUser } = useData();
 
     const tabs = ["User Profile", "Server Profiles"];
 
-    const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [activeTab, setActiveTab] = useState<0 | 1>(0);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -103,6 +103,12 @@ export function Profiles() {
         }
     }, [avatarId, bannerId]);
 
+    useEffect(() => {
+        for (const [_, value] of Object.entries(errors)) {
+            triggerAlert("error", value);
+        }
+    }, [errors]);
+
     function resetState() {
         if (!user) return;
 
@@ -130,42 +136,36 @@ export function Profiles() {
         description !== user.description;
 
     async function saveUser() {
-        if (isLoading && !avatarId && !bannerId) return;
-        setIsLoading(true);
-
         if (avatar instanceof File && !avatarId) {
-            uploadAvatar([avatar]);
+            setIsLoading(true);
+            await uploadAvatar([avatar]);
+            setIsLoading(false);
             return;
         }
 
         if (banner instanceof File && !bannerId) {
-            uploadBanner([banner]);
+            setIsLoading(true);
+            await uploadBanner([banner]);
+            setIsLoading(false);
             return;
         }
 
-        try {
-            const { errors, data } = await sendRequest({
-                query: "UPDATE_USER",
-                body: {
-                    avatar: avatar !== user.avatar ? avatarId || avatar : undefined,
-                    banner: banner !== user.banner ? bannerId || banner : undefined,
-                    displayName: displayName !== user.displayName ? displayName : undefined,
-                    bannerColor: bannerColor !== user.bannerColor ? bannerColor : undefined,
-                    accentColor: accentColor !== user.accentColor ? accentColor : undefined,
-                    description: description !== user.description ? description : undefined,
+        updateUser.send(
+            {
+                avatar: avatar !== user.avatar ? avatarId || avatar : undefined,
+                banner: banner !== user.banner ? bannerId || banner : undefined,
+                displayName,
+                bannerColor,
+                accentColor,
+                description,
+            },
+            {
+                onComplete: (data) => {
+                    setErrors({});
+                    setUser({ ...user, ...data.user });
                 },
-            });
-
-            if (data?.user) {
-                setUser({ ...user, ...data.user });
-                setErrors({});
-            } else if (errors) {
-                setErrors(errors);
             }
-        } catch (err) {
-            console.error(err);
-            setErrors({ server: "An error occurred while saving your profile" });
-        }
+        );
     }
 
     async function handleFileChange(
@@ -177,27 +177,17 @@ export function Profiles() {
 
         // Run checks
         const maxFileSize = 1024 * 1024 * 4; // 4MB
+
         if (file.size > maxFileSize) {
-            setErrors({
-                avatar: "File size is too large. A maximum of 4MB is allowed",
-            });
-
-            setTimeout(() => {
-                setErrors({});
-            }, 5000);
-
+            setErrors({ avatar: "File size is too large. A maximum of 4MB is allowed" });
+            setTimeout(() => setErrors({}), 5000);
             return (e.target.value = "");
         }
 
-        const newFile = new File([file], "image", {
-            type: file.type,
-        });
+        const newFile = new File([file], "image", { type: file.type });
 
-        if (type === "avatar") {
-            setFileType("avatar");
-        } else {
-            setFileType("banner");
-        }
+        if (type === "avatar") setFileType("avatar");
+        else setFileType("banner");
 
         setFileTemp(newFile);
 
@@ -211,28 +201,16 @@ export function Profiles() {
             canvas.toBlob((blob) => resolve(blob as any))
         );
 
-        const newFile = new File([blob], "image", {
-            type: fileTemp.type,
-        });
+        const newFile = new File([blob], "image", { type: fileTemp.type });
 
-        if (fileType === "avatar") {
-            setAvatar(newFile);
-        } else {
-            setBanner(newFile);
-        }
+        if (fileType === "avatar") setAvatar(newFile);
+        else setBanner(newFile);
 
         setFileTemp(null);
     }
 
     return (
         <div>
-            {(errors.avatar || errors.banner) && (
-                <Alert
-                    type="danger"
-                    message={errors.avatar || errors.banner}
-                />
-            )}
-
             {fileTemp && (
                 <Dialog
                     open={!!fileTemp}
@@ -296,7 +274,7 @@ export function Profiles() {
                         key={tab + index}
                         onClick={() => setActiveTab(index as 0 | 1)}
                         style={{
-                            color: activeTab === index ? "var(--foreground-1)" : "",
+                            color: activeTab === index ? "var(--fg-1)" : "",
                             cursor: activeTab === index ? "default" : "",
                             borderBottom:
                                 activeTab === index ? "2px solid hsl(235, 86.1%, 77.5%)" : "",
@@ -412,8 +390,7 @@ export function Profiles() {
                                                 element="div"
                                                 style={{
                                                     backgroundColor: accentColor,
-                                                    borderColor:
-                                                        accentColor || "var(--border-light)",
+                                                    borderColor: accentColor || "var(--border-2)",
                                                 }}
                                             >
                                                 <Icon
@@ -486,7 +463,7 @@ export function Profiles() {
                                         style={{
                                             color:
                                                 (description?.length || 0) > 190
-                                                    ? "var(--error-1)"
+                                                    ? "var(--danger-0)"
                                                     : "",
                                         }}
                                     >
@@ -571,7 +548,11 @@ export function Profiles() {
                                             }
                                         }}
                                     >
-                                        {isLoading ? <LoadingDots /> : "Save Changes"}
+                                        {isLoading || updateUser.isLoading ? (
+                                            <LoadingDots />
+                                        ) : (
+                                            "Save Changes"
+                                        )}
                                     </button>
                                 </TooltipTrigger>
 

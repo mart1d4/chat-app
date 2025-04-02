@@ -12,8 +12,8 @@
     min-height: 200px;
     border-radius: 4px;
     flex-direction: column;
+    background-color: var(--bg-3);
     max-width: calc(var(--dvw) - 40px);
-    background-color: var(--background-4);
     max-height: min(720px, calc(var(--dvh) - 40px));
     box-shadow: var(--elevation-high), var(--elevation-low);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
@@ -61,7 +61,7 @@
     line-height: 1.2;
     font-weight: 600;
     margin-bottom: 16px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .header > h2:last-child {
@@ -74,7 +74,7 @@
     margin-bottom: 0;
     font-weight: 700;
     line-height: 30px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .boldHeading > h2 {
@@ -89,14 +89,14 @@
     line-height: 1.25;
     user-select: none;
     margin-bottom: 4px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .header.centered > p {
     margin-top: 8px;
     line-height: 1.25;
     user-select: none;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .header.boldHeading > p {
@@ -120,7 +120,7 @@
     position: absolute;
     border-radius: 3px;
     transition: opacity 0.15s;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     background-color: transparent;
 }
 
@@ -162,7 +162,7 @@
     font-size: 14px;
     font-weight: 700;
     line-height: 1.285;
-    color: var(--success-light);
+    color: var(--success-fg);
     text-transform: uppercase;
 }
 
@@ -195,8 +195,8 @@
     position: relative;
     align-items: center;
     border-radius: 0 0 5px 5px;
+    background-color: var(--bg-2);
     justify-content: space-between;
-    background-color: var(--background-3);
     box-shadow: inset 0 1px 0 hsla(220, 6.5%, 18%, 0.6);
 }
 
@@ -255,7 +255,7 @@
     border-radius: 4px;
     padding: 10px;
     max-height: calc(100dvh - 40px);
-    background-color: var(--error-1);
+    background-color: var(--danger-0);
     box-shadow: var(--elevation-low), var(--elevation-high);
     animation: modalShake 0.82s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
     transform: translateZ(0);
@@ -265,7 +265,7 @@
 .warning > div {
     height: auto;
     flex: 1;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -369,21 +369,21 @@
 
 .channelItem:hover,
 .channelItem:focus-visible {
-    background-color: var(--background-hover-1);
+    background-color: var(--bg-hover-1);
 }
 
 .channelItem > span:first-of-type {
     font-size: 14px;
     margin-left: 8px;
     font-weight: 500;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .channelItem > span:last-of-type {
     font-size: 12px;
     margin-top: 2px;
     margin-left: 8px;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 @keyframes modalShake {

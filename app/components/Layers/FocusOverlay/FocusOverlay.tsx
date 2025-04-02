@@ -19,7 +19,7 @@ const FocusOverlay: React.FC<FocusOverlayProps> = ({ active, bounds, borderRadiu
         left: Math.max(bounds.left - 4, 0), // Prevent overflow on the left
         width: Math.min(bounds.width + 8, window.innerWidth - bounds.left + 4), // Adjust width to fit viewport
         height: Math.min(bounds.height + 8, window.innerHeight - bounds.top + 4), // Adjust height to fit viewport
-        border: "4px solid var(--accent-light)",
+        border: "4px solid var(--accent-fg)",
         borderRadius: borderRadius,
         boxSizing: "border-box",
         zIndex: 9999,

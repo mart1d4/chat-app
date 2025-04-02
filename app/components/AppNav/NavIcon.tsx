@@ -1,17 +1,23 @@
 "use client";
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "@components";
+import { Icon, Tooltip, TooltipContent, TooltipTrigger } from "@components";
+import { useActiveVoice, useData, useUrls } from "@/store";
 import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTracks } from "@livekit/components-react";
 import { useGuildSettings } from "@/store/settings";
+import { useRequests } from "@/hooks/useRequests";
 import { getRandomImage } from "@/lib/utils";
-import { useState, useEffect } from "react";
-import { useData, useUrls } from "@/store";
+import type { GuildChannel } from "@/type";
 import { isStillMuted } from "@/lib/mute";
 import styles from "./AppNav.module.css";
+import { memo, useState } from "react";
+import { Track } from "livekit-client";
 import Link from "next/link";
+import { isChannelPrivate } from "@/lib/permissions";
 
-export default function NavIcon({
+export const NavIcon = memo(function NavIcon({
+    voice,
     green,
     special,
     guild,
@@ -23,6 +29,7 @@ export default function NavIcon({
     hasUnread,
     channelType,
 }: {
+    voice?: boolean;
     green?: boolean;
     special?: boolean;
     guild?: any;
@@ -37,9 +44,20 @@ export default function NavIcon({
     const [markHeight, setMarkHeight] = useState(0);
     const [active, setActive] = useState(false);
 
-    const requests = useData((state) => state.received);
-    const guildUrls = useUrls((state) => state.guilds);
-    const meUrl = useUrls((state) => state.me);
+    const { guilds: guildUrls, me: meUrl } = useUrls();
+    const { received, updateGuild } = useData();
+    const { getGuildChannels } = useRequests();
+    const { guilds } = useGuildSettings();
+    const pathname = usePathname();
+    const router = useRouter();
+
+    const currentGuild = useData((s) => s.guilds).find((g) => g.id === guild?.id);
+
+    const guildHasVoice = useActiveVoice((s) => s.rooms).find((r) => r.guildId === guild?.id);
+    voice = voice || !!guildHasVoice;
+
+    const cameraTracks = useTracks([Track.Source.Camera]);
+    const streamTracks = useTracks([Track.Source.ScreenShare]);
 
     let url;
     if (special) {
@@ -53,24 +71,68 @@ export default function NavIcon({
         url = link;
     }
 
-    const { guilds } = useGuildSettings();
-    const pathname = usePathname();
-    const router = useRouter();
-
     const guildSettings = guilds[guild?.id];
     const isMuted = guildSettings
         ? isStillMuted(guildSettings.duration, guildSettings.started)
         : false;
 
-    useEffect(() => {
-        if (pathname.startsWith(special ? "/channels/me" : link)) {
-            setActive(true);
-            setMarkHeight(40);
-        } else {
-            setActive(false);
-            setMarkHeight(hasUnread ? 7 : 0);
+    const isActive = pathname.startsWith(special ? "/channels/me" : link);
+
+    function fetchGuildChannels() {
+        if (currentGuild && !currentGuild.channels.length) {
+            getGuildChannels.send(
+                { guildId: currentGuild.id },
+                {
+                    onComplete: (data: { channels: GuildChannel[] }) => {
+                        console.log("Received data: ", data);
+
+                        if (data.channels) {
+                            const everyoneRole = currentGuild.roles.find(
+                                (role) => role.name === "@everyone"
+                            )?.id;
+
+                            const channels = data.channels
+                                .map((channel) => {
+                                    const overwrites = channel.permissionOverwrites || [];
+
+                                    const newOverwrites = overwrites.map(
+                                        (o: { allow: string; deny: string }) => ({
+                                            ...o,
+                                            allow: BigInt(o.allow),
+                                            deny: BigInt(o.deny),
+                                        })
+                                    );
+
+                                    const isPrivate = everyoneRole
+                                        ? isChannelPrivate(
+                                              channel.permissionOverwrites,
+                                              everyoneRole
+                                          )
+                                        : false;
+
+                                    return {
+                                        ...channel,
+                                        permissionOverwrites: newOverwrites,
+                                        isPrivate,
+                                    };
+                                })
+                                .sort((a, b) => a.position - b.position);
+
+                            updateGuild(currentGuild.id, { channels });
+                        }
+                    },
+                }
+            );
         }
-    }, [pathname]);
+    }
+
+    if (isActive && !active) {
+        setActive(true);
+        setMarkHeight(40);
+    } else if (!isActive && active) {
+        setActive(false);
+        setMarkHeight(hasUnread ? 7 : 0);
+    }
 
     const firstLetters = name
         .split(" ")
@@ -118,26 +180,49 @@ export default function NavIcon({
                             href={url}
                             onClick={() => router.push(link)}
                             className={`${styles.wrapper} ${active ? styles.active : ""}`}
-                            onMouseEnter={() => !active && setMarkHeight(20)}
+                            onMouseEnter={() => {
+                                if (!active) setMarkHeight(20);
+                                fetchGuildChannels();
+                            }}
+                            onFocus={() => {
+                                fetchGuildChannels();
+                            }}
                             onMouseLeave={() => !active && setMarkHeight(hasUnread ? 7 : 0)}
                             style={{
                                 fontWeight: !src && !svg ? "500" : "",
                                 backgroundColor: src ? "transparent" : "",
                             }}
                         >
-                            {((requests.length > 0 && special) ||
+                            {((received.length > 0 && special) ||
                                 (pings !== undefined && pings > 0)) && (
                                 <div
                                     className={styles.badgeContainer}
-                                    style={{ width: requests.length > 99 ? "30px" : "" }}
+                                    style={{ width: received.length > 99 ? "30px" : "" }}
                                 >
                                     <div
                                         style={{
-                                            width: requests.length > 99 ? "20px" : "",
-                                            fontSize: requests.length > 99 ? "10px" : "",
+                                            width: received.length > 99 ? "20px" : "",
+                                            fontSize: received.length > 99 ? "10px" : "",
                                         }}
                                     >
-                                        {pings ? pings : requests.length}
+                                        {pings ? pings : received.length}
+                                    </div>
+                                </div>
+                            )}
+
+                            {voice && (
+                                <div className={styles.topBadge}>
+                                    <div>
+                                        <Icon
+                                            size={12}
+                                            name={
+                                                !!streamTracks.length
+                                                    ? "screen"
+                                                    : !!cameraTracks.length
+                                                    ? "video"
+                                                    : "voice"
+                                            }
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -193,7 +278,7 @@ export default function NavIcon({
             </Tooltip>
         </div>
     );
-}
+});
 
 function getFontSize(length: number) {
     if (length < 3) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useChannelSettings, useGuildSettings } from "@/store/settings";
+import { useActiveVoice, useData, useShowChannels } from "@/store";
 import { useNotifications } from "@/store/notifications";
 import { usePathname, useRouter } from "next/navigation";
 import { getApiUrl } from "@/lib/uploadthing";
@@ -8,24 +9,26 @@ import { useSocket } from "@/store/socket";
 import { useEffect, useRef } from "react";
 import { isStillMuted } from "@/lib/mute";
 import { AppSpinner } from "./Spinner";
-import { useData, useShowChannels } from "@/store";
 import Pusher from "pusher-js";
 import type {
     DMChannelWithRecipients,
     ChannelRecipient,
+    GuildChannel,
     UnknownUser,
     GuildMember,
     UserGuild,
     KnownUser,
     AppUser,
-    GuildChannel,
 } from "@/type";
 
 const PUSHER_KEY = process.env.NEXT_PUBLIC_PUSHER_KEY;
+const DISABLE_PUSHER = false;
 
 if (!PUSHER_KEY) {
     throw new Error("PUSHER_KEY is not defined");
 }
+
+let hasLoaded = false;
 
 export function Loading({
     children,
@@ -40,6 +43,16 @@ export function Loading({
         sent: KnownUser[];
         channels: DMChannelWithRecipients[];
         guilds: UserGuild[];
+        rooms: {
+            channelId: number;
+            guildId: number | null;
+            roomName: string;
+            participants: number[];
+            started: number;
+            startedBy: number;
+            hasJoined: number | null;
+            haveDismissed: number[];
+        }[];
     };
 }) {
     const {
@@ -74,6 +87,8 @@ export function Loading({
         user,
     } = useData();
 
+    const { setRooms, addRoom, removeRoom, addParticipant, removeParticipant, addDismissed } =
+        useActiveVoice();
     const { guilds: guildsSettings } = useGuildSettings();
     const { addNotification } = useNotifications();
     const { setShowChannels } = useShowChannels();
@@ -86,16 +101,19 @@ export function Loading({
     const pathnameRef = useRef(pathname);
     const mutedRef = useRef(muted);
 
-    useEffect(() => {
+    if (mutedRef.current !== muted) {
         mutedRef.current = muted;
+    }
+
+    if (guildsSettingsRef.current !== guildsSettings) {
         guildsSettingsRef.current = guildsSettings;
-    }, [muted, guildsSettings]);
+    }
 
-    useEffect(() => {
+    if (pathnameRef.current !== pathname) {
         pathnameRef.current = pathname;
-    }, [pathname]);
+    }
 
-    useEffect(() => {
+    if (!hasLoaded) {
         setUser(data.user);
         setFriends(data.friends);
         setBlocked(data.blocked);
@@ -103,10 +121,12 @@ export function Loading({
         setSent(data.sent);
         setChannels(data.channels);
         setGuilds(data.guilds);
-    }, []);
+        setRooms(data.rooms);
+        hasLoaded = true;
+    }
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || DISABLE_PUSHER) return;
 
         // Pusher.logToConsole = true;
 
@@ -180,6 +200,7 @@ export function Loading({
         );
 
         presence.bind("pusher:member_added", ({ info: user }: { info: KnownUser }) => {
+            console.log("added", user);
             addOnlineRecipient(channel.id, { ...user, id: Number(user.id) });
         });
 
@@ -228,6 +249,24 @@ export function Loading({
 
         chan.bind("update", (data: Partial<DMChannelWithRecipients>) => {
             updateChannel(channel.id, data);
+        });
+
+        chan.bind("livekit", ({ event, data }: { event: string; data: any }) => {
+            if (event === "roomStarted") {
+                addRoom({
+                    ...data,
+                    hasJoined: data.startedBy === userId ? Date.now() / 1000 : null,
+                    haveDismissed: [],
+                });
+            } else if (event === "roomFinished") {
+                removeRoom(data.channelId);
+            } else if (event === "participantJoined") {
+                addParticipant(data.channelId, data.joined);
+            } else if (event === "participantLeft") {
+                removeParticipant(data.channelId, data.left);
+            } else if (event === "userDismissed") {
+                addDismissed(data.channelId, data.dismissed);
+            }
         });
     }
 
@@ -318,6 +357,24 @@ export function Loading({
                 removeGuildChannel(guild.id, channelId);
             }
         );
+
+        chan.bind("livekit", ({ event, data }: { event: string; data: any }) => {
+            if (event === "roomStarted") {
+                addRoom({
+                    ...data,
+                    hasJoined: false,
+                    haveDismissed: [],
+                });
+            } else if (event === "roomFinished") {
+                removeRoom(data.channelId);
+            } else if (event === "participantJoined") {
+                addParticipant(data.channelId, data.joined);
+            } else if (event === "participantLeft") {
+                removeParticipant(data.channelId, data.left);
+            } else if (event === "userDismissed") {
+                addDismissed(data.channelId, data.dismissed);
+            }
+        });
     }
 
     useEffect(() => {
@@ -340,6 +397,8 @@ export function Loading({
                 type: "friends" | "received" | "sent" | "blocked";
                 user: KnownUser | UnknownUser | number;
             }) => {
+                console.log(type, user);
+
                 if (typeof user === "number") {
                     removeUser(user, type);
                 } else {

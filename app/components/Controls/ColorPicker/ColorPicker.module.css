@@ -6,8 +6,8 @@
     border-radius: 4px;
     flex-direction: column;
     box-shadow: var(--shadow-high);
-    border: 1px solid var(--border-light);
-    background-color: var(--background-4);
+    border: 1px solid var(--border-0);
+    background-color: var(--bg-4);
 }
 
 .container > div:not(:first-child) {
@@ -49,13 +49,13 @@
     cursor: pointer;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
 }
 
 .picker:hover,
 .picker:focus-visible {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .swatch {
@@ -63,5 +63,5 @@
     height: 34px;
     cursor: pointer;
     border-radius: 4px;
-    border: 1px solid var(--foreground-3);
+    border: 1px solid var(--fg-3);
 }

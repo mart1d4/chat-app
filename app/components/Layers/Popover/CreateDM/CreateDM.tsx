@@ -1,109 +1,83 @@
 "use client";
 
-import { Icon, Avatar, usePopoverContext } from "@components";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { lowercaseContains } from "@/lib/strings";
-import { useData, useSettings } from "@/store";
-import type { Channel, User } from "@/type";
-import styles from "./CreateDM.module.css";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { Icon, Avatar, usePopoverContext } from "@components";
+import type { DMChannelWithRecipients, User } from "@/type";
+import { lowercaseContains } from "@/lib/strings";
+import { useRequests } from "@/hooks/useRequests";
+import { useData, useSettings } from "@/store";
+import { useRouter } from "next/navigation";
+import styles from "./CreateDM.module.css";
+import { useMemo, useState } from "react";
 
-export function CreateDM({ channel }: { channel?: Channel }) {
-    const [filteredList, setFilteredList] = useState<User[]>([]);
+export function CreateDM({ channel }: { channel?: DMChannelWithRecipients }) {
+    const { createChannel, addChannelRecipients, createInvite } = useRequests();
+    const { setOpen } = usePopoverContext();
+    const { setSettings } = useSettings();
+    const user = useAuthenticatedUser();
+    const { friends } = useData();
+    const router = useRouter();
+
+    const list = channel
+        ? friends.filter((f) => !channel.recipients.find((r) => r.id === f.id))
+        : friends;
+
     const [chosen, setChosen] = useState<User[]>([]);
     const [inviteLink, setInviteLink] = useState("");
-    const [placesLeft, setPlacesLeft] = useState(9);
     const [copied, setCopied] = useState(false);
     const [search, setSearch] = useState("");
 
-    const setSettings = useSettings((state) => state.setSettings);
-    const { sendRequest } = useFetchHelper();
-    const { setOpen } = usePopoverContext();
-    const user = useAuthenticatedUser();
-    const { friends } = useData();
+    const placesLeft = (channel ? 10 - channel.recipients.length : 9) - chosen.length;
 
-    const inputLinkRef = useRef<HTMLInputElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
-
-    const pathname = usePathname();
-    const router = useRouter();
-
-    useEffect(() => {
-        if (channel) {
-            const filtered = friends.filter((f) => !channel.recipients.find((r) => r.id === f.id));
-            setFilteredList(filtered);
-            setPlacesLeft(10 - channel.recipients.length);
-        } else {
-            setFilteredList(friends);
-            setPlacesLeft(9);
+    const filteredList = useMemo(() => {
+        if (search) {
+            return list.filter((u) => lowercaseContains(u.username, search));
         }
-    }, []);
+        return list;
+    }, [list, search]);
 
-    useEffect(() => {
-        if (channel) {
-            if (chosen?.length === 0) setPlacesLeft(10 - channel.recipients.length);
-            else setPlacesLeft(10 - channel.recipients.length - chosen.length);
+    function handleSubmit() {
+        const recipients = chosen.map((r) => r.id);
+
+        if (channel?.type === 1) {
+            addChannelRecipients.send(
+                { channelId: channel.id, recipients },
+                { onComplete: () => setOpen(false) }
+            );
         } else {
-            if (chosen.length === 0) setPlacesLeft(9);
-            else setPlacesLeft(9 - chosen.length);
-        }
-    }, [chosen]);
-
-    useEffect(() => {
-        if (channel) {
-            const filtered = friends.filter((f) => !channel.recipients.find((r) => r.id === f.id));
-
-            if (search)
-                setFilteredList(
-                    filtered.filter((user) => lowercaseContains(user.username, search))
-                );
-            else setFilteredList(filtered);
-        } else {
-            if (search) {
-                setFilteredList(friends.filter((user) => lowercaseContains(user.username, search)));
-            } else {
-                setFilteredList(friends);
+            if (channel?.type === 0) {
+                const friend = channel.recipients.find((r) => r.id !== user.id);
+                if (friend) recipients.push(friend.id);
             }
+
+            createChannel.send({ recipients }, { onComplete: () => setOpen(false) });
         }
-    }, [search, friends]);
+    }
 
-    async function createChan() {
-        const recipients = chosen.map((user) => user.id);
+    function getInvite() {
+        if (!channel) return;
 
-        if (channel) {
-            if (channel.type === 0) {
-                const friend = channel.recipients.find((r) => r.id !== user?.id);
-                if (!friend) return;
+        createInvite.send(
+            {
+                channelId: channel.id,
+                body: {
+                    maxUses: 100,
+                    maxAge: 86400,
+                    temporary: false,
+                },
+            },
+            { onComplete: (data) => setInviteLink(data.invite.code) }
+        );
+    }
 
-                const { data } = await sendRequest({
-                    query: "CHANNEL_CREATE",
-                    body: { recipients: [friend.id, ...recipients] },
-                });
-            } else if (channel.type === 1) {
-                recipients.forEach((recipient) => {
-                    sendRequest({
-                        query: "CHANNEL_RECIPIENT_ADD",
-                        params: {
-                            channelId: channel.id,
-                            recipientId: recipient,
-                        },
-                    });
-                });
-            }
-        } else {
-            const { data } = await sendRequest({
-                query: "CHANNEL_CREATE",
-                body: { recipients: recipients },
-            });
-        }
+    function copyLink() {
+        navigator.clipboard.writeText(`${window.location.origin}/${inviteLink}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1000);
     }
 
     return (
         <div
-            ref={containerRef}
             data-full-on-mobile
             className={styles.popup}
         >
@@ -144,25 +118,24 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                     ))}
 
                                     <input
-                                        ref={inputRef}
                                         type="text"
-                                        placeholder={
-                                            chosen?.length
-                                                ? "Find or start a conversation"
-                                                : "Type the username of a friend"
-                                        }
-                                        value={search || ""}
-                                        spellCheck="false"
+                                        value={search}
                                         role="combobox"
-                                        aria-autocomplete="list"
+                                        spellCheck="false"
                                         aria-expanded="true"
                                         aria-haspopup="true"
+                                        aria-autocomplete="list"
                                         onChange={(e) => setSearch(e.target.value)}
                                         onKeyDown={(e) => {
                                             if (e.key === "Backspace" && !search) {
                                                 setChosen(chosen?.slice(0, -1));
                                             }
                                         }}
+                                        placeholder={
+                                            chosen?.length
+                                                ? "Find or start a conversation"
+                                                : "Type the username of a friend"
+                                        }
                                     />
 
                                     <div></div>
@@ -172,15 +145,13 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                             {channel?.type === 1 && (
                                 <div className={styles.addButton}>
                                     <button
-                                        className={
-                                            chosen?.length ? "button blue" : "button blue disabled"
-                                        }
-                                        onClick={() => {
-                                            if (chosen?.length) {
-                                                setOpen(false);
-                                                createChan();
-                                            }
-                                        }}
+                                        onClick={handleSubmit}
+                                        disabled={!chosen.length || addChannelRecipients.isLoading}
+                                        className={`button blue ${
+                                            !chosen.length || addChannelRecipients.isLoading
+                                                ? "disabled"
+                                                : ""
+                                        }`}
                                     >
                                         Add
                                     </button>
@@ -194,17 +165,7 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                     className={styles.closeButton}
                     onClick={() => setOpen(false)}
                 >
-                    <svg
-                        viewBox="0 0 24 24"
-                        width="24"
-                        height="24"
-                        role="image"
-                    >
-                        <path
-                            fill="currentColor"
-                            d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
-                        />
-                    </svg>
+                    <Icon name="close" />
                 </button>
             </div>
 
@@ -262,14 +223,14 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                                         <div
                                             style={{
                                                 borderColor: chosen.includes(friend)
-                                                    ? "hsl(235, 86.1%, 77.5%)"
-                                                    : "var(--foreground-5)",
+                                                    ? "var(--accent-3)"
+                                                    : "var(--fg-5)",
                                             }}
                                         >
                                             {chosen.includes(friend) && (
                                                 <Icon
-                                                    name="checkmark"
                                                     size={16}
+                                                    name="checkmark"
                                                 />
                                             )}
                                         </div>
@@ -288,71 +249,24 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                             <div style={{ marginTop: "0px" }}>
                                 <div>
                                     <input
-                                        ref={inputLinkRef}
-                                        type="text"
                                         readOnly
-                                        placeholder="https://spark.mart1d4.dev/example"
+                                        type="text"
+                                        placeholder={`${window.location.origin}/example`}
                                         value={
-                                            inviteLink && `https://spark.mart1d4.dev/${inviteLink}`
+                                            inviteLink && `${window.location.origin}/${inviteLink}`
                                         }
-                                        onClick={async () => {
-                                            if (!inviteLink) {
-                                                const { data, errors } = await sendRequest({
-                                                    query: "CREATE_INVITE",
-                                                    params: {
-                                                        channelId: channel.id,
-                                                    },
-                                                    body: {
-                                                        maxUses: 100,
-                                                        maxAge: 86400,
-                                                        temporary: false,
-                                                    },
-                                                });
-
-                                                if (data?.invite) {
-                                                    setInviteLink(data.invite.code);
-                                                } else if (errors) {
-                                                    console.error(errors);
-                                                }
-                                            }
-
-                                            inputLinkRef.current?.select();
+                                        onClick={(e) => {
+                                            if (!inviteLink) getInvite();
+                                            e.currentTarget.select();
                                         }}
                                     />
                                 </div>
 
                                 <button
                                     className={copied ? "button green" : "button blue"}
-                                    onClick={async () => {
-                                        async function getLink() {
-                                            const { data, errors } = await sendRequest({
-                                                query: "CREATE_INVITE",
-                                                params: {
-                                                    channelId: channel.id,
-                                                },
-                                                body: {
-                                                    maxUses: 100,
-                                                    maxAge: 86400,
-                                                    temporary: false,
-                                                },
-                                            });
-
-                                            if (data?.invite) {
-                                                setInviteLink(data.invite.code);
-                                            } else if (errors) {
-                                                console.error(errors);
-                                            }
-                                        }
-
-                                        if (!inviteLink) {
-                                            await getLink();
-                                        } else {
-                                            navigator.clipboard.writeText(
-                                                `https://spark.mart1d4.dev/${inviteLink}`
-                                            );
-                                            setCopied(true);
-                                            setTimeout(() => setCopied(false), 1000);
-                                        }
+                                    onClick={() => {
+                                        if (!inviteLink) getInvite();
+                                        else copyLink();
                                     }}
                                 >
                                     {!inviteLink ? "Create" : copied ? "Copied" : "Copy"}
@@ -364,14 +278,20 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                     ) : (
                         <div className={styles.footer}>
                             <button
+                                onClick={handleSubmit}
                                 className={
-                                    "button blue " + (channel && !chosen.length ? "disabled" : "")
+                                    "button blue " +
+                                    ((channel && !chosen.length) ||
+                                    createChannel.isLoading ||
+                                    addChannelRecipients.isLoading
+                                        ? "disabled"
+                                        : "")
                                 }
-                                onClick={() => {
-                                    if (channel && !chosen.length) return;
-                                    setOpen(false);
-                                    createChan();
-                                }}
+                                disabled={
+                                    (channel && !chosen.length) ||
+                                    createChannel.isLoading ||
+                                    addChannelRecipients.isLoading
+                                }
                             >
                                 Create DM
                             </button>
@@ -413,75 +333,24 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                             <div style={{ marginTop: "0px" }}>
                                 <div>
                                     <input
-                                        ref={inputLinkRef}
-                                        type="text"
                                         readOnly
-                                        placeholder="https://spark.mart1d4.dev/example"
+                                        type="text"
+                                        placeholder={`${window.location.origin}/example`}
                                         value={
-                                            inviteLink && `https://spark.mart1d4.dev/${inviteLink}`
+                                            inviteLink && `${window.location.origin}/${inviteLink}`
                                         }
-                                        onClick={async () => {
-                                            async function getLink() {
-                                                const { data, errors } = await sendRequest({
-                                                    query: "CREATE_INVITE",
-                                                    params: {
-                                                        channelId: channel.id,
-                                                    },
-                                                    body: {
-                                                        maxUses: 100,
-                                                        maxAge: 86400,
-                                                        temporary: false,
-                                                    },
-                                                });
-
-                                                if (data?.invite) {
-                                                    setInviteLink(data.invite.code);
-                                                } else if (errors) {
-                                                    console.error(errors);
-                                                }
-                                            }
-
-                                            if (!inviteLink) {
-                                                await getLink();
-                                            }
-
-                                            inputLinkRef.current?.select();
+                                        onClick={(e) => {
+                                            if (!inviteLink) getInvite();
+                                            e.currentTarget.select();
                                         }}
                                     />
                                 </div>
 
                                 <button
                                     className={copied ? "button green" : "button blue"}
-                                    onClick={async () => {
-                                        const getLink = async () => {
-                                            const { data, errors } = await sendRequest({
-                                                query: "CREATE_INVITE",
-                                                params: {
-                                                    channelId: channel.id,
-                                                },
-                                                body: {
-                                                    maxUses: 100,
-                                                    maxAge: 86400,
-                                                    temporary: false,
-                                                },
-                                            });
-
-                                            if (data?.invite) {
-                                                setInviteLink(data.invite.code);
-                                            } else if (errors) {
-                                                console.error(errors);
-                                            }
-                                        };
-
-                                        if (!inviteLink) {
-                                            await getLink();
-                                        } else {
-                                            navigator.clipboard.writeText(
-                                                `https://spark.mart1d4.dev/${inviteLink}`
-                                            );
-                                            setCopied(true);
-                                            setTimeout(() => setCopied(false), 1000);
-                                        }
+                                    onClick={() => {
+                                        if (!inviteLink) getInvite();
+                                        else copyLink();
                                     }}
                                 >
                                     {!inviteLink ? "Create" : copied ? "Copied" : "Copy"}
@@ -493,13 +362,17 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                     ) : (
                         <div className={styles.footer}>
                             <button
-                                className="button blue"
-                                onClick={() => {
-                                    if (chosen.length) {
-                                        setOpen(false);
-                                        createChan();
-                                    }
-                                }}
+                                onClick={handleSubmit}
+                                disabled={
+                                    (channel && !chosen.length) ||
+                                    createChannel.isLoading ||
+                                    addChannelRecipients.isLoading
+                                }
+                                className={`button blue ${
+                                    (channel && !chosen.length) || createChannel.isLoading
+                                        ? "disabled"
+                                        : ""
+                                }`}
                             >
                                 Create DM
                             </button>
@@ -523,9 +396,7 @@ export function CreateDM({ channel }: { channel?: Channel }) {
                         onClick={() => {
                             setOpen(false);
                             setSettings("friendTab", "add");
-                            if (pathname !== "/channels/me") {
-                                router.push("/channels/me");
-                            }
+                            router.push("/channels/me");
                         }}
                     >
                         Add Friend

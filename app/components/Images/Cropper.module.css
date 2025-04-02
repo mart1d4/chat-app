@@ -7,7 +7,7 @@
     border-radius: 4px;
     align-items: center;
     justify-content: center;
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
 }
 
 .container > .image {

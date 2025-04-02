@@ -1,10 +1,12 @@
 import { type ReactElement, Suspense } from "react";
 import { getInitialData } from "@/lib/db/helpers";
 import styles from "./Layout.module.css";
+import { VoiceHandler } from "./Voice";
 import type { Metadata } from "next";
 import {
     DialogOverlay,
     EventManager,
+    AlertOverlay,
     EmojiPicker,
     AppSpinner,
     Settings,
@@ -44,19 +46,22 @@ export async function GetData({ children }: { children: ReactElement }) {
 
     return (
         <Loading data={data}>
-            <div className={styles.appContainer}>
-                <AppNav />
+            <VoiceHandler>
+                <div className={styles.appContainer}>
+                    <AppNav />
 
-                <div className={styles.appWrapper}>
-                    <div className={styles.channelsContainer}>{children}</div>
+                    <div className={styles.appWrapper}>
+                        <div className={styles.channelsContainer}>{children}</div>
+                    </div>
+
+                    {/* Layers */}
+                    <Settings />
+                    <DialogOverlay />
+                    <EventManager />
+                    <EmojiPicker />
+                    <AlertOverlay />
                 </div>
-
-                {/* Layers */}
-                <Settings />
-                <DialogOverlay />
-                <EventManager />
-                <EmojiPicker />
-            </div>
+            </VoiceHandler>
         </Loading>
     );
 }

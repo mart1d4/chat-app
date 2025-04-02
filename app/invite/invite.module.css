@@ -5,7 +5,7 @@
     background-size: 60%;
     justify-content: center;
     background-repeat: repeat;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
     background-image: url("/assets/app/bg-pattern.png");
 }
 
@@ -28,12 +28,12 @@
     font-weight: 600;
     line-height: 1.25;
     margin-bottom: 8px;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .card > p {
     user-select: none;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .card > a,

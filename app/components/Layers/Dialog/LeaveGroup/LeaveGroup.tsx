@@ -1,45 +1,23 @@
 "use client";
 
 import { DialogContent, useDialogContext, Input } from "@components";
-import { usePathname, useRouter } from "next/navigation";
-import useFetchHelper from "@/hooks/useFetchHelper";
-import { useData } from "@/store";
+import { useRequests } from "@/hooks/useRequests";
 import { useState } from "react";
 
 export function LeaveGroup({ channelId, channelName }: { channelId: number; channelName: string }) {
     const [noNotify, setNoNotify] = useState(false);
-    const [loading, setLoading] = useState(false);
 
-    const { sendRequest } = useFetchHelper();
+    const { deleteChannel } = useRequests();
     const { setOpen } = useDialogContext();
-    const { removeChannel } = useData();
-    const pathname = usePathname();
-    const router = useRouter();
-
-    const sameUrl = pathname.includes(channelId.toString());
 
     return (
         <DialogContent
-            heading={`Leave '${channelName}'`}
-            confirmLabel="Leave Group"
             confirmColor="red"
-            confirmLoading={loading}
-            onConfirm={async () => {
-                setLoading(true);
-
-                const { errors } = await sendRequest({
-                    query: "CHANNEL_DELETE",
-                    params: {
-                        channelId: channelId,
-                        noNotify,
-                    },
-                });
-
-                setLoading(false);
-
-                if (!errors) {
-                    setOpen(false);
-                }
+            confirmLabel="Leave Group"
+            heading={`Leave '${channelName}'`}
+            confirmLoading={deleteChannel.isLoading}
+            onConfirm={() => {
+                deleteChannel.send({ channelId, noNotify }, { onComplete: () => setOpen(false) });
             }}
         >
             <p>

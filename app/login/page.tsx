@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { getUser } from "@/lib/db/helpers";
 import styles from "../Auth.module.css";
 import { Suspense } from "react";
-import Link from "next/link";
 import Form from "./Form";
 
 const loading = (

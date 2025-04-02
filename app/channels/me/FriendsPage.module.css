@@ -1,17 +1,120 @@
 .main {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    overflow: hidden;
-    background-color: var(--background-4);
-    flex: 1 1 auto;
     min-width: 0;
     min-height: 0;
+    display: flex;
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+    flex-direction: column;
+    background-color: var(--bg-3);
 }
 
 .content {
-    flex: 1 1 auto;
     display: flex;
-    position: relative;
+    flex: 1 1 auto;
     overflow: hidden;
+    position: relative;
+}
+
+.container {
+    display: flex;
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+    flex-direction: column;
+}
+
+.header {
+    flex-shrink: 0;
+    padding: 20px 30px;
+    border-bottom: 1px solid var(--border-2);
+}
+
+.header h2 {
+    font-weight: 600;
+    user-select: none;
+    margin-bottom: 8px;
+    color: var(--fg-1);
+    text-transform: uppercase;
+}
+
+.description {
+    font-size: 14px;
+    font-weight: 400;
+    user-select: none;
+    line-height: 20px;
+    color: var(--fg-4);
+}
+
+.inputWrapper {
+    display: flex;
+    padding: 0 12px;
+    margin-top: 16px;
+    overflow: hidden;
+    border-radius: 8px;
+    position: relative;
+    align-items: center;
+    background-color: var(--bg-1);
+    outline: 1px solid transparent;
+}
+
+.inputWrapper:focus-within {
+    outline: 1px solid var(--accent-fg);
+}
+
+.inputWrapper > div {
+    display: flex;
+    flex: 1 1 auto;
+    padding: 4px 0;
+    font-weight: 500;
+    white-space: pre;
+    margin-right: 16px;
+    flex-direction: column;
+    letter-spacing: 0.04rem;
+}
+
+.inputWrapper input {
+    height: 40px;
+    outline: none;
+    background: none;
+    color: var(--fg-2);
+}
+
+.error {
+    margin-top: 8px;
+    font-size: 14px;
+    user-select: none;
+    color: var(--danger-fg);
+}
+
+.valid {
+    margin-top: 8px;
+    font-size: 14px;
+    user-select: none;
+    color: var(--success-fg);
+}
+
+.noData {
+    display: flex;
+    flex: 1 1 auto;
+    margin: 0 auto;
+    max-width: 440px;
+    flex-wrap: nowrap;
+    user-select: none;
+    align-items: center;
+    pointer-events: none;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.noData > img {
+    margin-bottom: 40px;
+}
+
+.noData > div {
+    flex: 0 1 auto;
+    margin-top: 8px;
+    line-height: 20px;
+    text-align: center;
+    color: var(--fg-5);
 }

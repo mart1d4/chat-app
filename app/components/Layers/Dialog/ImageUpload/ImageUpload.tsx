@@ -1,8 +1,9 @@
-import { ImageCropper } from "@/app/components/Images/Cropper";
-import useRequestHelper from "@/hooks/useFetchHelper";
 import { useEffect, useRef, useState } from "react";
 import { useUploadThing } from "@/lib/uploadthing";
-import { Alert, DialogContent } from "@components";
+import { useRequests } from "@/hooks/useRequests";
+import { DialogContent } from "@components";
+import { ImageCropper } from "@components";
+import { useTriggerAlert } from "@/store";
 import Cropper from "cropperjs";
 
 export function ImageUpload({
@@ -67,9 +68,9 @@ function SendToServer({
     remove: () => void;
 }) {
     const [fileId, setFileId] = useState<string | null>(null);
-    const [error, setError] = useState<string | null>(null);
 
-    const { sendRequest } = useRequestHelper();
+    const { triggerAlert } = useTriggerAlert();
+    const { updateChannel } = useRequests();
     const hasRun = useRef(false);
 
     const { startUpload: uploadAvatar } = useUploadThing("imageUploader", {
@@ -79,11 +80,7 @@ function SendToServer({
         },
         onUploadError: (error) => {
             console.error(error);
-            setError("Failed to upload image");
-
-            setTimeout(() => {
-                setError(null);
-            }, 5000);
+            triggerAlert("error", "Failed to upload image");
         },
         headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -91,20 +88,16 @@ function SendToServer({
     });
 
     async function sendToServer() {
-        const { errors } = await sendRequest({
-            query: "CHANNEL_UPDATE",
-            body: { icon: fileId },
-            params: { channelId },
-        });
-
-        if (errors) {
-            setError("Failed to update channel");
-            setTimeout(() => {
-                setError(null);
-            }, 5000);
-        } else {
-            remove();
-        }
+        await updateChannel.send(
+            {
+                channelId,
+                body: { icon: fileId },
+            },
+            {
+                onComplete: () => remove(),
+                onFail: () => triggerAlert("error", "Failed to update channel"),
+            }
+        );
     }
 
     useEffect(() => {
@@ -122,15 +115,6 @@ function SendToServer({
             hasRun.current = true;
         };
     }, []);
-
-    if (error) {
-        return (
-            <Alert
-                type="danger"
-                message={error}
-            />
-        );
-    }
 
     return null;
 }

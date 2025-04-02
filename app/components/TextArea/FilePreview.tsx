@@ -57,8 +57,7 @@ export function FilePreview({
                 <div
                     className={styles.image}
                     style={{
-                        backgroundColor:
-                            isSpoiler && !hideSpoiler ? "var(--background-dark-3)" : "",
+                        backgroundColor: isSpoiler && !hideSpoiler ? "hsl(0, 0%, 0%, 0.8)" : "",
                         cursor: isSpoiler && !hideSpoiler ? "pointer" : "default",
                     }}
                     onClick={() => isSpoiler && setHideSpoiler(true)}
@@ -219,7 +218,7 @@ export function FilePreview({
                                 <Icon
                                     size={20}
                                     name="delete"
-                                    fill="var(--error-1)"
+                                    fill="var(--danger-0)"
                                 />
                             </button>
                         </TooltipTrigger>

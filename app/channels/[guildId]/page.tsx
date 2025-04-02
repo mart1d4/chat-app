@@ -57,6 +57,7 @@ export default async function GuildPage({ params }: { params: { guildId: string 
         .selectFrom("channels")
         .select(DefaultGuildChannelSelect)
         .where("guildId", "=", guildId)
+        .where("isDeleted", "=", false)
         .execute()) as GuildChannel[];
 
     const channels = channelsQuery

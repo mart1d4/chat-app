@@ -28,8 +28,8 @@ export function MessageMenuContent({
         openLink: () => void;
     };
 }) {
+    const shift = useWindowSettings((s) => s.shiftKeyDown);
     const { setData: setEmojiPicker } = useEmojiPicker();
-    const { shiftKeyDown: shift } = useWindowSettings();
     const { triggerDialog } = useTriggerDialog();
     const { emojis } = useMostUsedEmojis();
     const appUser = useAuthenticatedUser();

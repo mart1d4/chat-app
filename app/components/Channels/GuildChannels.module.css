@@ -4,51 +4,23 @@
     min-height: 0;
     flex: 0 0 auto;
     flex-direction: column;
-    background-color: var(--background-3);
+    background-color: var(--bg-2);
+    border-right: 1px solid transparent;
 }
 
 .privateChannels {
-    position: relative;
+    flex: 1;
     display: flex;
     overflow: hidden;
     user-select: none;
-    flex: 1;
-    flex-direction: column;
-}
-
-.searchContainer {
-    z-index: 2;
-    flex: 0 0 auto;
-    padding: 0 10px;
-    height: 48px;
-    align-items: center;
     position: relative;
-    display: flex;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1.5px 0 rgba(0, 0, 0, 0.05),
-        0 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.searchContainer > button {
-    width: 100%;
-    height: 28px;
-    justify-content: start;
-    overflow: hidden;
-    border-radius: 4px;
-    text-align: left;
-    text-overflow: ellipsis;
-    line-height: 24px;
-    white-space: nowrap;
-    cursor: pointer;
-    outline: 0;
-    padding: 1px 6px;
-    color: var(--foreground-4);
-    background-color: var(--background-1);
+    flex-direction: column;
 }
 
 .guildSettings {
     cursor: pointer;
     position: relative;
-    padding: 12px 16px;
+    padding: 11.5px 16px;
     outline-offset: -5px;
     transition: background-color 0.1s linear;
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2), 0 1.5px 0 rgba(0, 0, 0, 0.05),
@@ -62,14 +34,14 @@
 .guildSettings:hover,
 .guildSettings:focus-visible,
 div[data-state="open"] .guildSettings {
-    background-color: var(--background-hover-1);
+    background-color: var(--bg-hover-1);
 }
 
 .guildSettings > div {
     height: 24px;
     display: flex;
     align-items: center;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .guildSettings > div > div:first-child {
@@ -90,7 +62,7 @@ div[data-state="open"] .guildSettings {
     position: relative;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .guildSettings > div > div:last-child > svg {
@@ -118,17 +90,17 @@ div.scroller::-webkit-scrollbar {
 }
 
 div.scroller::-webkit-scrollbar-track {
-    border: 1px var(--background-3) solid;
+    border: 1px var(--bg-2) solid;
     background-color: transparent;
 }
 
 div.scroller::-webkit-scrollbar-thumb {
-    border: 2px var(--background-3) solid;
+    border: 2px var(--bg-2) solid;
     background-color: transparent;
 }
 
 div.scroller:hover::-webkit-scrollbar-thumb {
-    background-color: var(--background-1);
+    background-color: var(--bg-0);
 }
 
 .channelList {
@@ -163,11 +135,11 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .title:hover span {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .title > div {
@@ -186,17 +158,17 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     margin-left: 0;
     margin-right: 2px;
     display: block;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     cursor: pointer;
 }
 
 .title svg:hover polygon {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .userSectionContainer {
     flex: 0 0 auto;
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
     z-index: 1;
 }
 
@@ -224,7 +196,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 }
 
 .avatarWrapper:hover {
-    background-color: var(--background-hover-1);
+    background-color: var(--bg-hover-1);
 }
 
 .avatarWrapper > div:first-child {
@@ -248,7 +220,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -276,7 +248,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     font-size: 14px;
     line-height: 18px;
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .contentWrapper > div:last-child {
@@ -286,7 +258,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     line-height: 13px;
     font-size: 12px;
     font-weight: 400;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .toolbar {
@@ -311,16 +283,16 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     border: 0;
     padding: 0;
     margin: 0;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .toolbar > button:hover {
-    color: var(--foreground-2);
-    background-color: var(--background-hover-1);
+    color: var(--fg-2);
+    background-color: var(--bg-hover-1);
 }
 
 .toolbar > button:active {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 /* ChannelItem */
@@ -341,7 +313,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 .category > div {
     flex: 1 1 auto;
     overflow: hidden;
-    color: var(--foreground-5);
+    color: var(--fg-5);
 }
 
 .category > div > svg {
@@ -372,7 +344,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 
 .category:hover > div,
 .category:focus-visible > div {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .category > button {
@@ -384,14 +356,14 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     cursor: pointer;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-4);
+    color: var(--fg-4);
     background-color: transparent;
     transition: transform 0.1s ease-in-out;
 }
 
 .category > button:hover,
 .category > button:focus-visible {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .category > button:active {
@@ -418,7 +390,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     position: relative;
     text-decoration: none;
     flex-direction: column;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .channel.unread .name {
@@ -428,12 +400,12 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 .channel a:hover,
 .channel a:focus-visible,
 .channel a:focus-within {
-    background-color: var(--background-hover-1);
+    background-color: var(--bg-hover-1);
 }
 
 .channel:not(.unread) a:focus-visible .name,
 .channel:not(.unread) a:focus-within .name {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .channel a > div {
@@ -452,13 +424,13 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 }
 
 .channel .icon > svg {
-    color: var(--foreground-5);
+    color: var(--fg-5);
     height: 20px;
     width: 20px;
 }
 
 .channel .name {
-    color: var(--foreground-5);
+    color: var(--fg-5);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -470,7 +442,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 }
 
 .channel:not(.unread) a:hover .name {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .channel .tools {
@@ -501,7 +473,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
 }
 
 .channel .tools > button > svg {
-    color: var(--foreground-4);
+    color: var(--fg-4);
     width: 16px;
     height: 16px;
 }
@@ -526,7 +498,7 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    background-color: var(--error-1);
+    background-color: var(--danger-0);
 }
 
 .channel:hover .pings,
@@ -548,6 +520,68 @@ div.scroller:hover::-webkit-scrollbar-thumb {
     .channel a:hover,
     .channel a:focus-visible,
     .channel a:focus-within {
-        border-color: var(--border-light);
+        border-color: var(--border-0);
     }
+}
+
+.voiceParticipants {
+    display: flex;
+    flex-wrap: nowrap;
+    padding-left: 36px;
+    padding-bottom: 8px;
+    align-items: stretch;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.voiceParticipant {
+    height: 32px;
+    display: flex;
+    margin: 1px 0;
+    cursor: pointer;
+    border-radius: 4px;
+    position: relative;
+    align-items: center;
+}
+
+.voiceParticipant:hover,
+.voiceParticipant:focus-visible {
+    background-color: var(--bg-4);
+}
+
+.voiceParticipant > :first-child {
+    flex: 0 0 auto;
+    margin: 3px 8px;
+}
+
+.voiceParticipant > :nth-child(2) {
+    flex: 1 1 auto;
+    margin-top: 2px;
+    font-size: 14px;
+    overflow: hidden;
+    font-weight: 500;
+    line-height: 18px;
+    color: var(--fg-3);
+    position: relative;
+    white-space: nowrap;
+    vertical-align: middle;
+    text-overflow: ellipsis;
+}
+
+.voiceParticipant > :last-child {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    cursor: pointer;
+    margin-right: 4px;
+    color: var(--fg-3);
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+}
+
+.voiceParticipant > :last-child:hover,
+.voiceParticipant > :last-child:focus-visible {
+    background-color: var(--bg-5);
 }

@@ -5,7 +5,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
 }
 
 .container video {
@@ -24,12 +24,12 @@
 
 .textContent > div:first-child {
     margin-bottom: 8px;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .textContent > div:last-child {
     max-width: 300px;
     font-size: 16px;
     line-height: 20px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }

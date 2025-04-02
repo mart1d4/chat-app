@@ -8,11 +8,12 @@
     line-height: 16px;
     user-select: none;
     border-radius: 5px;
+    color: var(--fg-2);
     word-wrap: break-word;
     word-break: break-word;
-    color: var(--foreground-2);
+    background-color: var(--bg-7);
+    border: 1px solid transparent;
     box-shadow: var(--elevation-high);
-    background-color: var(--background-dark-1);
 }
 
 .tooltip.avatar {
@@ -34,5 +35,5 @@
     font-size: 12px;
     font-weight: 500;
     display: inline-block;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }

@@ -6,10 +6,10 @@
 }
 
 .sidebar {
-    position: relative;
     display: flex;
-    justify-content: flex-end;
     flex: 1 0 220px;
+    position: relative;
+    justify-content: flex-end;
 }
 
 .sidebar .closeButton,
@@ -45,7 +45,7 @@
     overflow: hidden scroll;
     align-items: flex-start;
     justify-content: flex-end;
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
 }
 
 @-moz-document url-prefix() {
@@ -74,14 +74,14 @@
     letter-spacing: 0.02rem;
     padding: 0 10px 6px 10px;
     text-transform: uppercase;
-    color: var(--foreground-5);
+    color: var(--fg-5);
     background-color: transparent;
 }
 
 .separator {
     height: 1px;
     margin: 8px 10px;
-    background-color: var(--background-hover-1);
+    background-color: var(--bg-hover-1);
 }
 
 .tab,
@@ -99,36 +99,36 @@
     white-space: nowrap;
     align-items: center;
     text-overflow: ellipsis;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
     justify-content: space-between;
 }
 
 .tab path,
 .tabActive path {
-    fill: var(--foreground-3);
+    fill: var(--fg-3);
 }
 
 .tab:hover,
 .tabActive {
-    background-color: var(--background-5);
-    color: var(--foreground-2);
+    background-color: var(--bg-5);
+    color: var(--fg-2);
 }
 
 .tab:hover path,
 .tabActive path {
-    fill: var(--foreground-2);
+    fill: var(--fg-2);
 }
 
 .tab:hover:active,
 .tabActive:active {
-    background-color: var(--background-hover-2);
-    color: var(--foreground-1);
+    background-color: var(--bg-hover-2);
+    color: var(--fg-1);
 }
 
 .tab:hover:active path,
 .tabActive:active path {
-    fill: var(--foreground-1);
+    fill: var(--fg-1);
 }
 
 .tabActive:hover {
@@ -143,18 +143,18 @@
     border-radius: 1000px;
     background-clip: padding-box;
     background-color: transparent;
-    border: 2px var(--background-3) solid;
+    border: 2px var(--bg-3) solid;
 }
 
 .sidebarWrapper::-webkit-scrollbar-thumb {
     border-radius: 1000px;
     background-clip: padding-box;
     background-color: transparent;
-    border: 2px var(--background-3) solid;
+    border: 2px var(--bg-3) solid;
 }
 
 .sidebarWrapper:hover::-webkit-scrollbar-thumb {
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .contentContainer {
@@ -172,7 +172,7 @@
     flex: 1 0 auto;
     display: flex;
     align-items: flex-start;
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
 }
 
 .contentWrapper > .content {
@@ -209,34 +209,34 @@
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
-    border: 2px solid var(--foreground-3);
+    border: 2px solid var(--fg-3);
 }
 
 .closeButton button:hover,
 .closeButton button:focus-visible {
-    border-color: var(--foreground-2);
-    background-color: var(--background-hover-1);
+    border-color: var(--fg-2);
+    background-color: var(--bg-hover-1);
 }
 
 .closeButton button:first-child:hover + div,
 .closeButton button:first-child:focus-visible + div {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .closeButton button:first-child:active {
     transform: translateY(1px);
-    border-color: var(--foreground-1);
-    background-color: var(--background-hover-1);
+    border-color: var(--fg-1);
+    background-color: var(--bg-hover-1);
 }
 
 .closeButton button:first-child:active path {
-    fill: var(--foreground-1);
+    fill: var(--fg-1);
 }
 
 .closeButton button:first-child:active + div {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .closeButton > div > div {
@@ -245,7 +245,7 @@
     font-size: 13px;
     line-height: 13px;
     text-align: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     cursor: default;
     user-select: none;
 }
@@ -254,7 +254,7 @@
     margin: 40px 0;
     width: 100%;
     height: 1px;
-    border-top: thin solid var(--border-light);
+    border-top: thin solid var(--border-2);
 }
 
 .section {
@@ -272,7 +272,7 @@
     line-height: 24px;
     flex: 1;
     cursor: default;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .content .label {
@@ -284,12 +284,12 @@
     letter-spacing: 0.02rem;
     cursor: default;
     display: inline-block;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     user-select: none;
 }
 
 .userCard {
-    background-color: var(--background-2);
+    background-color: var(--bg-2);
     border-radius: 8px;
     position: relative;
     overflow: hidden;
@@ -316,15 +316,15 @@
     border-radius: 8px;
     padding: 16px;
     margin: 8px 16px 16px;
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
 }
 
 .userAvatar {
     width: 90px;
     height: 90px;
     border-radius: 50%;
-    border: 5px solid var(--background-2);
-    background-color: var(--background-1);
+    border: 5px solid var(--bg-2);
+    background-color: var(--bg-1);
     position: absolute;
     top: 77px;
     left: 17px;
@@ -342,7 +342,7 @@
     height: fit-content;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .username > :nth-child(2) {
@@ -353,7 +353,7 @@
 }
 
 .username svg {
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .field {
@@ -376,7 +376,7 @@
 
 .field > div > h3 {
     margin-bottom: 4px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     font-size: 12px;
     line-height: 16px;
     font-weight: 700;
@@ -389,7 +389,7 @@
     text-overflow: ellipsis;
     font-size: 16px;
     line-height: 20px;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     user-select: none;
 }
 
@@ -405,7 +405,7 @@
 
 .section > .content > div {
     margin-bottom: 16px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     font-size: 14px;
     line-height: 20px;
     user-select: none;
@@ -441,8 +441,8 @@
     justify-content: space-between;
     padding: 10px 10px 10px 16px;
     border-radius: 5px;
-    background-color: var(--background-dark-1);
-    color: var(--foreground-2);
+    background-color: var(--bg-0);
+    color: var(--fg-2);
     box-shadow: var(--elevation-high);
     z-index: 1;
 }
@@ -470,7 +470,7 @@
     display: flex;
     padding-top: 6px;
     margin-bottom: 16px;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-2);
 }
 
 .contentNav > div {
@@ -483,7 +483,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
     flex-shrink: 0;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     cursor: pointer;
     user-select: none;
 }
@@ -493,12 +493,12 @@
 }
 
 .contentNav > div:hover {
-    color: var(--foreground-2);
-    border-bottom: 2px solid var(--accent-1);
+    color: var(--fg-2);
+    border-bottom: 2px solid var(--accent-0);
 }
 
 .contentNav > div:active {
-    color: var(--foreground-1);
+    color: var(--fg-1);
     border-color: hsl(235, 86.1%, 77.5%);
 }
 
@@ -514,7 +514,7 @@
 }
 
 .customSection:not(:last-child) {
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid var(--border-2);
 }
 
 .buttonContainer {
@@ -531,16 +531,16 @@
     font-size: 16px;
     width: 100%;
     border-radius: 3px;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     border: none;
     outline: none;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
     transition: border-color 0.2s ease-in-out;
 }
 
 .description {
     margin-bottom: 16px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     font-size: 14px;
     line-height: 20px;
     user-select: none;
@@ -565,7 +565,7 @@
     border-radius: 4px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     border: 1px solid transparent;
 }
 
@@ -582,7 +582,7 @@
     user-select: none;
     line-height: 16px;
     text-align: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .inputLarge {
@@ -593,7 +593,7 @@
 }
 
 .inputLarge > div:first-child {
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
     border-radius: 3px;
     height: 136px;
     transition: border-color 0.2s ease-in-out;
@@ -612,13 +612,13 @@
 }
 
 .inputLarge > div:first-child::-webkit-scrollbar-thumb {
-    background-color: var(--background-dark-1);
+    background-color: var(--bg-0);
     border-width: 4px;
 }
 
 .inputLarge > div:first-child::-webkit-scrollbar-track {
-    background-color: var(--background-1);
-    border-color: var(--background-1);
+    background-color: var(--bg-1);
+    border-color: var(--bg-1);
 }
 
 .inputLarge > div:last-child {
@@ -628,7 +628,7 @@
     display: flex;
     align-items: flex-end;
     flex-direction: column;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     user-select: none;
     cursor: default;
 }
@@ -663,7 +663,7 @@
     white-space: break-spaces;
     user-select: text;
     line-height: 1.375rem;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .inputLargeInner > div:last-child {
@@ -758,7 +758,7 @@
     left: 0;
     bottom: 0;
     pointer-events: none;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     visibility: hidden;
     font-size: 10px;
     font-weight: 700;
@@ -805,7 +805,7 @@
     left: 0;
     bottom: 0;
     pointer-events: none;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     visibility: hidden;
     font-size: 10px;
     font-weight: 700;
@@ -833,7 +833,7 @@
     background-repeat: no-repeat;
     background-position: 50%;
     box-shadow: 0 2px 4px 0 hsl(0, 0, 0%, 0.2);
-    background-color: var(--foreground-1);
+    background-color: var(--fg-1);
     background-image: url("https://ucarecdn.com/8d8a32ee-a129-4f46-bd8d-da53b814ba94/");
 }
 
@@ -904,7 +904,7 @@
     font-weight: 600;
     user-select: text;
     cursor: auto;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .cardBody > div:first-child > div {
@@ -913,14 +913,14 @@
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .cardBody > .cardSection:not(:first-child) > h4 {
     display: flex;
     font-weight: 700;
     margin-bottom: 6px;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-size: 12px;
     line-height: 16px;
     text-transform: uppercase;
@@ -939,7 +939,7 @@
     font-size: 14px;
     line-height: 18px;
     overflow: hidden;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .cardBody > .cardDivider {
@@ -957,7 +957,7 @@
 
 .cardBody > .cardSectionLarge > h4 {
     font-weight: 700;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-size: 12px;
     line-height: 16px;
     text-transform: uppercase;
@@ -980,7 +980,7 @@
     justify-content: center;
     border-radius: 8px;
     margin-right: 16px;
-    background-color: var(--accent-3);
+    background-color: var(--accent-2);
 }
 
 .cardTime {
@@ -993,14 +993,14 @@
     font-size: 14px;
     line-height: 18px;
     font-weight: 600;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .cardTime > div:last-child {
     font-size: 14px;
     line-height: 18px;
     font-weight: 400;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .cardTime > div:last-child > span {
@@ -1028,15 +1028,15 @@
     border-radius: 8px;
     text-align: center;
     line-height: 1.285;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     border: 1px solid #ffffff0a;
     box-shadow: var(--elevation-low);
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
 }
 
 .email {
     font-weight: 600;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .reveal,
@@ -1044,7 +1044,7 @@
     font-size: 14px;
     margin-left: 4px;
     background: none;
-    color: var(--accent-light);
+    color: var(--accent-fg);
 }
 
 .resendCode {
@@ -1070,7 +1070,7 @@
     }
 
     .sidebarWrapper > nav {
-        width: 325px;
+        width: 550px;
         padding: 24px 24px 40px 24px;
     }
 
@@ -1146,14 +1146,14 @@
     border-radius: 4px;
     padding-right: 24px;
     align-items: center;
-    color: var(--foreground-3);
-    background-color: var(--background-3);
+    color: var(--fg-3);
+    background-color: var(--bg-3);
 }
 
 .defaultRoleTab:hover,
 .defaultRoleTab:focus-visible {
-    color: var(--foreground-2);
-    background-color: var(--background-5);
+    color: var(--fg-2);
+    background-color: var(--bg-5);
 }
 
 .defaultRoleTab > :first-child {
@@ -1205,7 +1205,7 @@
 
 .roleSearch > p > a {
     text-decoration: none;
-    color: var(--accent-light);
+    color: var(--accent-fg);
 }
 
 .roleSearch > p > a:hover {
@@ -1265,7 +1265,7 @@
 .listItemDraggable:hover,
 .listItemDraggable:focus-visible,
 .listItemDraggable.dragging {
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .listItemDraggable.dragging > * {
@@ -1280,7 +1280,7 @@
     content: "";
     position: absolute;
     border-radius: 2px;
-    background-color: var(--border-light);
+    background-color: var(--border-2);
 }
 
 .listItemDraggable:hover:not(.over)::before,
@@ -1292,7 +1292,7 @@
 .listItemDraggable.over:not(.dragging)::before {
     height: 4px;
     transform: translateY(-2px);
-    background-color: var(--success-light) !important;
+    background-color: var(--success-fg) !important;
 }
 
 .listItemDraggable:hover + .listItemDraggable::before,
@@ -1328,7 +1328,7 @@
 
 .listItemDraggable > :nth-child(2) > :last-child {
     font-weight: 600;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .listItemDraggable > :nth-child(3) {
@@ -1369,7 +1369,7 @@
 .roleEditContainer > :first-child {
     flex: 0 0 232px;
     height: var(--dvh);
-    border-right: 1px solid var(--border-light);
+    border-right: 1px solid var(--border-2);
 }
 
 .roleEditAside {
@@ -1389,7 +1389,7 @@
     gap: 8px;
     display: flex;
     align-items: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .roleEditAside > div > div > p {
@@ -1405,16 +1405,16 @@
 
 .roleEditAside > div > div:hover,
 .roleEditAside > div > div:focus-visible {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .roleEditAside > div > svg {
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .roleEditAside > div > svg:hover,
 .roleEditAside > div > svg:focus-visible {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .roleEditAside > div > div,
@@ -1439,17 +1439,17 @@
     margin-bottom: 2px;
     border-radius: 4px;
     align-items: center;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .roleList > li:hover,
 .roleList > li:focus-visible {
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .roleList > li.active {
     cursor: default;
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
 }
 
 .roleList > li > div {
@@ -1486,7 +1486,7 @@
     position: sticky;
     margin-bottom: 16px;
     padding: 60px 8px 16px 8px;
-    background-color: var(--background-4);
+    background-color: var(--bg-4);
 }
 
 .roleEditHeader > :first-child {
@@ -1504,7 +1504,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     text-transform: uppercase;
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .roleEditHeader > :first-child > svg {
@@ -1514,7 +1514,7 @@
 
 .roleEditHeader > :first-child > svg:hover,
 .roleEditHeader > :first-child > svg:focus-visible {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .roleEditTabs {
@@ -1522,7 +1522,7 @@
     margin-top: 16px;
     margin-bottom: -2px;
     align-items: center;
-    border-bottom: 2px solid var(--border-light);
+    border-bottom: 2px solid var(--border-2);
 }
 
 .roleEditTabs > li {
@@ -1532,20 +1532,20 @@
     margin-right: 32px;
     margin-bottom: -2px;
     padding-bottom: 16px;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     border-bottom: 2px solid transparent;
 }
 
 .roleEditTabs > li:hover,
 .roleEditTabs > li:focus-visible {
-    color: var(--foreground-2);
-    border-bottom-color: var(--accent-1);
+    color: var(--fg-2);
+    border-bottom-color: var(--accent-0);
 }
 
 .roleEditTabs > li.active {
     cursor: default;
-    color: var(--foreground-1);
-    border-bottom-color: var(--accent-border);
+    color: var(--fg-1);
+    border-bottom-color: var(--accent-3);
 }
 
 .roleEditHeader > :last-child {
@@ -1559,7 +1559,7 @@
     margin-bottom: 20px;
     letter-spacing: 0.02rem;
     text-transform: uppercase;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .rolePermItem {
@@ -1573,13 +1573,13 @@
     font-size: 14px;
     line-height: 20px;
     user-select: none;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .rolePermItem > :last-child {
     height: 1px;
     margin-top: 20px;
-    border-top: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-2);
 }
 
 .returnBack {
@@ -1592,8 +1592,8 @@
     border-radius: 4px;
     align-items: center;
     margin: -50px 0 36px 0;
-    color: var(--foreground-2);
-    background-color: var(--background-2);
+    color: var(--fg-2);
+    background-color: var(--bg-2);
 }
 
 nav > .returnBack {
@@ -1602,8 +1602,8 @@ nav > .returnBack {
 
 .returnBack:hover,
 .returnBack:focus-visible {
-    color: var(--foreground-1);
-    background-color: var(--background-5);
+    color: var(--fg-1);
+    background-color: var(--bg-5);
 }
 
 .returnBack > svg {

@@ -7,7 +7,7 @@
     overflow: hidden;
     border-radius: 4px;
     flex-direction: column;
-    background-color: var(--background-3);
+    background-color: var(--bg-2);
 }
 
 .guildInvite > h3 {
@@ -19,7 +19,7 @@
     text-overflow: ellipsis;
     letter-spacing: 0.02rem;
     text-transform: uppercase;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .content {
@@ -80,8 +80,8 @@
     text-overflow: clip;
     border-radius: 15px;
     justify-content: center;
-    color: var(--foreground-2);
-    background-color: var(--background-4);
+    color: var(--fg-2);
+    background-color: var(--bg-4);
 }
 
 .headline > div:last-child {
@@ -106,7 +106,7 @@
 }
 
 .headline h3.link {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .headline h3.link:hover,
@@ -121,7 +121,7 @@
     user-select: none;
     align-items: center;
     display: inline-flex;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .headline .onlineDot,
@@ -131,11 +131,11 @@
     margin-right: 4px;
     border-radius: 50%;
     display: inline-block;
-    background-color: var(--success-1);
+    background-color: var(--success-0);
 }
 
 .headline .offlineDot {
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .channelName {

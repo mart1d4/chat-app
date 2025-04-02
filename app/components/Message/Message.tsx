@@ -1,18 +1,16 @@
 "use client";
 
-import { useData, useEmojiPicker, useMessages, useTriggerDialog } from "@/store";
+import { useData, useEmojiPicker, useMessages, useTriggerDialog, useVoice } from "@/store";
+import { getLongDate, getMidDate, getRelativeDuration, getShortDate } from "@/lib/time";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
-import { getLongDate, getMidDate, getShortDate } from "@/lib/time";
 import { useState, useMemo, useEffect, memo, useRef } from "react";
-import useFetchHelper from "@/hooks/useFetchHelper";
 import { useUploadThing } from "@/lib/uploadthing";
 import { FormatMessage } from "./Formatter/Format";
+import { useRequests } from "@/hooks/useRequests";
 import { translateString } from "@/lib/helpers";
-import { sanitizeString } from "@/lib/strings";
 import styles from "./Message.module.css";
 import { isInline } from "@/lib/message";
 import { nanoid } from "nanoid";
-import { Node } from "slate";
 import {
     MessageMenuContent,
     AttachmentList,
@@ -52,6 +50,8 @@ const messageIcons = {
     3: "left-channel",
     4: "edit",
     7: "pin",
+    8: "phone",
+    9: "phone-missed",
 };
 
 const welcomeMessages = [
@@ -68,14 +68,8 @@ const welcomeMessages = [
     "{user} is here.",
 ];
 
-function serialize(nodes: Node[]) {
-    if (!nodes) return "";
-    return nodes.map((n) => Node.string(n)).join("\n");
-}
-
 export type MessageFunctions = {
     sendMessage: () => Promise<void>;
-    editMessage: () => Promise<void>;
     deleteMessage: () => Promise<void>;
     deleteMessageLocally: () => void;
     deleteAttachment: (attachmentId: string) => Promise<void>;
@@ -121,17 +115,28 @@ export const Message = memo(
         const [startUploading, setStartUploading] = useState(false);
         const [hasRun, setHasRun] = useState(false);
 
+        const isEditing =
+            (useMessages((s) => s.edits.find((e) => e.messageId === message.id))?.content?.length ||
+                0) > 0;
+
         const reply = useMessages((state) => state.replies.find((r) => r.messageId === message.id));
-        const edit = useMessages((state) => state.edits.find((e) => e.messageId === message.id));
-        const moveChannelUp = useData((state) => state.moveChannelUp);
         const { setData: setEmojiPickerData } = useEmojiPicker();
-        const setReply = useMessages((state) => state.setReply);
-        const setEdit = useMessages((state) => state.setEdit);
-        const { triggerDialog } = useTriggerDialog();
-        const { sendRequest } = useFetchHelper();
+        const { setEdit, setReply } = useMessages();
+        const { setChannelId } = useVoice();
+        const { moveChannelUp } = useData();
         const user = useAuthenticatedUser();
         const emojiPickerRef = useRef(null);
         const isSending = useRef(true);
+        const {
+            removeReaction: removeReactionR,
+            updateMessage: updateMessageR,
+            deleteMessage: deleteMessageR,
+            unpinMessage: unpinMessageR,
+            sendMessage: sendMessageR,
+            addReaction: addReactionR,
+            pinMessage: pinMessageR,
+            getInvites,
+        } = useRequests();
 
         const isLocal = "local" in message;
         const isMentioned = message.mentions.some((m) => m.id === user.id);
@@ -173,7 +178,12 @@ export const Message = memo(
         }, [hasRun, isSending, attachmentIds, message]);
 
         async function fetchInvites() {
-            const inviteRegex = /https:\/\/spark.mart1d4.dev\/[a-zA-Z0-9]{7,32}/g;
+            let inviteRegex = /https:\/\/spark.mart1d4.dev\/[a-zA-Z0-9]{7,32}/g;
+
+            if (process.env.NODE_ENV === "development") {
+                inviteRegex = /http:\/\/localhost:3000\/[a-zA-Z0-9]{7,32}/g;
+            }
+
             const matches = message.content?.match(inviteRegex);
 
             const urls: string[] = matches ? Array.from(new Set(matches)) : [];
@@ -181,34 +191,31 @@ export const Message = memo(
 
             if (codes.length === 0) return;
 
-            try {
-                const { data } = await sendRequest({
-                    query: "GET_INVITES",
-                    body: { codes },
-                });
-
-                if (data?.invites) {
-                    if (data.invites.length) {
-                        setInvites(data.invites);
-                    } else {
+            getInvites.send(
+                { codes },
+                {
+                    onComplete: (data) => {
+                        if (data.invites.length) {
+                            setInvites(data.invites);
+                        } else {
+                            setInvites(
+                                Array.from({ length: codes.length }, () => ({
+                                    id: nanoid(),
+                                    error: "notfound",
+                                }))
+                            );
+                        }
+                    },
+                    onFail: () => {
                         setInvites(
                             Array.from({ length: codes.length }, () => ({
                                 id: nanoid(),
-                                error: "notfound",
+                                error: "cannotfetch",
                             }))
                         );
-                    }
+                    },
                 }
-            } catch (error) {
-                console.error(error);
-
-                setInvites(
-                    Array.from({ length: codes.length }, () => ({
-                        id: nanoid(),
-                        error: "cannotfetch",
-                    }))
-                );
-            }
+            );
         }
 
         async function sendMessage() {
@@ -233,15 +240,12 @@ export const Message = memo(
                       }))
                     : [];
 
-                const { data, errors } = await sendRequest({
-                    query: "SEND_MESSAGE",
-                    params: { channelId: channel.id },
-                    body: {
-                        message: {
-                            attachments: att,
-                            content: message.content,
-                            reference: message.reference,
-                        },
+                const data = await sendMessageR.send({
+                    channelId: channel.id,
+                    message: {
+                        attachments: att,
+                        content: message.content,
+                        reference: message.reference,
                     },
                 });
 
@@ -249,7 +253,7 @@ export const Message = memo(
                     setMessages("update", message.id, data.message, true);
                     moveChannelUp(channel.id);
                     setAttachmentIds([]);
-                } else if (errors) {
+                } else {
                     setMessages("update", message.id, {
                         ...message,
                         error: true,
@@ -265,40 +269,6 @@ export const Message = memo(
             }
         }
 
-        async function editMessage() {
-            const str = serialize(JSON.parse(edit?.content || ""));
-            const content = sanitizeString(str);
-
-            if (content === message.content) {
-                return setEdit(message.id, null);
-            }
-
-            if (!content && !hasAttachments) {
-                return triggerDialog({ type: "DELETE_MESSAGE" });
-            }
-
-            if (content.length > 16000) {
-                return triggerDialog({ type: "MESSAGE_LIMIT" });
-            }
-
-            try {
-                const { errors } = await sendRequest({
-                    query: "UPDATE_MESSAGE",
-                    params: {
-                        channelId: channel.id,
-                        messageId: message.id,
-                    },
-                    body: { content },
-                });
-
-                if (!errors) {
-                    setEdit(message.id, null);
-                }
-            } catch (error) {
-                console.error(error);
-            }
-        }
-
         function deleteMessageLocally() {
             setMessages("delete", message.id);
         }
@@ -310,16 +280,37 @@ export const Message = memo(
 
             setEdit(
                 message.id,
-                JSON.stringify([
-                    {
-                        type: "paragraph",
+                JSON.stringify({
+                    root: {
                         children: [
                             {
-                                text: message.content,
+                                children: [
+                                    {
+                                        detail: 0,
+                                        format: 0,
+                                        mode: "normal",
+                                        style: "",
+                                        text: message.content || "",
+                                        type: "text",
+                                        version: 1,
+                                    },
+                                ],
+                                direction: "ltr",
+                                format: "",
+                                indent: 0,
+                                type: "paragraph",
+                                version: 1,
+                                textFormat: 0,
+                                textStyle: "",
                             },
                         ],
+                        direction: null,
+                        format: "",
+                        indent: 0,
+                        type: "root",
+                        version: 1,
                     },
-                ])
+                })
             );
         }
 
@@ -328,78 +319,59 @@ export const Message = memo(
         }
 
         async function deleteMessage() {
-            await sendRequest({
-                query: "DELETE_MESSAGE",
-                params: {
-                    channelId: channel.id,
-                    messageId: message.id,
-                },
+            await deleteMessageR.send({
+                channelId: channel.id,
+                messageId: message.id,
             });
         }
 
         async function deleteAttachment(id: string) {
-            await sendRequest({
-                query: "UPDATE_MESSAGE",
-                params: {
-                    channelId: channel.id,
-                    messageId: message.id,
-                },
-                body: {
+            await updateMessageR.send({
+                channelId: channel.id,
+                messageId: message.id,
+                message: {
                     attachments: message.attachments.map((a) => a.id).filter((a) => a !== id),
                 },
             });
         }
 
         async function removeEmbeds() {
-            await sendRequest({
-                query: "UPDATE_MESSAGE",
-                params: {
-                    channelId: channel.id,
-                    messageId: message.id,
+            await updateMessageR.send({
+                channelId: channel.id,
+                messageId: message.id,
+                message: {
+                    hideEmbeds: true,
                 },
-                body: { hideEmbeds: true },
             });
         }
 
         async function pinMessage() {
-            await sendRequest({
-                query: "PIN_MESSAGE",
-                params: {
-                    channelId: channel.id,
-                    messageId: message.id,
-                },
+            await pinMessageR.send({
+                channelId: channel.id,
+                messageId: message.id,
             });
         }
 
         async function unpinMessage() {
-            await sendRequest({
-                query: "UNPIN_MESSAGE",
-                params: {
-                    channelId: channel.id,
-                    messageId: message.id,
-                },
+            await unpinMessageR.send({
+                channelId: channel.id,
+                messageId: message.id,
             });
         }
 
         async function addReaction(reaction: string | number) {
-            await sendRequest({
-                query: "ADD_REACTION",
-                params: {
-                    channelId: channel.id,
-                    messageId: message.id,
-                    emoji: encodeURIComponent(reaction),
-                },
+            await addReactionR.send({
+                channelId: channel.id,
+                messageId: message.id,
+                emoji: encodeURIComponent(reaction),
             });
         }
 
         async function removeReaction(reaction: string | number) {
-            await sendRequest({
-                query: "REMOVE_REACTION",
-                params: {
-                    channelId: channel.id,
-                    messageId: message.id,
-                    emoji: encodeURIComponent(reaction),
-                },
+            await removeReactionR.send({
+                channelId: channel.id,
+                messageId: message.id,
+                emoji: encodeURIComponent(reaction),
             });
         }
 
@@ -457,7 +429,6 @@ export const Message = memo(
 
         const functions = {
             sendMessage,
-            editMessage,
             deleteMessage,
             deleteMessageLocally,
             deleteAttachment,
@@ -491,6 +462,14 @@ export const Message = memo(
         if (inline) {
             const welcome = welcomeMessages[message.author.id % welcomeMessages.length];
 
+            const endedValue = message.content?.split("Ended: ");
+            const endedTime = endedValue && endedValue[1];
+
+            const voiceId = useVoice((s) => s.channelId);
+
+            const canJoinVoice = voiceId !== channel.id;
+            const hasCall = endedTime === "null";
+
             return (
                 <Menu
                     positionOnClick
@@ -513,22 +492,33 @@ export const Message = memo(
                             <div className={styles.message}>
                                 <div className={styles.specialIcon}>
                                     <Icon
-                                        size={[2, 3].includes(message.type) ? 22 : 18}
+                                        size={[2, 3, 8].includes(message.type) ? 22 : 18}
                                         name={
-                                            messageIcons[message.type as keyof typeof messageIcons]
+                                            message.type === 8 &&
+                                            !message.content.includes(user.id) &&
+                                            !hasCall
+                                                ? messageIcons[
+                                                      (message.type +
+                                                          1) as keyof typeof messageIcons
+                                                  ]
+                                                : messageIcons[
+                                                      message.type as keyof typeof messageIcons
+                                                  ]
                                         }
                                     />
                                 </div>
 
                                 <div className={styles.content}>
                                     <div style={{ whiteSpace: "pre-line" }}>
-                                        {(message.type === 2 || message.type === 3) && guild ? (
+                                        {message.type === 2 && !!guild && (
                                             <span>
                                                 {welcome.slice(0, welcome.indexOf("{user}"))}
                                                 <UserMention user={message.author} />
                                                 {welcome.slice(welcome.indexOf("{user}") + 6)}{" "}
                                             </span>
-                                        ) : (
+                                        )}
+
+                                        {((message.type === 2 && !guild) || message.type === 3) && (
                                             <span>
                                                 <UserMention user={message.author} />{" "}
                                                 {!!message.mentions.length ? (
@@ -537,8 +527,8 @@ export const Message = memo(
                                                         <UserMention
                                                             user={message.mentions[0]}
                                                         />{" "}
-                                                        {message.type === 2 ? "to " : "from "}the
-                                                        group.{" "}
+                                                        {message.type === 2 ? "to " : "from "}
+                                                        the group.{" "}
                                                     </>
                                                 ) : (
                                                     " left the group. "
@@ -593,12 +583,57 @@ export const Message = memo(
                                             </span>
                                         )}
 
-                                        {message.type === 8 && <span></span>}
+                                        {message.type === 8 && (
+                                            <span>
+                                                {hasCall ? (
+                                                    <>
+                                                        <UserMention user={message.author} />{" "}
+                                                        started a call.{" "}
+                                                        {canJoinVoice && (
+                                                            <>
+                                                                <button
+                                                                    className={styles.joinCall}
+                                                                    onClick={() =>
+                                                                        setChannelId(channel.id)
+                                                                    }
+                                                                >
+                                                                    Join Call
+                                                                </button>{" "}
+                                                            </>
+                                                        )}
+                                                    </>
+                                                ) : message.content.includes(user.id) ? (
+                                                    <>
+                                                        <UserMention user={message.author} />{" "}
+                                                        started a call that lasted{" "}
+                                                        {getRelativeDuration(
+                                                            new Date(endedTime).getTime() -
+                                                                new Date(
+                                                                    message.createdAt
+                                                                ).getTime()
+                                                        )}
+                                                        .{" "}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        You missed a call from{" "}
+                                                        <UserMention user={message.author} /> that
+                                                        lasted{" "}
+                                                        {getRelativeDuration(
+                                                            new Date(endedTime).getTime() -
+                                                                new Date(
+                                                                    message.createdAt
+                                                                ).getTime()
+                                                        )}
+                                                        .{" "}
+                                                    </>
+                                                )}
+                                            </span>
+                                        )}
 
                                         <Tooltip
                                             gap={1}
                                             delay={500}
-                                            bigMaxWidth
                                         >
                                             <TooltipTrigger>
                                                 <span className={styles.contentTimestamp}>
@@ -632,9 +667,11 @@ export const Message = memo(
                                                 }}
                                             >
                                                 <img
+                                                    draggable={false}
                                                     alt={reaction.name}
                                                     src={`/assets/emojis/${reaction.name}.svg`}
                                                 />
+
                                                 <span>{reaction.count || 1}</span>
                                             </button>
                                         ))}
@@ -688,7 +725,7 @@ export const Message = memo(
                 <MenuTrigger>
                     <li
                         className={classNames()}
-                        style={{ backgroundColor: !!edit ? "var(--background-hover-4)" : "" }}
+                        style={{ backgroundColor: !!isEditing ? "var(--bg-hover-4)" : "" }}
                     >
                         <MessageMenu
                             large={large}
@@ -807,7 +844,6 @@ export const Message = memo(
                                                     <Tooltip
                                                         gap={1}
                                                         delay={500}
-                                                        bigMaxWidth
                                                     >
                                                         <TooltipTrigger>
                                                             <span>(edited)</span>
@@ -948,7 +984,6 @@ export const Message = memo(
                                         <Tooltip
                                             gap={1}
                                             delay={500}
-                                            bigMaxWidth
                                         >
                                             <TooltipTrigger>
                                                 <span>{getShortDate(message.createdAt)}</span>
@@ -966,45 +1001,23 @@ export const Message = memo(
                                     style={{
                                         opacity:
                                             isLocal && !message.error && !hasAttachments ? 0.5 : 1,
-                                        color: isLocal && message.error ? "var(--error-1)" : "",
+                                        color: isLocal && message.error ? "var(--danger-0)" : "",
                                     }}
                                 >
-                                    {!!edit ? (
-                                        <>
-                                            <TextArea
-                                                edit={edit}
-                                                channel={channel}
-                                                functions={functions}
-                                                messageObject={message}
-                                            />
-
-                                            <div className={styles.editHint}>
-                                                escape to{" "}
-                                                <span
-                                                    tabIndex={0}
-                                                    onClick={() => setEdit(message.id, null)}
-                                                >
-                                                    cancel{" "}
-                                                </span>
-                                                • enter to{" "}
-                                                <span
-                                                    tabIndex={0}
-                                                    onClick={() => editMessage()}
-                                                >
-                                                    save{" "}
-                                                </span>
-                                            </div>
-                                        </>
+                                    {isEditing ? (
+                                        <TextArea
+                                            channel={channel}
+                                            functions={functions}
+                                            messageObject={message}
+                                            edit={message.content || ""}
+                                        />
                                     ) : (
                                         content && (
                                             <>
                                                 {content}{" "}
                                                 {message.edited && !message.attachments.length && (
                                                     <span className={styles.contentTimestamp}>
-                                                        <Tooltip
-                                                            delay={500}
-                                                            bigMaxWidth
-                                                        >
+                                                        <Tooltip delay={500}>
                                                             <TooltipTrigger>
                                                                 <span>(edited)</span>
                                                             </TooltipTrigger>
@@ -1019,7 +1032,7 @@ export const Message = memo(
                                         )
                                     )}
 
-                                    {translation && !edit && (
+                                    {translation && !isEditing && (
                                         <Dialog>
                                             <DialogTrigger>
                                                 <button
@@ -1104,7 +1117,7 @@ export const Message = memo(
                                                                     100 - fileProgress
                                                                 }%, 0, 0)`,
                                                                 backgroundColor: message.error
-                                                                    ? "var(--error-1)"
+                                                                    ? "var(--danger-0)"
                                                                     : "",
                                                             }}
                                                         />
@@ -1129,7 +1142,6 @@ export const Message = memo(
                                             <Tooltip
                                                 gap={1}
                                                 delay={500}
-                                                bigMaxWidth
                                             >
                                                 <TooltipTrigger>
                                                     <span>(edited)</span>
@@ -1172,6 +1184,7 @@ export const Message = memo(
                                                 }}
                                             >
                                                 <img
+                                                    draggable={false}
                                                     alt={reaction.name}
                                                     src={`/assets/emojis/${reaction.name}.svg`}
                                                 />
@@ -1230,9 +1243,6 @@ export const Message = memo(
             </Menu>
         );
     }
-    // (prevProps, nextProps) => {
-    //     return JSON.stringify(prevProps.message) === JSON.stringify(nextProps.message);
-    // }
 );
 
 function UploadAttachments({
@@ -1271,8 +1281,6 @@ function UploadAttachments({
             setMessages("update", message.id, {
                 ...message,
                 error: true,
-                send: false,
-                loading: false,
             });
         },
         onUploadProgress: (progress) => {

@@ -99,3 +99,24 @@ export function getRelativeDate(date: Date) {
         return `${days} day${days === 1 ? "" : "s"} ago`;
     }
 }
+
+export function getRelativeDuration(duration: number) {
+    const seconds = Math.floor(duration / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    // less than a minutes = a few seconds
+    // more than a minute = 1 minute, 2 minutes, 3 minutes, etc.
+    // more than an hour = 1 hour, 2 hours, 3 hours, etc.
+    // stop at hours, don't go to days or weeks
+
+    if (seconds < 60) {
+        return "a few seconds";
+    } else if (minutes < 60) {
+        return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+    } else if (hours < 24) {
+        return `${hours} hour${hours === 1 ? "" : "s"}`;
+    } else {
+        return `${Math.floor(hours / 24)} day${Math.floor(hours / 24) === 1 ? "" : "s"}`;
+    }
+}

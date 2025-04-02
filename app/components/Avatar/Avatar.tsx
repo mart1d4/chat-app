@@ -6,6 +6,8 @@ import { getRandomImage } from "@/lib/utils";
 import { getCdnUrl } from "@/lib/uploadthing";
 import styles from "./Avatar.module.css";
 import type { User } from "@/type";
+import Image from "next/image";
+import { useId } from "react";
 
 export function Avatar({
     src,
@@ -17,6 +19,7 @@ export function Avatar({
     guildName,
     status,
     showStatusTooltip,
+    speaking,
 }: {
     src?: string;
     alt: string;
@@ -27,6 +30,7 @@ export function Avatar({
     guildName?: string;
     status?: User["status"];
     showStatusTooltip?: boolean;
+    speaking?: boolean;
 }) {
     if (guildName) {
         return (
@@ -39,7 +43,7 @@ export function Avatar({
                     justifyContent: "center",
                     fontSize: size / 2,
                     color: "white",
-                    background: "var(--background-5)",
+                    background: "var(--bg-5)",
                     borderRadius: "50%",
                 }}
             >
@@ -59,16 +63,12 @@ export function Avatar({
     if (fileId) {
         url = `${getCdnUrl}${fileId}`;
     } else {
-        if (!generateId) {
-            console.error("generateId is required if fileId is not provided");
-            return null;
-        }
-
         url = getRandomImage(generateId, type === "user" ? "avatar" : "icon");
     }
 
     const rectPlacement = rectPlacements[size];
     const rectSize = rectSizes[size];
+    const masksId = useId();
 
     const statusObject = status ? (
         <rect
@@ -78,8 +78,9 @@ export function Avatar({
             height={rectSize}
             rx={rectSize / 2}
             ry={rectSize / 2}
+            className={styles.status}
             fill={colors[status as keyof typeof colors]}
-            mask={`url(#${masks[status as keyof typeof masks]})`}
+            mask={`url(#${masks[status as keyof typeof masks]}-${masksId})`}
         />
     ) : null;
 
@@ -91,13 +92,15 @@ export function Avatar({
             {/* if no filedId, use first letters of each word of guild name, otherwise display the image*/}
 
             {fileId ? (
-                <img
-                    src={url}
-                    alt={alt}
-                    width={size}
-                    height={size}
-                    draggable={false}
-                />
+                !url ? null : (
+                    <Image
+                        src={url}
+                        alt={alt}
+                        width={size}
+                        height={size}
+                        draggable={false}
+                    />
+                )
             ) : (
                 <svg
                     width={size}
@@ -133,174 +136,16 @@ export function Avatar({
                 className={styles.container}
                 style={{ width: size, height: size }}
             >
+                {speaking && <div className={styles.speaking} />}
+
                 <svg
                     width={size}
                     height={size}
-                    viewBox={`0 0 ${size} ${size}`}
                     aria-hidden="true"
                     className={styles.svg}
+                    viewBox={`0 0 ${size} ${size}`}
                 >
-                    <mask
-                        id="status-mask-24"
-                        maskContentUnits="objectBoundingBox"
-                        viewBox="0 0 1 1"
-                    >
-                        <circle
-                            fill="white"
-                            cx="0.5"
-                            cy="0.5"
-                            r="0.5"
-                        />
-
-                        <circle
-                            fill="black"
-                            cx="0.85"
-                            cy="0.85"
-                            r="0.275"
-                        />
-                    </mask>
-
-                    <mask
-                        id="status-mask-32"
-                        maskContentUnits="objectBoundingBox"
-                        viewBox="0 0 1 1"
-                    >
-                        <circle
-                            fill="white"
-                            cx="0.5"
-                            cy="0.5"
-                            r="0.5"
-                        />
-
-                        <circle
-                            fill="black"
-                            cx="0.85"
-                            cy="0.85"
-                            r="0.25"
-                        />
-                    </mask>
-
-                    <mask
-                        id="status-mask-40"
-                        maskContentUnits="objectBoundingBox"
-                        viewBox="0 0 1 1"
-                    >
-                        <circle
-                            fill="white"
-                            cx="0.5"
-                            cy="0.5"
-                            r="0.5"
-                        />
-
-                        <circle
-                            fill="black"
-                            cx="0.85"
-                            cy="0.85"
-                            r="0.240"
-                        />
-                    </mask>
-
-                    <mask
-                        id="status-mask-80"
-                        maskContentUnits="objectBoundingBox"
-                        viewBox="0 0 1 1"
-                    >
-                        <circle
-                            fill="white"
-                            cx="0.5"
-                            cy="0.5"
-                            r="0.5"
-                        />
-
-                        <circle
-                            fill="black"
-                            cx="0.85"
-                            cy="0.85"
-                            r="0.175"
-                        />
-                    </mask>
-
-                    <mask
-                        id="status-mask-120"
-                        maskContentUnits="objectBoundingBox"
-                        viewBox="0 0 1 1"
-                    >
-                        <circle
-                            fill="white"
-                            cx="0.5"
-                            cy="0.5"
-                            r="0.5"
-                        />
-
-                        <circle
-                            fill="black"
-                            cx="0.85"
-                            cy="0.85"
-                            r="0.16"
-                        />
-                    </mask>
-
-                    {/* Inner Masks */}
-
-                    <mask
-                        id="status-mask-offline"
-                        maskContentUnits="objectBoundingBox"
-                        viewBox="0 0 1 1"
-                    >
-                        <circle
-                            fill="white"
-                            cx="0.5"
-                            cy="0.5"
-                            r="0.5"
-                        />
-                        <circle
-                            fill="black"
-                            cx="0.5"
-                            cy="0.5"
-                            r="0.25"
-                        />
-                    </mask>
-
-                    <mask
-                        id="status-mask-dnd"
-                        maskContentUnits="objectBoundingBox"
-                        viewBox="0 0 1 1"
-                    >
-                        <circle
-                            fill="white"
-                            cx="0.5"
-                            cy="0.5"
-                            r="0.5"
-                        />
-                        <rect
-                            fill="black"
-                            x="0.125"
-                            y="0.375"
-                            width="0.75"
-                            height="0.25"
-                            rx="0.125"
-                            ry="0.125"
-                        />
-                    </mask>
-
-                    <mask
-                        id="status-mask-idle"
-                        maskContentUnits="objectBoundingBox"
-                        viewBox="0 0 1 1"
-                    >
-                        <circle
-                            fill="white"
-                            cx="0.5"
-                            cy="0.5"
-                            r="0.5"
-                        />
-                        <circle
-                            fill="black"
-                            cx="0.25"
-                            cy="0.25"
-                            r="0.375"
-                        />
-                    </mask>
+                    <Masks id={masksId} />
 
                     <foreignObject
                         x={0}
@@ -308,16 +153,18 @@ export function Avatar({
                         width={size}
                         height={size}
                         overflow="visible"
-                        mask={`url(#status-mask-${size})`}
+                        mask={`url(#status-mask-${size}-${masksId})`}
                     >
                         <div className={styles.container}>
-                            <img
-                                src={url}
-                                alt={alt}
-                                width={size}
-                                height={size}
-                                draggable={false}
-                            />
+                            {url && (
+                                <Image
+                                    src={url}
+                                    alt={alt}
+                                    width={size}
+                                    height={size}
+                                    draggable={false}
+                                />
+                            )}
                         </div>
                     </foreignObject>
 
@@ -339,12 +186,14 @@ export function Avatar({
             className={styles.container}
             style={{ width: size, height: size }}
         >
+            {speaking && <div className={styles.speaking} />}
+
             <svg
                 width={size}
                 height={size}
-                viewBox={`0 0 ${size} ${size}`}
                 aria-hidden="true"
                 className={styles.svg}
+                viewBox={`0 0 ${size} ${size}`}
             >
                 <foreignObject
                     x={0}
@@ -354,16 +203,187 @@ export function Avatar({
                     overflow="visible"
                 >
                     <div className={styles.container}>
-                        <img
-                            src={url}
-                            alt={alt}
-                            width={size}
-                            height={size}
-                            draggable={false}
-                        />
+                        {url && (
+                            <Image
+                                src={url}
+                                alt={alt}
+                                width={size}
+                                height={size}
+                                draggable={false}
+                            />
+                        )}
                     </div>
                 </foreignObject>
             </svg>
         </div>
+    );
+}
+
+export function Masks({ id }: { id: string }) {
+    return (
+        <>
+            <mask
+                id={`status-mask-24-${id}`}
+                maskContentUnits="objectBoundingBox"
+                viewBox="0 0 1 1"
+            >
+                <circle
+                    fill="white"
+                    cx="0.5"
+                    cy="0.5"
+                    r="0.5"
+                />
+
+                <circle
+                    fill="black"
+                    cx="0.85"
+                    cy="0.85"
+                    r="0.275"
+                />
+            </mask>
+
+            <mask
+                id={`status-mask-32-${id}`}
+                maskContentUnits="objectBoundingBox"
+                viewBox="0 0 1 1"
+            >
+                <circle
+                    fill="white"
+                    cx="0.5"
+                    cy="0.5"
+                    r="0.5"
+                />
+
+                <circle
+                    fill="black"
+                    cx="0.85"
+                    cy="0.85"
+                    r="0.25"
+                />
+            </mask>
+
+            <mask
+                id={`status-mask-40-${id}`}
+                maskContentUnits="objectBoundingBox"
+                viewBox="0 0 1 1"
+            >
+                <circle
+                    fill="white"
+                    cx="0.5"
+                    cy="0.5"
+                    r="0.5"
+                />
+
+                <circle
+                    fill="black"
+                    cx="0.85"
+                    cy="0.85"
+                    r="0.240"
+                />
+            </mask>
+
+            <mask
+                id={`status-mask-80-${id}`}
+                maskContentUnits="objectBoundingBox"
+                viewBox="0 0 1 1"
+            >
+                <circle
+                    fill="white"
+                    cx="0.5"
+                    cy="0.5"
+                    r="0.5"
+                />
+
+                <circle
+                    fill="black"
+                    cx="0.85"
+                    cy="0.85"
+                    r="0.175"
+                />
+            </mask>
+
+            <mask
+                id={`status-mask-120-${id}`}
+                maskContentUnits="objectBoundingBox"
+                viewBox="0 0 1 1"
+            >
+                <circle
+                    fill="white"
+                    cx="0.5"
+                    cy="0.5"
+                    r="0.5"
+                />
+
+                <circle
+                    fill="black"
+                    cx="0.85"
+                    cy="0.85"
+                    r="0.16"
+                />
+            </mask>
+
+            <mask
+                id={`status-mask-offline-${id}`}
+                maskContentUnits="objectBoundingBox"
+                viewBox="0 0 1 1"
+            >
+                <circle
+                    fill="white"
+                    cx="0.5"
+                    cy="0.5"
+                    r="0.5"
+                />
+
+                <circle
+                    fill="black"
+                    cx="0.5"
+                    cy="0.5"
+                    r="0.25"
+                />
+            </mask>
+
+            <mask
+                id={`status-mask-dnd-${id}`}
+                maskContentUnits="objectBoundingBox"
+                viewBox="0 0 1 1"
+            >
+                <circle
+                    fill="white"
+                    cx="0.5"
+                    cy="0.5"
+                    r="0.5"
+                />
+
+                <rect
+                    fill="black"
+                    x="0.125"
+                    y="0.375"
+                    width="0.75"
+                    height="0.25"
+                    rx="0.125"
+                    ry="0.125"
+                />
+            </mask>
+
+            <mask
+                id={`status-mask-idle-${id}`}
+                maskContentUnits="objectBoundingBox"
+                viewBox="0 0 1 1"
+            >
+                <circle
+                    fill="white"
+                    cx="0.5"
+                    cy="0.5"
+                    r="0.5"
+                />
+
+                <circle
+                    fill="black"
+                    cx="0.25"
+                    cy="0.25"
+                    r="0.375"
+                />
+            </mask>
+        </>
     );
 }

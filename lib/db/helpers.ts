@@ -12,6 +12,7 @@ import type {
     Channel,
     User,
 } from "@/type";
+import { client } from "../redis/client";
 
 export const SelectAppUnknownUser: (keyof User)[] = ["id", "username", "avatar"];
 export const selectAppRequest: (keyof User)[] = [...SelectAppUnknownUser, "displayName"];
@@ -193,7 +194,52 @@ export async function getInitialData() {
             getUserGuilds({ userId: user.id }),
         ]);
 
-        console.log("Guilds:", JSON.stringify(guilds, null, 4));
+        const scanKeys = async (pattern: string): Promise<string[]> => {
+            const stream = client.scanIterator({
+                MATCH: pattern,
+                COUNT: 100, // Adjust as needed
+            });
+
+            const keys: string[] = [];
+            for await (const key of stream) {
+                keys.push(key);
+            }
+            return keys;
+        };
+
+        const dmKeys = channels.map((c) => `livekit-room:dm:${c.id}`);
+        const guildKeysPatterns = guilds.map((g) => `livekit-room:guild:${g.id}:channel:*`);
+
+        const guildKeys = (await Promise.all(guildKeysPatterns.map(scanKeys))).flat();
+        const allKeys = [...dmKeys, ...guildKeys];
+
+        const rooms = [];
+
+        for (const key of allKeys) {
+            const room = await client.hGetAll(key);
+            const hasGuild = key.includes("guild");
+
+            const channelId = hasGuild
+                ? Number(key.split("channel:")[1].split(":")[0])
+                : Number(key.split("dm:")[1]);
+
+            const guildId = hasGuild ? Number(key.split("guild:")[1].split(":")[0]) : null;
+
+            if (room && Object.keys(room).length > 0) {
+                rooms.push({
+                    channelId,
+                    guildId,
+                    participants: JSON.parse(room.participants || "[]").map((id: string) =>
+                        Number(id)
+                    ),
+                    started: Number(room.started),
+                    hasJoined: false,
+                    haveDissmissed: [],
+                });
+            }
+        }
+
+        // console.log("Guilds:", JSON.stringify(guilds, null, 4));
 
         const end = Date.now();
 
@@ -212,7 +258,9 @@ export async function getInitialData() {
                 ...g,
                 members: [
                     {
+                        // @ts-ignore - Need to figure this one out
                         ...g.profile.profile,
+                        // @ts-ignore - Need to figure this one out
                         permissions: BigInt(g.profile.profile.permissions),
                         username: user.username,
                         avatar: user.avatar,
@@ -222,6 +270,7 @@ export async function getInitialData() {
                     },
                 ],
             })) as UserGuild[],
+            rooms,
         };
     } catch (error) {
         console.log(error);

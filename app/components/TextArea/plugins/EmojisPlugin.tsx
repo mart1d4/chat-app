@@ -1,7 +1,7 @@
 "use client";
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { getCodeFromName, isCorrectEmojiName } from "@/lib/emojis";
+import { getCodeFromName, isCorrectEmojiHex, isCorrectEmojiName } from "@/lib/emojis";
 import { $createEmojiNode, EmojiNode } from "../ui/EmojiNode";
 import type { LexicalEditor } from "lexical";
 import { TextNode } from "lexical";
@@ -9,44 +9,36 @@ import { useEffect } from "react";
 
 function $findAndTransformEmoji(node: TextNode): null | TextNode {
     const text = node.getTextContent();
+    const emojiMatch = text.match(/:[a-z0-9_-]+:/);
 
-    // If text contains an emoji (e.g. :smile: or :flag_us:), replace it with an EmojiNode
-    const emojiMatch = text.match(/:[a-z_]+:/);
+    if (emojiMatch !== null) {
+        const match = emojiMatch[0];
+        const index = emojiMatch.index || 0;
 
-    if (emojiMatch !== null && isCorrectEmojiName(emojiMatch[0])) {
-        const hex = getCodeFromName(emojiMatch[0]);
+        const correctName = isCorrectEmojiName(match);
+        const correctHex = isCorrectEmojiHex(match.replace(/:/g, ""));
+
+        if (!correctName && !correctHex) return null;
+
+        const hex = correctHex ? match.replace(/:/g, "") : getCodeFromName(match);
         if (!hex) return null;
 
-        const emojiNode = $createEmojiNode(hex);
+        const textbefore = text.substring(0, index);
+        const nodes = node.splitText(index, index + match.length) || [null, null];
+        const targetNode = textbefore ? nodes[1] : nodes[0];
 
-        // Get start and end index of the match
-        const matchStart = emojiMatch.index!;
-        const matchEnd = matchStart + emojiMatch[0].length;
+        const emojiNode = $createEmojiNode(`:${hex}:`);
+        targetNode.replace(emojiNode);
 
-        // Split the node to isolate the emoji text
-        let beforeNode: TextNode | null = null;
-        let targetNode: TextNode | null = null;
-        let afterNode: TextNode | null = null;
+        const nextSibling = emojiNode.getNextSibling();
 
-        if (matchStart > 0) {
-            [beforeNode, targetNode] = node.splitText(matchStart);
+        if (nextSibling && nextSibling.getType() === "emoji") {
+            // Need to figure out a way to put cursor after
+            console.info("Need to figure out a way to put cursor after");
+            emojiNode.select(match.length, match.length);
         } else {
-            targetNode = node;
+            emojiNode.selectNext(0, 0);
         }
-
-        if (matchEnd < text.length) {
-            [targetNode, afterNode] = targetNode!.splitText(matchEnd - matchStart);
-        }
-
-        // Replace the targetNode (matched text) with the emojiNode
-        targetNode!.replace(emojiNode);
-
-        // Reattach afterNode (text following the emoji) if it exists
-        if (afterNode) {
-            emojiNode.insertAfter(afterNode);
-        }
-
-        emojiNode.selectNext();
 
         return emojiNode;
     }

@@ -3,17 +3,17 @@
     display: flex;
     padding: 0 16px;
     min-width: 300px;
+    color: var(--fg-3);
     align-items: center;
     border-radius: 24px;
-    color: var(--foreground-3);
-    background-color: var(--background-3);
+    background-color: var(--bg-2);
 }
 
 .preview > .dot {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
     transition: background-color 0.15s ease-in-out;
 }
 
@@ -46,7 +46,7 @@
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     transition: background 0.1s ease-in-out, transform 0.1s ease-in-out;
     background: linear-gradient(
         150deg,
@@ -72,7 +72,7 @@
     margin-right: -6px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
 }
 

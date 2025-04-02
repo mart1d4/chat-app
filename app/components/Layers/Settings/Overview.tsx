@@ -1,5 +1,7 @@
+"use client";
+
 import { AnimatePresence, motion } from "framer-motion";
-import useFetchHelper from "@/hooks/useFetchHelper";
+import { useRequests } from "@/hooks/useRequests";
 import styles from "./Settings.module.css";
 import type { GuildChannel } from "@/type";
 import { LoadingDots } from "@components";
@@ -9,9 +11,8 @@ import Image from "next/image";
 export function Overview({ channel }: { channel: GuildChannel }) {
     const [channelTopic, setChannelTopic] = useState(channel.topic || "");
     const [channelName, setChannelName] = useState(channel.name);
-    const [loading, setLoading] = useState(false);
 
-    const { sendRequest } = useFetchHelper();
+    const { updateGuildChannel } = useRequests();
 
     function resetState() {
         setChannelName(channel.name);
@@ -19,30 +20,6 @@ export function Overview({ channel }: { channel: GuildChannel }) {
     }
 
     const needsSaving = channelName !== channel.name || channelTopic !== (channel.topic || "");
-
-    async function saveChannel() {
-        if (loading || !needsSaving) return;
-        setLoading(true);
-
-        try {
-            const { errors } = await sendRequest({
-                query: "CHANNEL_UPDATE",
-                params: { channelId: channel.id },
-                body: {
-                    name: channelName,
-                    topic: channelTopic,
-                },
-            });
-
-            if (!errors) {
-                resetState();
-            }
-        } catch (err) {
-            console.error(err);
-        }
-
-        setLoading(false);
-    }
 
     return (
         <div>
@@ -67,9 +44,20 @@ export function Overview({ channel }: { channel: GuildChannel }) {
 
                             <button
                                 className="button green"
-                                onClick={() => saveChannel()}
+                                onClick={() =>
+                                    updateGuildChannel.send(
+                                        {
+                                            channelId: channel.id,
+                                            body: {
+                                                name: channelName,
+                                                topic: channelTopic,
+                                            },
+                                        },
+                                        { onComplete: () => resetState() }
+                                    )
+                                }
                             >
-                                {loading ? <LoadingDots /> : "Save Changes"}
+                                {updateGuildChannel.isLoading ? <LoadingDots /> : "Save Changes"}
                             </button>
                         </div>
                     </motion.div>

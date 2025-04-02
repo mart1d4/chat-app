@@ -2,60 +2,50 @@
 
 import { FriendRequests, MyAccount, Profiles, Overview, GuildRoles } from "./index";
 import { Dialog, DialogContent, DialogTrigger, Icon } from "@components";
-import useRequestHelper from "@/hooks/useFetchHelper";
+import { useShowSettings, useWindowSettings } from "@/store";
+import { useRequests } from "@/hooks/useRequests";
 import { getApiUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from "./Settings.module.css";
-import { useShowSettings } from "@/store";
 
 export function Settings() {
-    const [activeTab, setActiveTab] = useState("");
     const [minified, setMinified] = useState(false);
+    const [activeTab, setActiveTab] = useState("");
     const [hideNav, setHideNav] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    const width1024 = useWindowSettings((s) => s.widthThresholds[1024]);
     const { showSettings, setShowSettings } = useShowSettings();
-    const { sendRequest } = useRequestHelper();
+    const { deleteGuildChannel } = useRequests();
     const router = useRouter();
 
     const guild = showSettings?.guild;
     const channel = showSettings?.channel;
 
-    useEffect(() => {
-        setMinified(window.innerWidth < 1024);
+    if (width1024 && minified) {
+        setMinified(false);
+    } else if (!width1024 && !minified) {
+        setMinified(true);
+    }
 
-        const handleWindowResize = () => {
-            if (window.innerWidth < 1024) setMinified(true);
-            else setMinified(false);
-        };
-
-        window.addEventListener("resize", handleWindowResize);
-        return () => window.removeEventListener("resize", handleWindowResize);
-    }, []);
-
-    useEffect(() => {
-        if (showSettings !== null && showSettings.tab) {
-            setActiveTab(showSettings.tab);
-            if (minified) setHideNav(true);
-        } else if (showSettings !== null) {
-            setActiveTab(
-                ["GUILD", "CHANNEL"].includes(showSettings.type) ? "Overview" : "My Account"
-            );
-        }
-    }, [showSettings]);
+    if (showSettings?.tab && activeTab !== showSettings.tab) {
+        setActiveTab(showSettings.tab);
+        if (minified) setHideNav(true);
+    } else if (showSettings !== null && activeTab === "") {
+        setActiveTab(["GUILD", "CHANNEL"].includes(showSettings.type) ? "Overview" : "My Account");
+    }
 
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
-                // if (layers) return;
                 setShowSettings(null);
             }
         };
 
         document.addEventListener("keydown", handleEsc);
         return () => document.removeEventListener("keydown", handleEsc);
-    }, [showSettings]);
+    }, []);
 
     const userTabs = [
         { name: "User Settings", type: "title" },
@@ -178,12 +168,12 @@ export function Settings() {
                                     )}
 
                                     {tabs.map((tab, index) => {
-                                        if (tab.hide) return null;
+                                        if ("hide" in tab && tab.hide) return null;
 
                                         const noInteraction =
                                             tab.name === "separator" ||
                                             tab.type === "title" ||
-                                            tab.noInteraction;
+                                            "noInteraction" in tab;
 
                                         const item = (
                                             <button
@@ -270,22 +260,16 @@ export function Settings() {
                                                         confirmColor="red"
                                                         confirmLabel={`Delete ${type}`}
                                                         confirmLoading={loading}
-                                                        onConfirm={async () => {
-                                                            setLoading(true);
-
-                                                            const { errors } = await sendRequest({
-                                                                query: "GUILD_CHANNEL_DELETE",
-                                                                params: {
-                                                                    channelId: channel.id,
-                                                                },
-                                                            });
-
-                                                            if (!errors) {
-                                                                setShowSettings(null);
-                                                                router.refresh();
-                                                            }
-
-                                                            setLoading(false);
+                                                        onConfirm={() => {
+                                                            deleteGuildChannel.send(
+                                                                { channelId: channel.id },
+                                                                {
+                                                                    onComplete: () => {
+                                                                        setShowSettings(null);
+                                                                        router.refresh();
+                                                                    },
+                                                                }
+                                                            );
                                                         }}
                                                     />
                                                 </Dialog>

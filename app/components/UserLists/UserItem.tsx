@@ -1,16 +1,15 @@
 "use client";
 
 import type { KnownUser, UnknownUser } from "@/type";
-import useFetchHelper from "@/hooks/useFetchHelper";
+import { useRequests } from "@/hooks/useRequests";
 import { getStatusLabel } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import styles from "./UserItem.module.css";
-import { useData } from "@/store";
-import { useState } from "react";
 import {
-    TooltipContent,
+    InteractiveElement,
     TooltipTrigger,
+    TooltipContent,
     MenuTrigger,
+    LoadingDots,
     UserMenu,
     Tooltip,
     Avatar,
@@ -25,39 +24,9 @@ export function UserItem({
     user,
 }: {
     content: ContentType;
-    user: ContentType extends "blocked" ? UnknownUser : KnownUser & { req: string };
+    user: ContentType extends "blocked" ? UnknownUser : KnownUser & { req: "Sent" | "Received" };
 }) {
-    const [loading, setLoading] = useState(false);
-
-    const { channels } = useData();
-    const { sendRequest } = useFetchHelper();
-    const router = useRouter();
-
-    const dmWithUser = channels.find((c) => {
-        return c.recipients.length === 2 && c.recipients.find((r) => r.id === user.id);
-    });
-
-    async function messageUser() {
-        if (loading || !["all", "online"].includes(content)) return;
-
-        if (dmWithUser) {
-            router.push(`/channels/me/${dmWithUser.id}`);
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            await sendRequest({
-                query: "CHANNEL_CREATE",
-                body: { recipients: [user.id] },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading(false);
-    }
+    const { createChannel, addFriend, removeFriend, unblockUser } = useRequests();
 
     return (
         <Menu
@@ -65,13 +34,11 @@ export function UserItem({
             placement="right-start"
         >
             <MenuTrigger>
-                <li
-                    tabIndex={0}
-                    onClick={messageUser}
+                <InteractiveElement
                     className={styles.container}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                            messageUser();
+                    onClick={() => {
+                        if (content === "all" || content === "online") {
+                            createChannel.send({ recipients: [user.id] });
                         }
                     }}
                 >
@@ -121,14 +88,15 @@ export function UserItem({
                                 <>
                                     <Tooltip>
                                         <TooltipTrigger>
-                                            <button
-                                                type="button"
-                                                onClick={messageUser}
-                                            >
-                                                <Icon
-                                                    size={20}
-                                                    name="message"
-                                                />
+                                            <button type="button">
+                                                {createChannel.isLoading ? (
+                                                    <LoadingDots />
+                                                ) : (
+                                                    <Icon
+                                                        size={20}
+                                                        name="message"
+                                                    />
+                                                )}
                                             </button>
                                         </TooltipTrigger>
 
@@ -171,17 +139,18 @@ export function UserItem({
                                                 <button
                                                     type="button"
                                                     className={styles.green}
-                                                    onClick={async () => {
-                                                        const { data } = await sendRequest({
-                                                            query: "ADD_FRIEND",
-                                                            body: { username: user.username },
-                                                        });
-                                                    }}
+                                                    onClick={() =>
+                                                        addFriend.send({ username: user.username })
+                                                    }
                                                 >
-                                                    <Icon
-                                                        size={20}
-                                                        name="checkmark"
-                                                    />
+                                                    {addFriend.isLoading ? (
+                                                        <LoadingDots />
+                                                    ) : (
+                                                        <Icon
+                                                            size={20}
+                                                            name="checkmark"
+                                                        />
+                                                    )}
                                                 </button>
                                             </TooltipTrigger>
 
@@ -194,19 +163,18 @@ export function UserItem({
                                             <button
                                                 type="button"
                                                 className={styles.red}
-                                                onClick={async () => {
-                                                    const { errors } = await sendRequest({
-                                                        query: "REMOVE_FRIEND",
-                                                        body: {
-                                                            username: user.username,
-                                                        },
-                                                    });
-                                                }}
+                                                onClick={() =>
+                                                    removeFriend.send({ username: user.username })
+                                                }
                                             >
-                                                <Icon
-                                                    size={20}
-                                                    name="cancel"
-                                                />
+                                                {removeFriend.isLoading ? (
+                                                    <LoadingDots />
+                                                ) : (
+                                                    <Icon
+                                                        size={20}
+                                                        name="cancel"
+                                                    />
+                                                )}
                                             </button>
                                         </TooltipTrigger>
 
@@ -223,17 +191,16 @@ export function UserItem({
                                         <button
                                             type="button"
                                             className={styles.red}
-                                            onClick={async () => {
-                                                const { errors } = await sendRequest({
-                                                    query: "UNBLOCK_USER",
-                                                    params: { userId: user.id },
-                                                });
-                                            }}
+                                            onClick={() => unblockUser.send({ userId: user.id })}
                                         >
-                                            <Icon
-                                                size={20}
-                                                name="unblock"
-                                            />
+                                            {unblockUser.isLoading ? (
+                                                <LoadingDots />
+                                            ) : (
+                                                <Icon
+                                                    size={20}
+                                                    name="unblock"
+                                                />
+                                            )}
                                         </button>
                                     </TooltipTrigger>
 
@@ -242,7 +209,7 @@ export function UserItem({
                             )}
                         </div>
                     </div>
-                </li>
+                </InteractiveElement>
             </MenuTrigger>
 
             <UserMenu user={user} />

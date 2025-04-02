@@ -1,16 +1,17 @@
 "use client";
 
 import { getRandomImage, getStatusColor, getStatusLabel, getStatusMask } from "@/lib/utils";
-import type { AppUser, KnownUser, User, UserGuild, UserProfile } from "@/type";
 import { useData, useShowSettings, useTriggerDialog } from "@/store";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
-import { useState, useEffect, Fragment } from "react";
-import useFetchHelper from "@/hooks/useFetchHelper";
+import { useFetchNote, useFetchUser } from "@/hooks/useFetchData";
+import { useRelationships } from "@/hooks/useRelationships";
+import { useRequests } from "@/hooks/useRequests";
+import { useState, Fragment, useId } from "react";
 import { getButtonColor } from "@/lib/getColors";
-import { sanitizeString } from "@/lib/strings";
 import { usePopoverContext } from "../Popover";
 import { getCdnUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
+import type { AppUser, User } from "@/type";
 import styles from "./UserCard.module.css";
 import Image from "next/image";
 import {
@@ -25,6 +26,7 @@ import {
     MenuItem,
     Tooltip,
     Avatar,
+    Masks,
     Icon,
     Menu,
 } from "@components";
@@ -42,217 +44,87 @@ export function UserCard({
     onAvatarClick?: () => void;
     onBannerClick?: () => void;
 }) {
-    const [mutualFriendIds, setMutualFriendIds] = useState<number[]>([]);
-    const [mutualGuildIds, setMutualGuildIds] = useState<number[]>([]);
-    const [mutualFriends, setMutualFriends] = useState<KnownUser[]>([]);
-    const [mutualGuilds, setMutualGuilds] = useState<UserGuild[]>([]);
-    const [usernameCopied, setUsernameCopied] = useState(false);
-    const [user, setUser] = useState<null | UserProfile | AppUser>(
-        mode === "edit" ? initUser : null
-    );
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
-    const [note, setNote] = useState("");
+    const {
+        data: fData,
+        isLoading: fLoading,
+        mutate,
+    } = mode === "edit" ? {} : useFetchUser(initUser.id);
 
-    const { guilds, channels, updateUser, friends, received, sent, blocked } = useData();
+    const user = fData?.user
+        ? {
+              ...fData.user,
+              status: initUser.status,
+          }
+        : initUser;
+
+    const { channels, friends, guilds, setUser } = useData();
+
+    const mutualFriends = friends.filter((f) => fData?.mutualFriends?.includes(f.id));
+    const mutualGuilds = guilds.filter((g) => fData?.mutualGuilds?.includes(g.id));
+
+    const { data: nData } = useFetchNote(initUser.id);
+    const [note, setNote] = useState(nData ?? "");
+
+    if (note === "" && nData) {
+        setNote(nData);
+    }
+
+    const [usernameCopied, setUsernameCopied] = useState(false);
+    const [message, setMessage] = useState("");
+
+    const { updateUser, addFriend, removeFriend, sendMessage, createChannel } = useRequests();
     const { setOpen } = !mode ? usePopoverContext() : { setOpen: () => {} };
     const { setShowSettings } = useShowSettings();
     const { triggerDialog } = useTriggerDialog();
     const currentUser = useAuthenticatedUser();
-    const { sendRequest } = useFetchHelper();
     const router = useRouter();
+    const masksId = useId();
 
-    const isFriend = friends.find((friend) => friend.id === initUser.id);
-    const isSent = sent.find((friend) => friend.id === initUser.id);
-    const isReceived = received.find((friend) => friend.id === initUser.id);
-    const isBlocked = blocked.find((friend) => friend.id === initUser.id);
+    const { isCurrentUser, isFriend, hasRequested, wasRequested, isBlocked } = useRelationships(
+        initUser.id
+    );
 
-    async function handleChangeStatus(status: User["status"]) {
-        if (loading || !user) return;
-        setLoading(true);
-
-        try {
-            const { data } = await sendRequest({
-                query: "UPDATE_USER",
-                body: { status },
-            });
-
-            if (data?.user) {
-                setUser((prev) => ({ ...(prev as UserProfile), status }));
-                updateUser({ status });
-            } else {
-                console.error("Failed to update user status");
-            }
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading(false);
-    }
-
-    async function sendMessage() {
-        if (loading) return;
-        setLoading(true);
-
+    async function handleSendMessage() {
         if (message.length > 0) {
-            // Check whether channel exists
-            const channel = channels.find((channel) => {
-                if (channel.type === 0) {
-                    const first = channel.recipients[0];
-                    const second = channel.recipients[1];
-
-                    return (
-                        (first.id === initUser.id && second.id === currentUser.id) ||
-                        (first.id === currentUser.id && second.id === initUser.id)
-                    );
-                }
-
-                return false;
+            const sameChannel = channels.find((c) => {
+                return (
+                    c.type === 0 &&
+                    c.recipients.every((r) => [initUser.id, currentUser.id].includes(r.id))
+                );
             });
 
-            let channelId;
-            if (!channel) {
-                const { data } = await sendRequest({
-                    query: "CHANNEL_CREATE",
-                    body: { recipients: [initUser.id] },
-                });
-
-                if (data?.channel) {
-                    channelId = data.channel.id;
-                }
+            let channelId = sameChannel?.id;
+            if (!channelId) {
+                createChannel.send(
+                    { recipients: [initUser.id] },
+                    { onComplete: (data) => (channelId = data.channelId) }
+                );
             }
 
-            if (!channelId && !channel) return;
+            if (!channelId) return;
 
-            const { errors } = await sendRequest({
-                query: "SEND_MESSAGE",
-                params: {
-                    channelId: channelId || channel?.id,
+            sendMessage.send(
+                {
+                    channelId,
+                    message: { content: message },
+                    senderShouldReceive: true,
                 },
-                body: {
-                    message: {
-                        content: sanitizeString(message),
-                        attachments: [],
-                        messageReference: null,
+                {
+                    onComplete: () => {
+                        setMessage("");
+                        setOpen(false);
+                        router.push(`/channels/me/${channelId}`);
                     },
-                },
-            });
-
-            if (!errors) {
-                setMessage("");
-                router.push(`/channels/me/${channelId || channel?.id}`);
-                setOpen(false);
-            }
-        }
-
-        setLoading(false);
-    }
-
-    async function deleteStatus() {
-        try {
-            const { data } = await sendRequest({
-                query: "UPDATE_USER",
-                body: {
-                    customStatus: "",
-                },
-            });
-
-            if (data?.user) {
-                setUser(data.user);
-            }
-        } catch (error) {
-            console.error(error);
+                }
+            );
         }
     }
 
-    async function getNote() {
-        if (!initUser) return;
+    const accentColor = "accentColor" in user ? user.accentColor : "#1a1a1a";
+    const bannerColor = "bannerColor" in user ? user.bannerColor : "#1a1a1a";
+    const customStatus = "customStatus" in user ? user.customStatus : null;
 
-        const { data } = await sendRequest({
-            query: "GET_NOTE",
-            params: { userId: initUser.id },
-        });
-
-        if (data) {
-            setNote(data.note);
-        }
-    }
-
-    async function getProfile() {
-        if (!initUser) return;
-
-        const { data } = await sendRequest({
-            query: "GET_USER_PROFILE",
-            params: {
-                userId: initUser.id,
-                withMutualGuilds: true,
-                withMutualFriends: true,
-            },
-        });
-
-        if (data?.user) {
-            setUser(data.user);
-            setMutualFriendIds(data.mutualFriends);
-            setMutualGuildIds(data.mutualGuilds);
-        }
-    }
-
-    async function addFriend() {
-        if (loading || !user) return;
-        setLoading(true);
-
-        try {
-            await sendRequest({
-                query: "ADD_FRIEND",
-                body: { username: user.username },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading(false);
-    }
-
-    async function removeFriend() {
-        if (loading || !user) return;
-        setLoading(true);
-
-        try {
-            await sendRequest({
-                query: "REMOVE_FRIEND",
-                body: { username: user.username },
-            });
-        } catch (error) {
-            console.error(error);
-        }
-
-        setLoading(false);
-    }
-
-    useEffect(() => {
-        if (mode === "edit") return;
-
-        getNote();
-        getProfile();
-    }, [mode]);
-
-    useEffect(() => {
-        if (mode === "edit") {
-            setUser(initUser);
-        }
-    }, [initUser]);
-
-    useEffect(() => {
-        if (!mutualFriendIds.length) return;
-        setMutualFriends(friends.filter((f) => mutualFriendIds.includes(f.id)));
-    }, [mutualFriendIds, friends]);
-
-    useEffect(() => {
-        if (!mutualGuildIds.length) return;
-        setMutualGuilds(guilds.filter((g) => mutualGuildIds.includes(g.id)));
-    }, [mutualGuildIds, guilds]);
-
-    if (!user || !currentUser) {
+    if (fLoading) {
         return (
             <div className={styles.loading}>
                 <LoadingCubes />
@@ -260,28 +132,26 @@ export function UserCard({
         );
     }
 
-    const isSameUser = currentUser.id === user.id;
-
     return (
         <div
             className={styles.container}
             style={
                 {
-                    "--card-primary-color": user.bannerColor,
-                    "--card-accent-color": user.accentColor,
+                    "--card-primary-color": bannerColor,
+                    "--card-accent-color": accentColor,
                     "--card-overlay-color": "hsla(0, 0%, 0%, 0.6)",
                     "--card-background-color": "hsla(0, 0%, 0%, 0.45)",
                     "--card-background-hover": "hsla(0, 0%, 100%, 0.16)",
                     "--card-note-background": "hsla(0, 0%, 0%, 0.3)",
                     "--card-divider-color": "hsla(0, 0%, 100%, 0.24)",
-                    "--card-button-color": user.accentColor
-                        ? getButtonColor(user.bannerColor, user.accentColor)
+                    "--card-button-color": accentColor
+                        ? getButtonColor(bannerColor, accentColor)
                         : "",
-                    "--card-border-color": user.bannerColor,
+                    "--card-border-color": bannerColor,
                 } as React.CSSProperties
             }
         >
-            <header style={{ paddingBottom: isSameUser || user.customStatus ? "0" : "" }}>
+            <header style={{ paddingBottom: isCurrentUser || customStatus ? "0" : "" }}>
                 <InteractiveElement
                     element="svg"
                     viewBox="0 0 300 105"
@@ -293,7 +163,9 @@ export function UserCard({
                         }
                     }}
                 >
-                    <mask id="card-banner-mask">
+                    <Masks id={masksId} />
+
+                    <mask id={`card-banner-mask-3-${masksId}`}>
                         <rect
                             x="0"
                             y="0"
@@ -315,7 +187,7 @@ export function UserCard({
                         width="100%"
                         height="100%"
                         overflow="visible"
-                        mask="url(#card-banner-mask)"
+                        mask={`url(#card-banner-mask-3-${masksId})`}
                     >
                         <div
                             className={`${mode === "edit" ? styles.overlay : ""} ${styles.banner}`}
@@ -347,11 +219,12 @@ export function UserCard({
                             return;
                         }
 
+                        setOpen(false);
+
                         triggerDialog({
                             type: "USER_PROFILE",
                             data: { user },
                         });
-                        setOpen(false);
                     }}
                 >
                     <div
@@ -369,7 +242,7 @@ export function UserCard({
                                 y="0"
                                 width="80"
                                 height="80"
-                                mask="url(#status-mask-80)"
+                                mask={`url(#status-mask-80-${masksId})`}
                             >
                                 <div className={styles.overlay}>
                                     <Image
@@ -409,7 +282,7 @@ export function UserCard({
                                         width="16"
                                         height="16"
                                         fill={getStatusColor(user.status)}
-                                        mask={`url(#${getStatusMask(user.status)})`}
+                                        mask={`url(#${getStatusMask(user.status)}-${masksId})`}
                                     />
                                 </TooltipTrigger>
 
@@ -419,52 +292,52 @@ export function UserCard({
                     </div>
                 </InteractiveElement>
 
-                {(isSameUser || user.customStatus) && (
+                {(isCurrentUser || customStatus) && (
                     <div style={{ maxHeight: "58px" }}>
                         <div
-                            tabIndex={user.customStatus ? -1 : 0}
-                            role={user.customStatus ? "div" : "button"}
+                            tabIndex={customStatus ? -1 : 0}
+                            role={customStatus ? "div" : "button"}
                             className={`${styles.customStatus} ${
-                                user.customStatus ? styles.active : ""
-                            } ${!isSameUser ? styles.disabled : ""}`}
+                                customStatus ? styles.active : ""
+                            } ${!isCurrentUser ? styles.disabled : ""}`}
                             onClick={() => {
-                                if (!isSameUser) return;
-                                if (!user.customStatus) {
-                                    triggerDialog({ type: "USER_STATUS" });
+                                if (!isCurrentUser) return;
+                                if (!customStatus) {
                                     setOpen(false);
+                                    triggerDialog({ type: "USER_STATUS" });
                                 }
                             }}
                             onKeyDown={(e) => {
-                                if (e.key === "Enter" && !user.customStatus) {
-                                    if (!isSameUser) return;
-                                    triggerDialog({ type: "USER_STATUS" });
+                                if (e.key === "Enter" && !customStatus) {
+                                    if (!isCurrentUser) return;
                                     setOpen(false);
+                                    triggerDialog({ type: "USER_STATUS" });
                                 }
                             }}
                         >
                             <div>
                                 <span className={styles.statusContent}>
                                     <div>
-                                        {!user.customStatus && (
+                                        {!customStatus && (
                                             <Icon
                                                 size={18}
                                                 name="add-circle"
                                             />
                                         )}
 
-                                        <div>{user.customStatus || "Add Status"}</div>
+                                        <div>{customStatus || "Add Status"}</div>
                                     </div>
                                 </span>
                             </div>
 
-                            {isSameUser && user.customStatus && (
+                            {isCurrentUser && customStatus && (
                                 <div className={styles.statusTools}>
                                     <Tooltip>
                                         <TooltipTrigger>
                                             <button
                                                 onClick={() => {
-                                                    triggerDialog({ type: "USER_STATUS" });
                                                     setOpen(false);
+                                                    triggerDialog({ type: "USER_STATUS" });
                                                 }}
                                             >
                                                 <Icon
@@ -479,7 +352,22 @@ export function UserCard({
 
                                     <Tooltip>
                                         <TooltipTrigger>
-                                            <button onClick={deleteStatus}>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    updateUser.send(
+                                                        { customStatus: null },
+                                                        {
+                                                            onComplete: () => {
+                                                                setUser({
+                                                                    ...currentUser,
+                                                                    customStatus: null,
+                                                                });
+                                                            },
+                                                        }
+                                                    );
+                                                }}
+                                            >
                                                 <Icon
                                                     size={16}
                                                     name="delete"
@@ -496,11 +384,11 @@ export function UserCard({
                 )}
             </header>
 
-            {!isSameUser && (
+            {!isCurrentUser && (
                 <div className={styles.topTools}>
                     {!isBlocked &&
                         (!isFriend ? (
-                            isReceived || isSent ? (
+                            hasRequested || wasRequested ? (
                                 <Tooltip>
                                     <TooltipTrigger>
                                         <button disabled>
@@ -516,7 +404,11 @@ export function UserCard({
                             ) : (
                                 <Tooltip>
                                     <TooltipTrigger>
-                                        <button onClick={addFriend}>
+                                        <button
+                                            onClick={() => {
+                                                addFriend.send({ username: user.username });
+                                            }}
+                                        >
                                             <Icon
                                                 size={18}
                                                 name="user-add"
@@ -594,20 +486,18 @@ export function UserCard({
                             className={mode ? styles.disabled : ""}
                             onClick={() => {
                                 if (mode) return;
+                                setOpen(false);
                                 triggerDialog({
                                     type: "USER_PROFILE",
                                     data: { user },
                                 });
-                                setOpen(false);
                             }}
                         >
                             {user.displayName}
                         </InteractiveElement>
 
                         {!mode && (
-                            <Tooltip
-                                background={usernameCopied ? "var(--success-light)" : undefined}
-                            >
+                            <Tooltip background={usernameCopied ? "var(--success-fg)" : undefined}>
                                 <TooltipTrigger>
                                     <button
                                         className={styles.note}
@@ -624,11 +514,11 @@ export function UserCard({
                                                     console.error(error);
                                                 }
                                             } else {
+                                                setOpen(false);
                                                 triggerDialog({
                                                     type: "USER_PROFILE",
                                                     data: { user, focusNote: true },
                                                 });
-                                                setOpen(false);
                                             }
                                         }}
                                     >
@@ -657,11 +547,11 @@ export function UserCard({
                             className={mode ? styles.disabled : ""}
                             onClick={() => {
                                 if (mode) return;
+                                setOpen(false);
                                 triggerDialog({
                                     type: "USER_PROFILE",
                                     data: { user },
                                 });
-                                setOpen(false);
                             }}
                         >
                             {user.username}
@@ -669,22 +559,22 @@ export function UserCard({
                     </div>
                 </div>
 
-                {isReceived && (
+                {hasRequested && (
                     <section className={styles.received}>
                         <div>
                             <strong>{user.displayName}</strong> sent you a friend request.
                         </div>
                         <div>
                             <button
-                                onClick={addFriend}
                                 className="button blue small"
+                                onClick={() => addFriend.send({ username: user.username })}
                             >
                                 Accept
                             </button>
 
                             <button
-                                onClick={removeFriend}
                                 className="button grey small"
+                                onClick={() => removeFriend.send({ username: user.username })}
                             >
                                 Ignore
                             </button>
@@ -713,19 +603,19 @@ export function UserCard({
                                     tabIndex={0}
                                     role="button"
                                     onClick={() => {
+                                        setOpen(false);
                                         triggerDialog({
                                             type: "USER_PROFILE",
                                             data: { user, startingTab: 1 },
                                         });
-                                        setOpen(false);
                                     }}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") {
+                                            setOpen(false);
                                             triggerDialog({
                                                 type: "USER_PROFILE",
                                                 data: { user, startingTab: 1 },
                                             });
-                                            setOpen(false);
                                         }
                                     }}
                                 >
@@ -761,19 +651,19 @@ export function UserCard({
                                     tabIndex={0}
                                     role="button"
                                     onClick={() => {
+                                        setOpen(false);
                                         triggerDialog({
                                             type: "USER_PROFILE",
                                             data: { user, startingTab: 2 },
                                         });
-                                        setOpen(false);
                                     }}
                                     onKeyDown={(e) => {
                                         if (e.key === "Enter") {
+                                            setOpen(false);
                                             triggerDialog({
                                                 type: "USER_PROFILE",
                                                 data: { user, startingTab: 2 },
                                             });
-                                            setOpen(false);
                                         }
                                     }}
                                 >
@@ -809,6 +699,7 @@ export function UserCard({
                 <div className={styles.menus}>
                     <section>
                         <button
+                            autoFocus
                             className="button"
                             onClick={() => {
                                 setShowSettings({ type: "USER", tab: "Profiles" });
@@ -847,7 +738,37 @@ export function UserCard({
                             <MenuContent>
                                 {["online", "idle", "dnd", "invisible"].map((status, i) => (
                                     <Fragment key={`status-${status}`}>
-                                        <MenuItem onClick={() => handleChangeStatus(status)}>
+                                        <MenuItem
+                                            onClick={() => {
+                                                updateUser.send(
+                                                    { status },
+                                                    {
+                                                        onComplete: () => {
+                                                            if (mutate && fData) {
+                                                                mutate(
+                                                                    {
+                                                                        ...fData,
+                                                                        // @ts-expect-error - id is there
+                                                                        user: {
+                                                                            ...fData.user,
+                                                                            status,
+                                                                        },
+                                                                    },
+                                                                    false
+                                                                );
+                                                            }
+
+                                                            if (isCurrentUser) {
+                                                                setUser({
+                                                                    ...currentUser,
+                                                                    status,
+                                                                });
+                                                            }
+                                                        },
+                                                    }
+                                                );
+                                            }}
+                                        >
                                             <div className={styles.statusItem}>
                                                 <StatusIcon
                                                     size={10}
@@ -976,10 +897,11 @@ export function UserCard({
                         className={styles.message}
                         onSubmit={(e) => {
                             e.preventDefault();
-                            sendMessage();
+                            handleSendMessage();
                         }}
                     >
                         <input
+                            autoFocus
                             type="text"
                             value={message}
                             placeholder={`Message @${user.displayName}`}
@@ -1001,6 +923,8 @@ export function StatusIcon({
     size?: number;
     [key: string]: any;
 }) {
+    const id = useId();
+
     return (
         <svg
             width={size}
@@ -1008,13 +932,15 @@ export function StatusIcon({
             viewBox={`0 0 ${size} ${size}`}
             {...props}
         >
+            <Masks id={id} />
+
             <foreignObject
                 x="0"
                 y="0"
                 width={size}
                 height={size}
                 overflow="visible"
-                mask={`url(#${getStatusMask(status)})`}
+                mask={`url(#${getStatusMask(status)}-${id})`}
             >
                 <div
                     data-type="status"

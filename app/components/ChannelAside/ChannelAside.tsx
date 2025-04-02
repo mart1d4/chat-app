@@ -1,8 +1,12 @@
 "use client";
 
-import type { ChannelRecipient, DMChannel, GuildChannel, GuildMember } from "@/type";
-import styles from "./UserItem.module.css";
-import { useMemo, useRef } from "react";
+import { type ChannelRecipient, type DMChannel, type GuildChannel, type GuildMember } from "@/type";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { useData, useSettings, useWindowSettings } from "@/store";
+import { usePermissions } from "@/hooks/usePermissions";
+import styles from "./ChannelAside.module.css";
+import { UserAside } from "./UserAside";
+import { memo, useMemo, useRef } from "react";
 import {
     PopoverContent,
     PopoverTrigger,
@@ -17,7 +21,116 @@ import {
     Menu,
 } from "@components";
 
-export function UserItem({
+export const ChannelAside = memo(function ChannelAside({
+    channelId,
+    guildId,
+    initChannel,
+}: {
+    channelId: number;
+    guildId?: number;
+    initChannel?: GuildChannel & { recipients: GuildMember[] };
+}) {
+    const channel = initChannel ?? useData((s) => s.channels).find((c) => c.id === channelId);
+    const guild = useData((state) => state.guilds).find((g) => g.id === guildId);
+    const widthThresholds = useWindowSettings((s) => s.widthThresholds);
+    const { hasPermission } = usePermissions({ guildId, channelId });
+    const user = useAuthenticatedUser();
+    const { settings } = useSettings();
+
+    const recipients = useMemo(() => {
+        let arr: (GuildMember | ChannelRecipient)[] = [];
+
+        if (initChannel) arr = initChannel.recipients;
+        if (channel) arr = channel.recipients;
+
+        if (guild) {
+            arr = guild.members.filter((r) =>
+                hasPermission({ permission: "VIEW_CHANNEL", userId: r.id })
+            );
+        }
+
+        return arr;
+    }, [channel, guild]);
+
+    const isWidth1200 = widthThresholds[1200];
+    if (!isWidth1200) return null;
+
+    if (channel?.type === 0) {
+        const friend = channel.recipients.find((r) => r.id !== user!.id);
+        if (!friend) return null;
+
+        return <UserAside friend={friend as ChannelRecipient} />;
+    }
+
+    if (!channel || !settings.showUsers) return null;
+
+    const offline = recipients.filter((r) => ("status" in r ? r.status === "offline" : true));
+    const online = recipients.filter((r) => !offline.find((o) => o.id === r.id));
+
+    return (
+        <aside className={styles.memberList}>
+            <div>
+                {!initChannel && <h2>Members—{channel.recipients.length}</h2>}
+                {initChannel && !!online.length && <h2>Online — {online.length}</h2>}
+
+                {!initChannel &&
+                    recipients.map((user) => (
+                        <UserItem
+                            user={user}
+                            key={user.id}
+                            channel={channel}
+                            isGuild={!!guild}
+                            offline={user.status === "offline"}
+                            isOwner={
+                                guild
+                                    ? guild.ownerId === user.id
+                                    : "ownerId" in channel && channel.ownerId === user.id
+                            }
+                        />
+                    ))}
+
+                {!!initChannel && (
+                    <>
+                        {!!online.length &&
+                            online.map((user) => (
+                                <UserItem
+                                    user={user}
+                                    key={user.id}
+                                    channel={channel}
+                                    isGuild={!!guild}
+                                    isOwner={
+                                        guild
+                                            ? guild.ownerId === user.id
+                                            : "ownerId" in channel && channel.ownerId === user.id
+                                    }
+                                />
+                            ))}
+
+                        {initChannel && !!offline.length && <h2>Offline — {offline?.length}</h2>}
+
+                        {!!offline.length &&
+                            offline.map((user) => (
+                                <UserItem
+                                    offline
+                                    user={user}
+                                    key={user.id}
+                                    channel={channel}
+                                    isGuild={!!guild}
+                                    isOwner={
+                                        guild
+                                            ? guild.ownerId === user.id
+                                            : "ownerId" in channel && channel.ownerId === user.id
+                                    }
+                                />
+                            ))}
+                    </>
+                )}
+            </div>
+        </aside>
+    );
+});
+
+export const UserItem = memo(function UserItem({
     user,
     channel,
     offline,
@@ -89,9 +202,9 @@ export function UserItem({
                                                     </TooltipContent>
                                                 </Tooltip>
 
-                                                <Tooltip>
-                                                    <TooltipTrigger>
-                                                        {isOwner && (
+                                                {isOwner && (
+                                                    <Tooltip>
+                                                        <TooltipTrigger>
                                                             <svg
                                                                 xmlns="http://www.w3.org/2000/svg"
                                                                 viewBox="0 0 24 24"
@@ -104,13 +217,13 @@ export function UserItem({
                                                                     d="M5 18a1 1 0 0 0-1 1 3 3 0 0 0 3 3h10a3 3 0 0 0 3-3 1 1 0 0 0-1-1H5ZM3.04 7.76a1 1 0 0 0-1.52 1.15l2.25 6.42a1 1 0 0 0 .94.67h14.55a1 1 0 0 0 .95-.71l1.94-6.45a1 1 0 0 0-1.55-1.1l-4.11 3-3.55-5.33.82-.82a.83.83 0 0 0 0-1.18l-1.17-1.17a.83.83 0 0 0-1.18 0l-1.17 1.17a.83.83 0 0 0 0 1.18l.82.82-3.61 5.42-4.41-3.07Z"
                                                                 />
                                                             </svg>
-                                                        )}
-                                                    </TooltipTrigger>
+                                                        </TooltipTrigger>
 
-                                                    <TooltipContent>
-                                                        {isGuild ? "Server" : "Group"} Owner
-                                                    </TooltipContent>
-                                                </Tooltip>
+                                                        <TooltipContent>
+                                                            {isGuild ? "Server" : "Group"} Owner
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                )}
                                             </div>
 
                                             {"customStatus" in user && (
@@ -154,4 +267,4 @@ export function UserItem({
             />
         </Menu>
     );
-}
+});

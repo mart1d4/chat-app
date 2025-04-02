@@ -12,14 +12,14 @@
     justify-content: center;
     align-items: center;
     flex: 0 0 auto;
-    border: 1px solid var(--foreground-5);
+    border: 1px solid var(--fg-5);
     box-sizing: border-box;
     border-radius: 6px;
     cursor: pointer;
 }
 
 .box > svg {
-    fill: var(--foreground-1);
+    fill: var(--fg-1);
 }
 
 .container > svg {

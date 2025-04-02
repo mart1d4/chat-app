@@ -17,13 +17,14 @@ export function EmojiButton({
     return (
         <button
             type="button"
+            onClick={() => setOpen(!open)}
             className={styles.buttonContainer}
-            onClick={(e) => {
-                e.preventDefault();
-                setOpen(!open);
-            }}
             data-state={open ? "open" : "closed"}
-            onMouseEnter={() => setPosIndex(Math.floor(Math.random() * emojiPos.length))}
+            onMouseEnter={() => {
+                if (!open) {
+                    setPosIndex(Math.floor(Math.random() * emojiPos.length));
+                }
+            }}
         >
             <div
                 className={styles.emoji}

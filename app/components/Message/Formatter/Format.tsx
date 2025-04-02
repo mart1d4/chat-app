@@ -203,7 +203,7 @@ export function FormatMessage({
                 href={node.target}
                 rel="noopener noreferrer"
                 className={styles.messageLink}
-                style={{ color: "error" in message && message.error ? "var(--error-1)" : "" }}
+                style={{ color: "error" in message && message.error ? "var(--danger-0)" : "" }}
             >
                 {output(node.content, state)}
             </Link>

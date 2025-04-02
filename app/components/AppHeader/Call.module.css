@@ -1,0 +1,358 @@
+.container {
+    display: grid;
+    position: relative;
+    padding: 0 16px 16px;
+    background-color: var(--bg-7);
+    max-height: calc(50vh - 48px);
+    max-height: calc(50dvh - 48px);
+    grid-template-rows: 1fr calc(50px + 16px);
+}
+
+.container.chatHidden {
+    max-height: calc(100vh - 48px);
+    max-height: calc(100dvh - 48px);
+}
+
+.participants {
+    gap: 24px;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.container.videos .participants {
+    gap: 8px;
+    height: 100%;
+    display: grid;
+    margin: 0 auto;
+    max-width: 100%;
+    flex-wrap: wrap;
+    overflow: hidden;
+    align-items: center;
+    aspect-ratio: 16 / 9;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+}
+
+.container.videos .participants > * {
+    display: flex;
+    cursor: pointer;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    border-radius: 8px;
+    align-items: center;
+    aspect-ratio: 16 / 9;
+    justify-content: center;
+}
+
+.video {
+    object-fit: cover;
+    position: relative;
+    aspect-ratio: 16 / 9;
+}
+
+.video video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.video > .live {
+    top: 8px;
+    right: 8px;
+    height: 16px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.333;
+    color: var(--fg-1);
+    text-align: center;
+    position: absolute;
+    border-radius: 16px;
+    letter-spacing: 0.02rem;
+    text-transform: uppercase;
+    background-color: var(--danger-0);
+}
+
+.participant {
+    gap: 8px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.participantBig {
+    display: flex;
+    cursor: pointer;
+    object-fit: cover;
+    position: relative;
+    align-items: center;
+    aspect-ratio: 16 / 9;
+    justify-content: center;
+    background-color: var(--bg-3);
+}
+
+.participantBig.speaking {
+    box-shadow: inset 0 0 0 2px var(--success-fg), inset 0 0 0 3px var(--bg-7);
+}
+
+.participantBig > button {
+    right: 8px;
+    bottom: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    cursor: pointer;
+    position: absolute;
+    border-radius: 8px;
+    visibility: hidden;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-0);
+}
+
+.participantBig:hover > button {
+    visibility: visible;
+}
+
+.participantBig > .user,
+.video > .user {
+    left: 8px;
+    bottom: 8px;
+    height: 32px;
+    display: flex;
+    padding: 0 8px;
+    position: absolute;
+    border-radius: 8px;
+    visibility: hidden;
+    align-items: center;
+    background-color: var(--bg-0-75);
+}
+
+.participantBig > .user.show {
+    visibility: visible;
+}
+
+.participantBig > .user > svg + p,
+.video > .user > svg + p {
+    margin-left: 4px;
+}
+
+.participantBig > .user > svg > path,
+.video > .user > svg > path {
+    fill: var(--fg-2);
+}
+
+.participantBig > .user > p,
+.video > .user > p {
+    display: none;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--fg-2);
+}
+
+.video > .user > p {
+    display: block;
+}
+
+.container:hover .participantBig > .user,
+.container:hover .video > .user {
+    visibility: visible;
+}
+
+.container:hover .participantBig > .user > p {
+    display: block;
+}
+
+.actions {
+    width: 100%;
+    height: 50px;
+    display: flex;
+    margin-top: 16px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.actions > section {
+    gap: 12px;
+    height: 50px;
+    display: flex;
+}
+
+.container.videos .actions {
+    visibility: hidden;
+}
+
+.container.videos:hover .actions {
+    visibility: visible;
+}
+
+.actions > section > div {
+    gap: 8px;
+    padding: 4px;
+    display: flex;
+    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-0);
+    border: 1px solid var(--bg-1);
+}
+
+.actions > section > div > button,
+.actions > section > div > div > button {
+    transition: background-color 0.15s ease;
+}
+
+.actions > section > div > button,
+.actions > section > div > div > button:first-child {
+    width: 40px;
+    height: 40px;
+    padding: 10px;
+    display: flex;
+    cursor: pointer;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+}
+
+.actions > section > div > button:hover,
+.actions > section > div > button:focus-visible {
+    background-color: var(--bg-3);
+}
+
+.actions > section > div > div {
+    display: flex;
+    cursor: pointer;
+}
+
+.actions > section > div > div > button:first-child {
+    border-radius: 8px 0 0 8px;
+}
+
+.actions > section > div > div > button:first-child:hover,
+.actions > section > div > div > button:first-child:focus-visible {
+    background-color: var(--bg-2);
+}
+
+.actions > section > div > div > button:last-child {
+    width: 20px;
+    display: flex;
+    cursor: pointer;
+    padding: 10px 0;
+    margin-left: 1px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0 8px 8px 0;
+    background-color: transparent;
+}
+
+.actions > section > div > div > button:last-child > svg {
+    transform: rotate(90deg);
+}
+
+.actions > section > div > div > button:last-child:hover,
+.actions > section > div > div > button:last-child:focus-visible {
+    background-color: var(--bg-2);
+}
+
+.actions > section > div > div:hover > button,
+.actions > section > div > div:focus-within > button {
+    background-color: var(--bg-3);
+}
+
+.actions > section > div > div.disabled > button {
+    color: var(--danger-0);
+    background-color: var(--danger-0-10);
+}
+
+.actions > section > div > div.disabled > button:hover,
+.actions > section > div > div.disabled > button:focus-visible {
+    background-color: var(--danger-0-15);
+}
+
+.actions > section > div > div.enabled > button {
+    color: var(--success-light);
+    background-color: var(--success-light-10);
+}
+
+.actions > section > div > div.enabled > button:hover,
+.actions > section > div > div.enabled > button:focus-visible {
+    background-color: var(--success-light-15);
+}
+
+.actions > section > button {
+    width: 68px;
+    display: flex;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--danger-0);
+    transition: background-color 0.15s ease;
+}
+
+.actions > section > button:hover,
+.actions > section > button:focus-visible {
+    background-color: var(--danger-1);
+}
+
+.actions > section > button:active {
+    background-color: var(--danger-2);
+}
+
+.hideChat,
+.fullscreen {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    cursor: pointer;
+    color: var(--fg-3);
+    align-items: center;
+    justify-content: center;
+    transform: rotate(90deg);
+    background-color: transparent;
+}
+
+.hideChat.hidden,
+.fullscreen.active {
+    transform: rotate(-90deg);
+}
+
+.hideChat:hover,
+.fullscreen:hover,
+.hideChat:focus-visible,
+.fullscreen:focus-visible {
+    color: var(--fg-1);
+}
+
+.noone {
+    display: flex;
+    user-select: none;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.noone > h1 {
+    font-size: 34px;
+    font-weight: 500;
+    color: var(--fg-3);
+}
+
+.noone > p {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--fg-3);
+}
+
+.noone > button {
+    height: 38px;
+    margin-top: 24px;
+    border-radius: 1000px;
+}

@@ -7,8 +7,8 @@
     border-radius: 8px;
     position: relative;
     flex-direction: column;
+    background-color: var(--bg-7);
     max-height: calc(var(--dvh) - 28px);
-    background-color: var(--background-dark-1);
 }
 
 .loading {
@@ -18,7 +18,7 @@
     border-radius: 8px;
     align-items: center;
     justify-content: center;
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .container > div:not(.topTools) {
@@ -145,14 +145,14 @@
 }
 
 .avatar:hover .overlay::after,
-.avatar:focus-within .overlay::after {
+.avatar:focus-visible .overlay::after {
     opacity: 0.4;
 }
 
 .banner:hover .overlay::after,
-.banner:focus-within .overlay::after,
+.banner:focus-visible .overlay::after,
 .banner:hover .overlay > p,
-.banner:focus-within .overlay > p {
+.banner:focus-visible .overlay > p {
     opacity: 1;
 }
 
@@ -166,7 +166,7 @@
     position: absolute;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     animation: popIn 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -188,7 +188,7 @@
     position: absolute;
     width: fit-content;
     height: fit-content;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     transform: translate(-50%, -50%);
     transition: opacity 0.1s ease-in-out;
 }
@@ -215,7 +215,7 @@
     min-width: 56px;
     max-width: 184px;
     position: relative;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: var(--elevation-low);
     background: hsl(225, 6.667%, 23.529%);
     border: 1px solid hsla(1, 0%, 100%, 0.03);
@@ -255,7 +255,7 @@
     display: block;
     overflow: hidden;
     position: relative;
-    padding: 10px 12px;
+    padding: 8px 12px;
     border-radius: 12px;
     word-wrap: break-word;
     background: hsl(225, 6.667%, 23.529%);
@@ -268,7 +268,7 @@
     align-items: center;
     word-wrap: break-word;
     word-break: break-word;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .statusContent > div > svg {
@@ -297,7 +297,7 @@
 
 .customStatus:not(.disabled):hover .statusContent > div,
 .customStatus:not(.disabled):focus-within .statusContent > div {
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .customStatus.active > div {
@@ -307,13 +307,13 @@
 .customStatus.active:not(.disabled):hover .statusContent,
 .customStatus.active:not(.disabled):hover > div:not(.statusTools)::before,
 .customStatus.active:not(.disabled):hover > div:not(.statusTools)::after {
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
 }
 
 .customStatus.active .statusContent > div {
     cursor: text;
     user-select: text;
-    color: var(--foreground-2);
+    color: var(--fg-2);
 }
 
 .statusTools {
@@ -330,7 +330,7 @@
     display: inline-flex;
     border-radius: 1000px;
     right: min(8px, 50% - 29px);
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
     transition: box-shadow 0.1s ease-in-out;
 }
 
@@ -347,7 +347,7 @@
     padding-left: 6px;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-3);
+    color: var(--fg-3);
     background-color: transparent;
     border-radius: 1000px 6px 6px 1000px;
 }
@@ -360,8 +360,8 @@
 
 .statusTools > button:hover,
 .statusTools > button:focus-visible {
-    color: var(--foreground-2);
-    background-color: var(--background-6);
+    color: var(--fg-2);
+    background-color: var(--bg-6);
 }
 
 .statusTools > button > svg {
@@ -389,7 +389,7 @@
     outline: none;
     padding: 0 10px;
     border-radius: 4px;
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
 }
 
 .editProfile {
@@ -399,11 +399,11 @@
 .editProfile > button {
     gap: 6px;
     height: 32px;
-    background-color: var(--background-6);
+    background-color: var(--bg-6);
 }
 
 .editProfile > button:hover {
-    background-color: var(--background-5);
+    background-color: var(--bg-5);
 }
 
 .content > :first-child > :first-child {
@@ -521,7 +521,7 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background-color: var(--foreground-2);
+    background-color: var(--fg-2);
 }
 
 .description {
@@ -611,20 +611,20 @@
     border-radius: 50%;
     align-items: center;
     justify-content: center;
-    color: var(--foreground-2);
+    color: var(--fg-2);
     transition: background-color 0.2s ease;
-    background-color: var(--background-hover-dark-1);
+    background-color: var(--bg-hover-0);
 }
 
 .topTools > button:hover,
 .topTools > button:focus-visible {
-    background-color: var(--background-hover-dark-2);
+    background-color: var(--bg-hover-5);
 }
 
 .topTools > button:disabled {
     opacity: 0.5;
     cursor: default;
-    background-color: var(--background-hover-dark-1);
+    background-color: var(--bg-hover-0);
 }
 
 .received,
@@ -632,7 +632,7 @@
     user-select: none;
     padding: 10px 12px;
     border-radius: 8px;
-    background-color: var(--background-3);
+    background-color: var(--bg-3);
 }
 
 .received > :first-child {
@@ -655,7 +655,7 @@
     font-weight: 700;
     user-select: none;
     line-height: 1.285;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 @keyframes popIn {

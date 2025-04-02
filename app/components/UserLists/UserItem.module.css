@@ -9,7 +9,7 @@
     position: relative;
     margin: 0 20px 0 30px;
     box-sizing: border-box;
-    border-top: 1px solid var(--border-light);
+    border-top: 1px solid var(--border-1);
 }
 
 .container:hover,
@@ -20,7 +20,7 @@
     padding: 16px 10px;
     margin: 0 10px 0 20px;
     border-color: transparent;
-    background-color: var(--background-hover-1);
+    background-color: var(--bg-hover-1);
 }
 
 .container:hover + .container,
@@ -67,7 +67,7 @@
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    color: var(--foreground-1);
+    color: var(--fg-1);
     font-weight: 600;
 }
 
@@ -76,7 +76,7 @@
     margin-left: 5px;
     line-height: 16px;
     visibility: hidden;
-    color: var(--foreground-3);
+    color: var(--fg-3);
 }
 
 .usernames > p.blocked {
@@ -96,7 +96,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
     font-size: 14px;
-    color: var(--foreground-4);
+    color: var(--fg-4);
 }
 
 .actions {
@@ -106,42 +106,42 @@
 }
 
 .actions > button {
-    cursor: pointer;
+    padding: 0;
     width: 36px;
     height: 36px;
-    padding: 0;
-    border-radius: 50%;
-    color: var(--foreground-3);
-    background-color: var(--background-3);
-    transition: none;
     display: flex;
+    cursor: pointer;
+    transition: none;
+    border-radius: 50%;
+    color: var(--fg-3);
     align-items: center;
     justify-content: center;
+    background-color: var(--bg-2);
 }
 
 .container:hover .actions > button,
 .container:focus-within .actions > button,
 .container[data-state="open"] .actions > button,
 .container:has([data-state="open"]) .actions > button {
-    background-color: var(--background-1);
+    background-color: var(--bg-1);
 }
 
 .actions > button:hover,
 .actions > button:focus-visible,
 .actions > button[data-state="open"] {
-    color: var(--foreground-1);
+    color: var(--fg-1);
 }
 
 .actions > button.green:hover,
 .actions > button.green:focus-visible {
-    color: var(--success-light);
+    color: var(--success-fg);
 }
 
 .actions > button.red:hover,
 .actions > button.red:focus-visible {
-    color: var(--error-1);
+    color: var(--danger-0);
 }
 
 .container:hover .actions > button:active {
-    background-color: var(--background-dark-1);
+    background-color: var(--bg-0);
 }
