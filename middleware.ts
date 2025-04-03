@@ -38,7 +38,7 @@ export async function middleware(req: NextRequest) {
         }
 
         const secret = new TextEncoder().encode(process.env.REFRESH_TOKEN_SECRET);
-        const { API_URL: issuer, BASE_URL: audience } = process.env;
+        const { BASE_API_URL: issuer, BASE_URL: audience } = process.env;
 
         try {
             const {

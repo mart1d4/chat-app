@@ -18,7 +18,9 @@ import {
     useParticipants,
     VideoTrack,
     useTracks,
+    useRemoteParticipant,
 } from "@livekit/components-react";
+import { useParticipant } from "@livekit/react-core";
 
 export function Call({
     hideChat,
@@ -55,7 +57,8 @@ export function Call({
         },
     });
 
-    const videoTrackRefs = useTracks([Track.Source.Camera, Track.Source.ScreenShare]);
+    const screenTrackRefs = useTracks([Track.Source.ScreenShare]);
+    const cameraTrackRefs = useTracks([Track.Source.Camera]);
 
     const members = useMemo(() => {
         if (notInVoice && currentVoice) {
@@ -84,12 +87,12 @@ export function Call({
         });
     }, [currentVoice, currentChannel, notInVoice, channelId, channels, participantsState]);
 
-    const showingVideo = videoTrackRefs.length > 0;
+    const showingVideo = screenTrackRefs.length > 0 || cameraTrackRefs.length > 0;
 
     useEffect(() => {
-        const isShowing = videoTrackRefs.length > 0;
+        const isShowing = screenTrackRefs.length > 0 || cameraTrackRefs.length > 0;
         setIsShowingVideos(isShowing);
-    }, [videoTrackRefs.length]);
+    }, [screenTrackRefs.length, cameraTrackRefs.length]);
 
     useEffect(() => {
         if (!currentVoice) {
@@ -150,7 +153,7 @@ export function Call({
             } ${hideChat || fullscreen || currentVoice?.guildId ? styles.chatHidden : ""}`}
         >
             <div className={styles.participants}>
-                {videoTrackRefs.map((trackRef, i) => {
+                {screenTrackRefs.map((trackRef, i) => {
                     const user = members.find((m) => m.sid === trackRef.participant.sid);
 
                     return (
@@ -178,25 +181,18 @@ export function Call({
                         <UserTile
                             key={p.sid}
                             participant={p as RemoteParticipant & ChannelRecipient}
+                            participantPure={participantsState.find((part) => part.sid === p.sid)}
                         />
                     ))}
 
                 {!showingVideo &&
                     !currentVoice?.guildId &&
                     members.map((p) => (
-                        <div
+                        <UserCircle
                             key={p.sid}
-                            className={styles.participant}
-                        >
-                            <Avatar
-                                size={80}
-                                type="user"
-                                alt={p.username}
-                                fileId={p.avatar}
-                                speaking={p.isSpeaking}
-                                generateId={Number(p.identity.split("-")[1])}
-                            />
-                        </div>
+                            participant={p as RemoteParticipant & ChannelRecipient}
+                            participantPure={participantsState.find((part) => part.sid === p.sid)}
+                        />
                     ))}
             </div>
 
@@ -420,7 +416,13 @@ export function Call({
                                                 );
 
                                                 tracks.map((track) =>
-                                                    local.localParticipant.publishTrack(track)
+                                                    local.localParticipant.publishTrack(track, {
+                                                        // The highest possible
+                                                        screenShareEncoding: {
+                                                            maxBitrate: 510000,
+                                                            maxFramerate: 60,
+                                                        },
+                                                    })
                                                 );
                                             }}
                                         >
@@ -437,9 +439,7 @@ export function Call({
                                                 onClick={async () => {
                                                     const tracks =
                                                         await local.localParticipant.createScreenTracks(
-                                                            {
-                                                                audio: true,
-                                                            }
+                                                            { audio: true }
                                                         );
 
                                                     await local.localParticipant.setScreenShareEnabled(
@@ -447,7 +447,15 @@ export function Call({
                                                     );
 
                                                     tracks.map((track) =>
-                                                        local.localParticipant.publishTrack(track)
+                                                        local.localParticipant.publishTrack(track, {
+                                                            screenShareEncoding: {
+                                                                maxBitrate: 1_500_000,
+                                                                maxFramerate: 60,
+                                                            },
+                                                            audioPreset: {
+                                                                maxBitrate: 510000,
+                                                            },
+                                                        })
                                                     );
                                                 }}
                                             >
@@ -513,37 +521,66 @@ export function Call({
     );
 }
 
-function UserTile({
+function UserCircle({
     participant,
+    participantPure,
 }: {
     participant: (LocalParticipant | RemoteParticipant) & ChannelRecipient;
+    participantPure: LocalParticipant | RemoteParticipant;
 }) {
-    // const isMutedStr = useParticipantAttribute("isMuted", { participant });
-    // const isDeafenedStr = useParticipantAttribute("isDeafened", { participant });
+    const { attributes } = useParticipantAttributes({ participant: participantPure });
+    const { isMuted, isDeafened } = attributes ?? { isMuted: false, isDeafened: false };
 
-    const attributes = useParticipantAttributes({ participant });
-    console.log("Attributes 2: ", participant.attributes);
-    // const e = useParticipantAttribute("isMuted", { participant });
-    // console.log("e", e);
-    console.log("Attributes", attributes);
+    return (
+        <div
+            key={participant.sid}
+            className={styles.participant}
+        >
+            <Avatar
+                size={80}
+                type="user"
+                muted={isMuted === "true"}
+                alt={participant.username}
+                fileId={participant.avatar}
+                deafened={isDeafened === "true"}
+                speaking={participant.isSpeaking}
+                generateId={Number(participant.identity.split("-")[1])}
+            />
+        </div>
+    );
+}
 
-    // const isMuted = isMutedStr === "true";
-    // const isDeafened = isDeafenedStr === "true";
+function UserTile({
+    participant,
+    participantPure,
+}: {
+    participant: (LocalParticipant | RemoteParticipant) & ChannelRecipient;
+    participantPure: LocalParticipant | RemoteParticipant;
+}) {
+    const { attributes } = useParticipantAttributes({ participant: participantPure });
+    const { isMuted, isDeafened } = attributes ?? { isMuted: false, isDeafened: false };
 
-    const isMuted = true;
-    const isDeafened = true;
+    const cameraTrack = useTracks([Track.Source.Camera]).find(
+        (t) => t.participant.sid === participant.sid && t.source === Track.Source.Camera
+    );
 
     return (
         <div
             className={`${styles.participantBig} ${participant.isSpeaking ? styles.speaking : ""}`}
         >
-            <Avatar
-                size={80}
-                type="user"
-                alt={participant.username}
-                fileId={participant.avatar}
-                generateId={Number(participant.identity.split("-")[1])}
-            />
+            {cameraTrack && participantPure.isCameraEnabled ? (
+                <div className={styles.video}>
+                    <VideoTrack trackRef={cameraTrack} />
+                </div>
+            ) : (
+                <Avatar
+                    size={80}
+                    type="user"
+                    alt={participant.username}
+                    fileId={participant.avatar}
+                    generateId={Number(participant.identity.split("-")[1])}
+                />
+            )}
 
             <Tooltip>
                 <TooltipTrigger>
@@ -558,13 +595,17 @@ function UserTile({
                 <TooltipContent>Options</TooltipContent>
             </Tooltip>
 
-            <div className={`${styles.user} ${isMuted || isDeafened ? styles.show : ""}`}>
-                {isDeafened ? (
+            <div
+                className={`${styles.user} ${
+                    isMuted === "true" || isDeafened === "true" ? styles.show : ""
+                }`}
+            >
+                {isDeafened === "true" ? (
                     <Icon
                         size={18}
                         name="headsetDisabled"
                     />
-                ) : isMuted ? (
+                ) : isMuted === "true" ? (
                     <Icon
                         size={18}
                         name="micDisabled"

@@ -239,7 +239,12 @@ div.scrollableContainer::-webkit-scrollbar-thumb {
 }
 
 .filesList::-webkit-scrollbar-track {
-    border-color: var(--bg-5);
+    background-color: var(--bg-5) !important;
+    border-color: transparent !important;
+}
+
+.filesList::-webkit-scrollbar-thumb {
+    border-color: transparent !important;
 }
 
 .formDivider {

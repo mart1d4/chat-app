@@ -1,20 +1,20 @@
 "use client";
 
-import { MenuContent, MenuDivider, MenuTrigger, MenuItem, Menu } from "@components";
 import { useData, useMention, useTriggerAlert, useTriggerDialog, useVoice } from "@/store";
+import { MenuContent, MenuDivider, MenuTrigger, MenuItem, Menu } from "@components";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useRelationships } from "@/hooks/useRelationships";
 import { getDateUntilEnd, isStillMuted } from "@/lib/mute";
 import { usePopoverContext } from "../../Popover/Popover";
 import { useNotifications } from "@/store/notifications";
 import { useChannelSettings } from "@/store/settings";
+import { isChannelPrivate } from "@/lib/permissions";
 import { useRequests } from "@/hooks/useRequests";
-import { useCallback, useContext, useMemo } from "react";
+import type { GuildChannel, User } from "@/type";
+import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useMenuContext } from "../Menu";
 import styles from "../Menu.module.css";
-import type { GuildChannel, User } from "@/type";
-import { isChannelPrivate } from "@/lib/permissions";
 
 export function UserMenu({
     user,
@@ -154,8 +154,6 @@ export function UserMenu({
                 { guildId },
                 {
                     onComplete: (data: { channels: GuildChannel[] }) => {
-                        console.log("Received data: ", data);
-
                         if (data.channels) {
                             const everyoneRole = guild.roles.find(
                                 (role) => role.name === "@everyone"

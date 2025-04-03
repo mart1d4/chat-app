@@ -97,6 +97,7 @@
 
 .content pre {
     padding: 0;
+    width: 100%;
     max-width: 90%;
     margin-top: 6px;
     line-height: 1rem;
@@ -108,6 +109,10 @@
     box-sizing: border-box;
     background-clip: border-box;
     font-family: var(--font-code);
+}
+
+.mainContent > div {
+    width: 100%;
 }
 
 .content pre > button {
@@ -137,26 +142,28 @@
 }
 
 .content code {
+    text-indent: 0;
+    display: block;
+    max-width: 50vw;
+    padding: 1px 2px;
+    overflow-x: auto;
+    width: fit-content;
+    color: var(--fg-2);
+    border-radius: 4px;
     font-size: 0.875rem;
     line-height: 1.125rem;
-    text-indent: 0;
     white-space: pre-wrap;
-    background-color: var(--bg-3);
-    border: 1px solid var(--bg-1);
-    display: block;
-    overflow-x: auto;
-    padding: 0.5rem;
-    border-radius: 4px;
     text-size-adjust: none;
-    color: var(--fg-2);
+    background-color: var(--bg-2);
+    border: 1px solid var(--bg-1);
     font-family: var(--font-code);
 }
 
 /* Inline code */
 
-.content code {
-    padding: 1px 2px;
-    width: fit-content;
+.content pre > code {
+    width: 100%;
+    padding: 0.5rem;
 }
 
 .content .spoiler {

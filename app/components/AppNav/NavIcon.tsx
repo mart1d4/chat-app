@@ -5,6 +5,7 @@ import { useActiveVoice, useData, useUrls } from "@/store";
 import { useRouter, usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useTracks } from "@livekit/components-react";
+import { isChannelPrivate } from "@/lib/permissions";
 import { useGuildSettings } from "@/store/settings";
 import { useRequests } from "@/hooks/useRequests";
 import { getRandomImage } from "@/lib/utils";
@@ -14,7 +15,6 @@ import styles from "./AppNav.module.css";
 import { memo, useState } from "react";
 import { Track } from "livekit-client";
 import Link from "next/link";
-import { isChannelPrivate } from "@/lib/permissions";
 
 export const NavIcon = memo(function NavIcon({
     voice,
@@ -84,8 +84,6 @@ export const NavIcon = memo(function NavIcon({
                 { guildId: currentGuild.id },
                 {
                     onComplete: (data: { channels: GuildChannel[] }) => {
-                        console.log("Received data: ", data);
-
                         if (data.channels) {
                             const everyoneRole = currentGuild.roles.find(
                                 (role) => role.name === "@everyone"
@@ -197,12 +195,16 @@ export const NavIcon = memo(function NavIcon({
                                 (pings !== undefined && pings > 0)) && (
                                 <div
                                     className={styles.badgeContainer}
-                                    style={{ width: received.length > 99 ? "30px" : "" }}
+                                    style={{
+                                        width: (received.length || pings || 0) > 9 ? "30px" : "",
+                                    }}
                                 >
                                     <div
                                         style={{
-                                            width: received.length > 99 ? "20px" : "",
-                                            fontSize: received.length > 99 ? "10px" : "",
+                                            width:
+                                                (received.length || pings || 0) > 9 ? "20px" : "",
+                                            fontSize:
+                                                (received.length || pings || 0) > 9 ? "11px" : "",
                                         }}
                                     >
                                         {pings ? pings : received.length}

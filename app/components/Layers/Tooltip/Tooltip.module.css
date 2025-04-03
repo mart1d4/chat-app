@@ -13,6 +13,7 @@
     word-break: break-word;
     background-color: var(--bg-7);
     border: 1px solid transparent;
+    font-family: var(--font-display);
     box-shadow: var(--elevation-high);
 }
 
@@ -31,9 +32,9 @@
     flex-direction: column;
 }
 
-.tooltip > span {
+/* .tooltip > span {
     font-size: 12px;
     font-weight: 500;
     display: inline-block;
     color: var(--fg-4);
-}
+} */

@@ -31,6 +31,7 @@ export function AddFriend() {
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
+                        if (!input.length) return;
                         addFriend.send({ username: input }, { onComplete: () => setInput("") });
                     }}
                 >

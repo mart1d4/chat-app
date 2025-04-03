@@ -562,6 +562,7 @@ export const useData = create<UseDataState>()((set) => ({
     reset: () => {
         set({
             user: null,
+            token: null,
             channels: [],
             guilds: [],
             friends: [],

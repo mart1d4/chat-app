@@ -359,6 +359,7 @@ export function Loading({
         );
 
         chan.bind("livekit", ({ event, data }: { event: string; data: any }) => {
+            console.log(event, data);
             if (event === "roomStarted") {
                 addRoom({
                     ...data,

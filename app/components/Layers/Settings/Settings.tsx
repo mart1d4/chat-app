@@ -2,7 +2,7 @@
 
 import { FriendRequests, MyAccount, Profiles, Overview, GuildRoles } from "./index";
 import { Dialog, DialogContent, DialogTrigger, Icon } from "@components";
-import { useShowSettings, useWindowSettings } from "@/store";
+import { useData, useShowSettings, useWindowSettings } from "@/store";
 import { useRequests } from "@/hooks/useRequests";
 import { getApiUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ export function Settings() {
     const width1024 = useWindowSettings((s) => s.widthThresholds[1024]);
     const { showSettings, setShowSettings } = useShowSettings();
     const { deleteGuildChannel } = useRequests();
+    const { setUser, reset } = useData();
     const router = useRouter();
 
     const guild = showSettings?.guild;
@@ -237,6 +238,7 @@ export function Settings() {
                                                                 setLoading(false);
                                                                 setShowSettings(null);
                                                                 router.refresh();
+                                                                reset();
                                                             });
                                                         }}
                                                     />

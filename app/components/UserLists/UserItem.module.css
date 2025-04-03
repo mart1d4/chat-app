@@ -15,7 +15,8 @@
 .container:hover,
 .container:focus-within,
 .container[data-state="open"],
-.container:has([data-state="open"]) {
+.container:has([data-state="open"]),
+.container[aria-expanded="true"] {
     border-radius: 8px;
     padding: 16px 10px;
     margin: 0 10px 0 20px;
@@ -26,16 +27,17 @@
 .container:hover + .container,
 .container:focus-within + .container,
 .container[data-state="open"] + .container,
-.container:has([data-state="open"]) + .container {
-    border-color: transparent;
+.container:has([data-state="open"]) + .container,
+.container[aria-expanded="true"] + .container {
+    border-color: transparent !important;
 }
 
 .li {
-    display: flex;
     flex-grow: 1;
+    display: flex;
+    max-width: 100%;
     align-items: center;
     justify-content: space-between;
-    max-width: 100%;
 }
 
 .userInfo {

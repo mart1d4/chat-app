@@ -57,6 +57,7 @@ import {
     $getSelection,
     $isRangeSelection,
     COMMAND_PRIORITY_CRITICAL,
+    INSERT_LINE_BREAK_COMMAND,
     INSERT_PARAGRAPH_COMMAND,
     KEY_ENTER_COMMAND,
 } from "lexical";
@@ -164,7 +165,7 @@ export function TextAreaContent({
                     event.preventDefault();
 
                     if (event.shiftKey) {
-                        return editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined);
+                        return editor.dispatchCommand(INSERT_LINE_BREAK_COMMAND, false);
                     }
                 }
 
@@ -205,7 +206,7 @@ export function TextAreaContent({
 
     useEffect(() => {
         editor.focus();
-    }, []);
+    }, [reply]);
 
     function debounce<T extends (...args: any[]) => void>(func: T, delay: number): T {
         let timer: ReturnType<typeof setTimeout>;
@@ -233,6 +234,7 @@ export function TextAreaContent({
         const editorStateTextString = parsedEditorState.read(() => $getRoot().getTextContent());
 
         setText(editorStateTextString);
+        console.log("Text: ", editorStateTextString);
         debouncedSetDraft(editorState);
     }
 

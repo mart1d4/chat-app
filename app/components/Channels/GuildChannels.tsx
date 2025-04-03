@@ -3,7 +3,7 @@
 import type { GuildChannel, GuildMember, UserGuild } from "@/type";
 import { useParams, usePathname } from "next/navigation";
 import { useNotifications } from "@/store/notifications";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePermissions } from "@/hooks/usePermissions";
 import styles from "./GuildChannels.module.css";
 import Link from "next/link";
@@ -32,6 +32,7 @@ import {
     useShowSettings,
     useData,
     useVoice,
+    useActiveVoice,
 } from "@/store";
 import { useParticipants } from "@livekit/components-react";
 
@@ -226,6 +227,7 @@ function ChannelItem({
     const { setShowChannels } = useShowChannels();
     const { setShowSettings } = useShowSettings();
     const { notifications } = useNotifications();
+    const { rooms } = useActiveVoice();
     const pathname = usePathname();
     const params = useParams();
 
@@ -237,6 +239,8 @@ function ChannelItem({
         channelId: channel.id,
         guildId: guild.id,
     });
+
+    const currentRoom = rooms.find((r) => r.channelId === channel.id);
 
     const canInvite = hasPermission({ permission: "CREATE_INSTANT_INVITE" });
 
@@ -332,7 +336,7 @@ function ChannelItem({
                                             e.preventDefault();
                                         }
 
-                                        // setShowChannels(false);
+                                        setShowChannels(false);
                                     }}
                                 >
                                     <div>
@@ -471,23 +475,59 @@ function ChannelItem({
                 />
             </Menu>
 
-            {voiceId === channel.id && <VoiceChannelParticipants members={members} />}
+            {currentRoom && (
+                <VoiceChannelParticipants
+                    members={members}
+                    room={currentRoom}
+                />
+            )}
         </>
     );
 }
 
-function VoiceChannelParticipants({ members }: { members: GuildMember[] }) {
+function VoiceChannelParticipants({
+    members,
+    room,
+}: {
+    members: GuildMember[];
+    room: {
+        channelId: number;
+        guildId: number | null;
+        participants: number[];
+        started: number;
+        startedBy: number;
+        hasJoined: number | null;
+        haveDismissed: number[];
+    };
+}) {
+    const { channelId: voiceId } = useVoice();
     const participants = useParticipants();
 
-    const toShow = participants.map((p) => {
-        const id = p.identity.split("-")[1];
-        const member = members.find((m) => m.id === Number(id));
+    const isInVoice = voiceId === room.channelId;
 
-        return {
-            ...p,
-            ...member,
-        };
-    });
+    const toShow = useMemo(() => {
+        if (isInVoice) {
+            return participants.map((p) => {
+                const id = p.identity.split("-")[1];
+                const member = members.find((m) => m.id === Number(id));
+
+                return {
+                    ...p,
+                    ...member,
+                };
+            });
+        } else {
+            return members
+                .map((m) => {
+                    return {
+                        ...m,
+                        isSpeaking: false,
+                        identity: `user-${m.id}`,
+                    };
+                })
+                .filter((m) => room.participants.includes(m.id));
+        }
+    }, [members, participants, room.participants, isInVoice]);
 
     return (
         <div className={styles.voiceParticipants}>

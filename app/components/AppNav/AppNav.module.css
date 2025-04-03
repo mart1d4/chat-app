@@ -134,9 +134,9 @@
     height: 23px;
     bottom: -3px;
     display: flex;
-    border-radius: 50%;
     position: absolute;
     align-items: center;
+    border-radius: 20px;
     justify-content: center;
     background-color: var(--bg-1);
 }
@@ -159,7 +159,7 @@
     line-height: 16px;
     color: var(--fg-1);
     text-align: center;
-    border-radius: 8px;
+    border-radius: 7px;
     align-items: center;
     letter-spacing: 0.02rem;
     justify-content: center;

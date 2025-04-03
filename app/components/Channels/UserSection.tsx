@@ -11,6 +11,7 @@ import {
     useDisconnectButton,
     useIsSpeaking,
     useLocalParticipant,
+    useTracks,
 } from "@livekit/components-react";
 import {
     PopoverContent,
@@ -24,6 +25,7 @@ import {
     Icon,
 } from "@components";
 import { useEffect, useState } from "react";
+import { Track } from "livekit-client";
 
 export function UserSection() {
     const { setSettings, settings } = useSettings();
@@ -194,6 +196,10 @@ function VoiceState() {
         currentRoom?.hasJoined ? Date.now() - currentRoom.hasJoined * 1000 : 0
     );
 
+    const currentStream = useTracks([Track.Source.ScreenShare]).filter(
+        (t) => t.participant.identity === local.localParticipant.identity
+    )?.[0];
+
     useEffect(() => {
         const interval = setInterval(() => {
             if (currentRoom?.hasJoined) {
@@ -210,24 +216,29 @@ function VoiceState() {
         },
     });
 
-    const isStreaming = local?.isScreenShareEnabled || local?.isCameraEnabled;
+    console.log("Current Stream", currentStream);
 
     return (
         <>
-            {isStreaming && (
+            {local.isScreenShareEnabled && (
                 <div className={styles.streamContainer}>
                     <div>
                         <Avatar
                             size={32}
-                            type="user"
+                            type="guild"
                             alt="Streaming Source"
                             generateId={2883728273}
+                            guildName={currentStream.publication.track?.mediaStreamTrack.label}
                         />
                     </div>
 
                     <div>
-                        <p>Screen 2</p>
-                        <p>1440p 60FPS</p>
+                        <p>{currentStream.publication.track?.mediaStreamTrack.label}</p>
+
+                        <p>
+                            {getResFromDimensions(currentStream.publication.dimensions ?? {})}{" "}
+                            {currentStream.publication.options?.screenShareEncoding.maxFramerate}FPS
+                        </p>
                     </div>
 
                     <Tooltip>
@@ -276,7 +287,11 @@ function VoiceState() {
                     <div className={styles.actions}>
                         <Tooltip>
                             <TooltipTrigger>
-                                <button>
+                                <button
+                                    onClick={() => {
+                                        // krisp.setNoiseFilterEnabled(!krisp.isNoiseFilterEnabled);
+                                    }}
+                                >
                                     <Icon
                                         name={
                                             krisp.isNoiseFilterEnabled ? "krisp" : "krisp-disabled"
@@ -314,25 +329,39 @@ function VoiceState() {
                             <button
                                 className={local.isCameraEnabled ? styles.enabled : ""}
                                 onClick={() => {
-                                    if (!local.isCameraEnabled) {
-                                        local.localParticipant.setCameraEnabled(true);
-                                    }
+                                    local.localParticipant.setCameraEnabled(!local.isCameraEnabled);
                                 }}
                             >
-                                <Icon name="video-disabled" />
+                                <Icon name={local.isCameraEnabled ? "video" : "video-disabled"} />
                             </button>
                         </TooltipTrigger>
 
-                        <TooltipContent>Turn On Camera</TooltipContent>
+                        <TooltipContent>
+                            Turn {local.isCameraEnabled ? "Off" : "On"} Camera
+                        </TooltipContent>
                     </Tooltip>
 
                     <Tooltip>
                         <TooltipTrigger>
                             <button
                                 className={local.isScreenShareEnabled ? styles.enabled : ""}
-                                onClick={() => {
+                                onClick={async () => {
                                     if (!local.isScreenShareEnabled) {
-                                        local.localParticipant.setScreenShareEnabled(true);
+                                        const tracks =
+                                            await local.localParticipant.createScreenTracks({
+                                                audio: true,
+                                            });
+
+                                        await local.localParticipant.setScreenShareEnabled(false);
+
+                                        tracks.map((track) =>
+                                            local.localParticipant.publishTrack(track, {
+                                                screenShareEncoding: {
+                                                    maxBitrate: 510000,
+                                                    maxFramerate: 60,
+                                                },
+                                            })
+                                        );
                                     }
                                 }}
                             >
@@ -348,24 +377,42 @@ function VoiceState() {
                     <Tooltip>
                         <TooltipTrigger>
                             <button>
-                                <Icon name="video-disabled" />
+                                <Icon name="cross" />
                             </button>
                         </TooltipTrigger>
 
-                        <TooltipContent>Turn On Camera</TooltipContent>
+                        <TooltipContent>Not Available</TooltipContent>
                     </Tooltip>
 
                     <Tooltip>
                         <TooltipTrigger>
                             <button>
-                                <Icon name="screen-arrow" />
+                                <Icon name="cross" />
                             </button>
                         </TooltipTrigger>
 
-                        <TooltipContent>Share Your Screen</TooltipContent>
+                        <TooltipContent>Not Available</TooltipContent>
                     </Tooltip>
                 </div>
             </div>
         </>
     );
+}
+
+function getResFromDimensions({ width, height }: { width?: number; height?: number }) {
+    const resolutions = {
+        "720p": { width: 1280, height: 720 },
+        "1080p": { width: 1920, height: 1080 },
+        "1440p": { width: 2560, height: 1440 },
+        "4K": { width: 3840, height: 2160 },
+        "8K": { width: 7680, height: 4320 },
+    };
+
+    for (const [name, dimensions] of Object.entries(resolutions)) {
+        if (dimensions.width === width && dimensions.height === height) {
+            return name;
+        }
+    }
+
+    return "";
 }

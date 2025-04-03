@@ -10,7 +10,7 @@ import { getButtonColor } from "@/lib/getColors";
 import styles from "./ChannelAside.module.css";
 import { getCdnUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
-import { memo, useId, useState } from "react";
+import { memo, useId, useMemo, useState } from "react";
 import Image from "next/image";
 import {
     InteractiveElement,
@@ -46,8 +46,15 @@ export const UserAside = memo(function UserAside({
 
     const { friends, guilds } = useData();
 
-    const mutualFriends = friends.filter((f) => fData.mutualFriends?.includes(f.id));
-    const mutualGuilds = guilds.filter((g) => fData.mutualGuilds?.includes(g.id));
+    const mutualFriends = useMemo(
+        () => friends.filter((f) => fData.mutualFriends?.includes(f.id)),
+        [friends, fData.mutualFriends]
+    );
+
+    const mutualGuilds = useMemo(
+        () => guilds.filter((g) => fData.mutualGuilds?.find((g2) => g2.id === g.id)),
+        [guilds, fData.mutualGuilds]
+    );
 
     const [showFriends, setShowFriends] = useState(false);
     const [showGuilds, setShowGuilds] = useState(false);
