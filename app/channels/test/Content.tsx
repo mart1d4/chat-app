@@ -9,29 +9,36 @@ import type { RoomOptions } from "livekit-client";
 import { useEffect, useState } from "react";
 // import type Cropper from "cropperjs";
 
-import { Track } from "livekit-client";
-
-import {
-    ControlBar,
-    GridLayout,
-    LiveKitRoom,
-    ParticipantTile,
-    RoomAudioRenderer,
-    useTracks,
-} from "@livekit/components-react";
-
-import "@livekit/components-styles";
+import { ColorPicker, ImageCropper, Input } from "@/app/components";
 
 export function TestContent() {
-    const [voiceToken, setVoiceToken] = useState<string | undefined>();
+    const radioChoices = [
+        { label: "Choice 1", value: "choice1", description: "Description 1", icon: "voice" },
+        { label: "Choice 2", value: "choice2", description: "Description 2", icon: "voice" },
+        { label: "Choice 3", value: "choice3", description: "Description 3", icon: "hashtag" },
+    ];
 
-    const { authorizeVoice } = useRequests();
+    const selectChoices = [
+        { label: "Select a channel", value: null },
+        { label: "Choice 1", value: "choice1", description: "Description 1", icon: "voice" },
+        { label: "Choice 2", value: "choice2", description: "Description 2", icon: "voice" },
+        { label: "Choice 3", value: "choice3", description: "Description 3", icon: "hashtag" },
+        { label: "Choice 4", value: "choice4", description: "Description 4", icon: "hashtag" },
+        { label: "Choice 5", value: "choice5", description: "Description 5", icon: "hashtag" },
+        { label: "Choice 6", value: "choice6", description: "Description 6", icon: "hashtag" },
+    ];
 
-    // const [croppedImage, setCroppedImage] = useState<Blob | undefined>();
-    // const [image, setImage] = useState<HTMLImageElement | undefined>();
-    // const [cropper, setCropper] = useState<Cropper | undefined>();
+    const [text, setText] = useState<string>("");
+    const [radio, setRadio] = useState<string>(radioChoices[0].value);
+    const [checkbox, setCheckbox] = useState<boolean>(false);
+    const [checkbox2, setCheckbox2] = useState<boolean>(false);
+    const [select, setSelect] = useState<string>(selectChoices[0].value);
 
-    // const [color, setColor] = useState("#000000");
+    const [croppedImage, setCroppedImage] = useState<Blob | undefined>();
+    const [image, setImage] = useState<HTMLImageElement | undefined>();
+    const [cropper, setCropper] = useState<Cropper | undefined>();
+
+    // const [color, setColor] = useState(null);
 
     // const [channelId, setChannelId] = useState("");
     // const [error, setError] = useState("");
@@ -81,30 +88,6 @@ export function TestContent() {
     //     image.addEventListener("cropend", getCroppedImage);
     // }, [cropper]);
 
-    useEffect(() => {
-        async function getVoiceToken() {
-            try {
-                const { token } = await authorizeVoice.send(
-                    { channelId: 69 },
-                    { onComplete: () => console.log("Completed") }
-                );
-
-                if (!token) {
-                    console.error("Could not get voice token");
-                    return;
-                }
-
-                setVoiceToken(token);
-            } catch (error) {
-                console.error(error);
-            }
-        }
-
-        getVoiceToken();
-    }, []);
-
-    return null;
-
     return (
         <div
             style={{
@@ -143,13 +126,13 @@ export function TestContent() {
                 )}
             </div> */}
 
-            {/* <div>
+            <div>
                 <ImageCropper
                     alt="avatar"
                     aspectRatio={3}
                     setImage={setImage}
                     setCropper={setCropper}
-                    src="https://images.unsplash.com/photo-1729731321992-5fdb6568816a?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8NXx8fGVufDB8fHx8fA%3D%3D"
+                    src="https://utfs.io/f/HVcOIr52x0E5OSpgHQQMYxj6r20gUACZlRdOyWzecSHLnDXw"
                 />
 
                 <div>
@@ -163,7 +146,7 @@ export function TestContent() {
                         />
                     )}
                 </div>
-            </div> */}
+            </div>
 
             {/* <div
                 style={{
@@ -188,48 +171,57 @@ export function TestContent() {
                 />
             </div> */}
 
-            {voiceToken && (
-                <LiveKitRoom
-                    video={true}
-                    audio={true}
-                    token={voiceToken}
-                    serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-                    // Use the default LiveKit theme for nice styles.
-                    data-lk-theme="default"
-                    style={{ height: "50%", width: "70%" }}
-                >
-                    {/* Your custom component with basic video conferencing functionality. */}
-                    <MyVideoConference />
-                    {/* The RoomAudioRenderer takes care of room-wide audio for you. */}
-                    <RoomAudioRenderer />
-                    {/* Controls for the user to start/stop audio, video, and screen
-      share tracks and to leave the room. */}
-                    <ControlBar />
-                </LiveKitRoom>
-            )}
+            {/* <div
+                style={{
+                    gap: 40,
+                    width: 450,
+                    padding: 20,
+                    display: "flex",
+                    borderRadius: 5,
+                    flexDirection: "column",
+                    backgroundColor: "var(--bg-2)",
+                }}
+            >
+                <Input
+                    type="text"
+                    value={text}
+                    label="Text"
+                    placeholder="Some text"
+                    onChange={(v) => setText(v as string)}
+                />
+
+                <Input
+                    type="radio"
+                    value={radio}
+                    radioSide="right"
+                    label="Channel type"
+                    choices={radioChoices}
+                    onChange={(v) => setRadio(v as string)}
+                />
+
+                <Input
+                    type="checkbox"
+                    label="Checkbox"
+                    value={checkbox}
+                    checkboxType="checkbox"
+                    onChange={(v) => setCheckbox(v as boolean)}
+                />
+
+                <Input
+                    type="checkbox"
+                    label="Checkbox"
+                    value={checkbox2}
+                    onChange={(v) => setCheckbox2(v as boolean)}
+                />
+
+                <Input
+                    type="select"
+                    label="Select"
+                    value={select}
+                    choices={selectChoices}
+                    onChange={(v) => setSelect(v as string)}
+                />
+            </div> */}
         </div>
-    );
-}
-
-function MyVideoConference() {
-    // `useTracks` returns all camera and screen share tracks. If a user
-    // joins without a published camera track, a placeholder track is returned.
-    const tracks = useTracks(
-        [
-            { source: Track.Source.Camera, withPlaceholder: true },
-            { source: Track.Source.ScreenShare, withPlaceholder: false },
-        ],
-        { onlySubscribed: false }
-    );
-
-    return (
-        <GridLayout
-            tracks={tracks}
-            style={{ height: "calc(100vh - var(--lk-control-bar-height))" }}
-        >
-            {/* The GridLayout accepts zero or one child. The child is used
-        as a template to render all passed in tracks. */}
-            <ParticipantTile />
-        </GridLayout>
     );
 }

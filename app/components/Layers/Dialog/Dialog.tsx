@@ -213,6 +213,18 @@ export const DialogContent = forwardRef<
                     <FloatingFocusManager context={floatingContext}>
                         <div
                             ref={ref}
+                            onDoubleClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }}
+                            onContextMenu={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }}
+                            // onClick={(e) => {
+                            //     e.preventDefault();
+                            //     e.stopPropagation();
+                            // }}
                             aria-labelledby={context.labelId}
                             aria-describedby={context.descriptionId}
                             {...context.getFloatingProps(
@@ -265,6 +277,18 @@ export const DialogContent = forwardRef<
                 <FloatingFocusManager context={floatingContext}>
                     <div
                         ref={ref}
+                        onDoubleClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }}
+                        onContextMenu={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }}
+                        // onClick={(e) => {
+                        //     e.preventDefault();
+                        //     e.stopPropagation();
+                        // }}
                         aria-labelledby={context.labelId}
                         aria-describedby={context.descriptionId}
                         {...context.getFloatingProps(
@@ -308,7 +332,7 @@ export const DialogContent = forwardRef<
                                 width: props.width || "",
                                 minHeight: props.hideFooter ? "unset" : "",
                                 animationName: !floatingContext.open ? styles.popOut : "",
-                                overflow: !props.headingIcon ? "hidden auto" : "",
+                                overflow: !props.headingIcon && !props.art ? "hidden auto" : "",
                             }}
                             className={styles.dialog}
                         >
@@ -413,7 +437,7 @@ export const DialogContent = forwardRef<
                                         {props.leftLabel ? (
                                             <button
                                                 type="button"
-                                                className="button underline"
+                                                className="button regular underline"
                                                 onClick={() => {
                                                     if (props.leftConfirm) {
                                                         props.leftConfirm();
@@ -429,8 +453,9 @@ export const DialogContent = forwardRef<
                                         <div>
                                             <button
                                                 type="submit"
+                                                disabled={props.confirmDisabled}
                                                 tabIndex={props.confirmDisabled ? -1 : 0}
-                                                className={`button submit ${
+                                                className={`button regular regular submit ${
                                                     props.confirmColor || "blue"
                                                 } ${props.confirmDisabled ? "disabled" : ""}`}
                                             >
@@ -444,7 +469,7 @@ export const DialogContent = forwardRef<
                                             {!props.buttonFull && !props.hideCancel && (
                                                 <button
                                                     type="button"
-                                                    className="button underline submit"
+                                                    className="button regular underline submit"
                                                     onClick={() => {
                                                         context.setOpen(false);
                                                         if (props.onCancel) {

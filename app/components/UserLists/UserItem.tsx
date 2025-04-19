@@ -33,12 +33,14 @@ export function UserItem({
             openOnRightClick
             placement="right-start"
         >
+            <UserMenu user={user} />
+
             <MenuTrigger>
                 <InteractiveElement
                     className={styles.container}
                     onClick={() => {
                         if (content === "all" || content === "online") {
-                            createChannel.send({ recipients: [user.id] });
+                            createChannel.send({ recipients: [user.id], isDM: true });
                         }
                     }}
                 >
@@ -211,8 +213,6 @@ export function UserItem({
                     </div>
                 </InteractiveElement>
             </MenuTrigger>
-
-            <UserMenu user={user} />
         </Menu>
     );
 }

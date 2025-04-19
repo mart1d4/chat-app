@@ -213,7 +213,7 @@ export const TooltipContent = memo(
                     style={{
                         ...context.floatingStyles,
                         ...style,
-                        zIndex: 1000,
+                        zIndex: 100000000000,
                         pointerEvents: "none",
                     }}
                     {...context.getFloatingProps(props)}

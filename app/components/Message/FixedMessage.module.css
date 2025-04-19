@@ -401,7 +401,7 @@
     max-width: 250px;
 }
 
-.hoverContainer > div:first-child {
+.hoverContainer > div {
     position: relative;
     display: flex;
     align-items: center;
@@ -420,18 +420,21 @@
     cursor: pointer;
 }
 
-.hoverContainer > div:first-child:hover {
+.hoverContainer > div:hover,
+.hoverContainer > div:focus-visible {
     color: var(--fg-2);
 }
 
-.hoverContainer > svg {
+.hoverContainer > button {
     width: 16px;
     height: 16px;
-    color: var(--fg-3);
     cursor: pointer;
+    color: var(--fg-3);
+    background-color: transparent;
 }
 
-.hoverContainer > svg:hover {
+.hoverContainer > button:hover,
+.hoverContainer > button:focus-visible {
     color: var(--fg-2);
 }
 

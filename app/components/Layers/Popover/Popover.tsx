@@ -202,10 +202,22 @@ export const PopoverContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElemen
                 <FloatingFocusManager context={floatingContext}>
                     <div
                         ref={ref}
+                        onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }}
+                        onContextMenu={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }}
                         className={styles.popover}
                         aria-labelledby={context.labelId}
                         aria-describedby={context.descriptionId}
-                        style={{ ...context.floatingStyles, ...style }}
+                        style={{
+                            ...context.floatingStyles,
+                            ...style,
+                            zIndex: props.highIndex ? 10000 : undefined,
+                        }}
                         {...context.getFloatingProps(props)}
                     >
                         {props.children}

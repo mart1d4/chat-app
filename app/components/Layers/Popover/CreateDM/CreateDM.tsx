@@ -50,7 +50,10 @@ export function CreateDM({ channel }: { channel?: DMChannelWithRecipients }) {
                 if (friend) recipients.push(friend.id);
             }
 
-            createChannel.send({ recipients }, { onComplete: () => setOpen(false) });
+            createChannel.send(
+                { recipients, isDM: !channel && recipients.length === 1 },
+                { onComplete: () => setOpen(false) }
+            );
         }
     }
 
@@ -147,7 +150,7 @@ export function CreateDM({ channel }: { channel?: DMChannelWithRecipients }) {
                                     <button
                                         onClick={handleSubmit}
                                         disabled={!chosen.length || addChannelRecipients.isLoading}
-                                        className={`button blue ${
+                                        className={`button regular blue ${
                                             !chosen.length || addChannelRecipients.isLoading
                                                 ? "disabled"
                                                 : ""
@@ -263,7 +266,9 @@ export function CreateDM({ channel }: { channel?: DMChannelWithRecipients }) {
                                 </div>
 
                                 <button
-                                    className={copied ? "button green" : "button blue"}
+                                    className={
+                                        copied ? "button regular green" : "button regular blue"
+                                    }
                                     onClick={() => {
                                         if (!inviteLink) getInvite();
                                         else copyLink();
@@ -280,7 +285,7 @@ export function CreateDM({ channel }: { channel?: DMChannelWithRecipients }) {
                             <button
                                 onClick={handleSubmit}
                                 className={
-                                    "button blue " +
+                                    "button regular blue " +
                                     ((channel && !chosen.length) ||
                                     createChannel.isLoading ||
                                     addChannelRecipients.isLoading
@@ -347,7 +352,9 @@ export function CreateDM({ channel }: { channel?: DMChannelWithRecipients }) {
                                 </div>
 
                                 <button
-                                    className={copied ? "button green" : "button blue"}
+                                    className={
+                                        copied ? "button regular green" : "button regular blue"
+                                    }
                                     onClick={() => {
                                         if (!inviteLink) getInvite();
                                         else copyLink();
@@ -368,7 +375,7 @@ export function CreateDM({ channel }: { channel?: DMChannelWithRecipients }) {
                                     createChannel.isLoading ||
                                     addChannelRecipients.isLoading
                                 }
-                                className={`button blue ${
+                                className={`button regular blue ${
                                     (channel && !chosen.length) || createChannel.isLoading
                                         ? "disabled"
                                         : ""
@@ -392,7 +399,7 @@ export function CreateDM({ channel }: { channel?: DMChannelWithRecipients }) {
                     <div>You don't have any friends to add!</div>
 
                     <button
-                        className="button green"
+                        className="button regular green"
                         onClick={() => {
                             setOpen(false);
                             setSettings("friendTab", "add");

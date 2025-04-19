@@ -347,11 +347,9 @@ export function DisplayableAttachment({
 
     if (isVideo) {
         return (
-            <div>
+            <div style={{ cursor: "pointer" }}>
                 <video
                     src={url}
-                    width={width}
-                    height={height}
                     className={styles.image}
                     controls={!noInteraction}
                     style={{
@@ -359,8 +357,6 @@ export function DisplayableAttachment({
                         cursor: !functions ? "default" : "",
                         maxHeight: `min(${maxHeight}px, 100%)`,
                         maxWidth: `min(${maxWidth}px, 100%)`,
-                        height: `${height}px`,
-                        width: `${width}px`,
                     }}
                 />
             </div>
@@ -759,9 +755,7 @@ export function NonVisualAttachment({
 
             {attachment.type === "audio" ? (
                 attachment.voiceMessage ? (
-                    <div style={{ marginTop: "8px" }}>
-                        <VoiceMessage url={`${getCdnUrl}${attachment.id}`} />
-                    </div>
+                    <VoiceMessage url={`${getCdnUrl}${attachment.id}`} />
                 ) : (
                     <div className={styles.audio}>
                         <header>

@@ -2,18 +2,18 @@
 
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useRequests } from "@/hooks/useRequests";
+import type { Guild, GuildChannel } from "@/type";
 import styles from "./AppHeader.module.css";
-import type { GuildChannel } from "@/type";
 import { useState } from "react";
 import { Call } from "./Call";
 import {
     useWindowSettings,
     useTriggerDialog,
     useShowChannels,
+    useActiveVoice,
     useSettings,
     useVoice,
     useData,
-    useActiveVoice,
 } from "@/store";
 import {
     TooltipContent,
@@ -32,9 +32,11 @@ import {
 } from "@components";
 
 export function AppHeader({
+    guildId,
     channelId,
     initChannel,
 }: {
+    guildId?: number;
     channelId?: number;
     requests?: number;
     initChannel?: GuildChannel;
@@ -49,6 +51,8 @@ export function AppHeader({
 
     const widthThresholds = useWindowSettings((state) => state.widthThresholds);
     const { 1200: width1200, 562: width562 } = widthThresholds;
+
+    const guild = useData((state) => state.guilds).find((g) => g.id === guildId);
 
     const channel = initChannel
         ? initChannel
@@ -87,6 +91,11 @@ export function AppHeader({
         setHideChat(false);
     }
 
+    if (!isShowingVideos && (fullScreen || hideChat)) {
+        setFullScreen(false);
+        setHideChat(false);
+    }
+
     const toolbarItems = channel
         ? initChannel
             ? [
@@ -104,7 +113,12 @@ export function AppHeader({
                       icon: "pin",
                       name: "Pinned Messages",
                       id: "pinned-messages-trigger",
-                      popover: <Pinned channel={channel} />,
+                      popover: (
+                          <Pinned
+                              guild={guild}
+                              channel={channel}
+                          />
+                      ),
                   },
                   {
                       name: settings.showUsers
@@ -133,7 +147,12 @@ export function AppHeader({
                       icon: "pin",
                       name: "Pinned Messages",
                       id: "pinned-messages-trigger",
-                      popover: <Pinned channel={channel} />,
+                      popover: (
+                          <Pinned
+                              guild={guild}
+                              channel={channel}
+                          />
+                      ),
                   },
                   {
                       name: "Add Friends to DM",

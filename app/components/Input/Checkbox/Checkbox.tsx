@@ -1,36 +1,44 @@
-import { InteractiveElement } from "../../Accessibility/InteractiveElement";
+"use client";
+
 import styles from "./Checkbox.module.css";
 
-export const Checkbox = ({
-    checked,
+export function Checkbox({
+    value: checked,
     onChange,
     inputFor,
-    box = false,
+    isSwitch = true,
     size = 24,
+    disabled,
 }: {
-    checked: boolean;
+    value: boolean;
     onChange: (value: boolean) => void;
     inputFor: string;
-    box?: boolean;
+    isSwitch?: boolean;
     size?: number;
-}) => {
-    if (box) {
+    disabled?: boolean;
+}) {
+    if (disabled) {
+        onChange = () => {};
+    }
+
+    if (!isSwitch) {
         return (
             <div
                 className={styles.box}
                 style={{
+                    width: `${size}px`,
+                    height: `${size}px`,
                     borderColor: checked ? "var(--accent-3)" : "",
                     backgroundColor: checked ? "var(--accent-0)" : "",
-                    height: `${size}px`,
-                    width: `${size}px`,
                 }}
             >
                 <input
                     id={inputFor}
                     type="checkbox"
                     checked={checked}
-                    onChange={() => onChange(!checked)}
+                    tabIndex={disabled ? -1 : 0}
                     focus-id={`${inputFor}-label`}
+                    onChange={() => onChange(!checked)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") {
                             e.preventDefault();
@@ -44,8 +52,8 @@ export const Checkbox = ({
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="none"
-                        width="18"
                         height="18"
+                        width="18"
                     >
                         <path
                             fill="var(--white-500)"
@@ -58,11 +66,25 @@ export const Checkbox = ({
     }
 
     return (
-        <InteractiveElement
+        <div
             className={styles.container}
-            onClick={onChange ? onChange : () => {}}
             style={{ backgroundColor: checked ? "var(--success-fg)" : "var(--default-2)" }}
         >
+            <input
+                id={inputFor}
+                type="checkbox"
+                checked={checked}
+                tabIndex={disabled ? -1 : 0}
+                focus-id={`${inputFor}-label`}
+                onChange={() => onChange(!checked)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        onChange(!checked);
+                    }
+                }}
+            />
+
             <svg
                 aria-hidden="true"
                 viewBox="0 0 28 20"
@@ -80,8 +102,8 @@ export const Checkbox = ({
 
                 {checked ? (
                     <svg
-                        viewBox="0 0 20 20"
                         fill="none"
+                        viewBox="0 0 20 20"
                     >
                         <path
                             fill="rgba(35, 165, 90, 1)"
@@ -94,8 +116,8 @@ export const Checkbox = ({
                     </svg>
                 ) : (
                     <svg
-                        viewBox="0 0 20 20"
                         fill="none"
+                        viewBox="0 0 20 20"
                     >
                         <path
                             fill="rgba(128, 132, 142, 1)"
@@ -108,6 +130,6 @@ export const Checkbox = ({
                     </svg>
                 )}
             </svg>
-        </InteractiveElement>
+        </div>
     );
-};
+}

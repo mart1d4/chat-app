@@ -1,15 +1,17 @@
 import { handleChannelDeletion } from "@/lib/channels";
+import { isChannelPrivate } from "@/lib/permissions";
 import { getFullChannel } from "../lib/strings";
 import { create } from "zustand";
 import type {
     DMChannelWithRecipients,
     ChannelRecipient,
+    GuildChannel,
     UnknownUser,
+    GuildMember,
     KnownUser,
     UserGuild,
+    GuildRole,
     AppUser,
-    GuildMember,
-    GuildChannel,
 } from "@/type";
 export interface UseDataState {
     user: AppUser | null;
@@ -64,7 +66,19 @@ export interface UseDataState {
     addOnlineMember: (guildId: number, user: GuildMember) => void;
     removeOnlineMember: (guildId: number, id: number) => void;
     addGuildChannel: (guildId: number, channel: GuildChannel) => void;
+    updateGuildChannel: (
+        guildId: number,
+        channelId: number,
+        channel: Partial<GuildChannel>
+    ) => void;
     removeGuildChannel: (guildId: number, channelId: number) => void;
+
+    addGuildRole: (guildId: number, role: GuildRole) => void;
+    updateGuildRole: (guildId: number, roleId: number, role: Partial<GuildRole>) => void;
+    removeGuildRole: (guildId: number, roleId: number) => void;
+
+    updateGuildMember: (guildId: number, memberId: number, member: Partial<GuildMember>) => void;
+    removeMember: (guildId: number, memberId: number) => void;
 
     reset: () => void;
 }
@@ -256,16 +270,10 @@ export const useData = create<UseDataState>()((set) => ({
         set(() => ({
             guilds: guilds.map((g) => ({
                 ...g,
-                channels: [],
                 members: g.members.map((m) => ({
                     ...m,
-                    permissions: BigInt(m.permissions),
                     dbStatus: m.status,
                     status: "offline",
-                })),
-                roles: g.roles.map((r) => ({
-                    ...r,
-                    permissions: BigInt(r.permissions),
                 })),
             })),
         })),
@@ -519,19 +527,22 @@ export const useData = create<UseDataState>()((set) => ({
             guilds: state.guilds.map((g) => {
                 if (g.id !== guildId) return g;
 
+                const everyone = g.roles.find((r) => r.everyone);
+
+                const overwrites = JSON.parse(channel.permissionOverwrites).map((o: any) => ({
+                    ...o,
+                    allow: BigInt(o.allow),
+                    deny: BigInt(o.deny),
+                }));
+
                 return {
                     ...g,
                     channels: [
                         {
                             ...channel,
                             recipients: [],
-                            permissionOverwrites: JSON.parse(channel.permissionOverwrites).map(
-                                (o: any) => ({
-                                    ...o,
-                                    allow: BigInt(o.allow),
-                                    deny: BigInt(o.deny),
-                                })
-                            ),
+                            permissionOverwrites: overwrites,
+                            isPrivate: isChannelPrivate(overwrites, everyone!.id),
                         },
                         ...g.channels.map((c) => {
                             if (c.position >= channel.position) {
@@ -546,6 +557,28 @@ export const useData = create<UseDataState>()((set) => ({
         }));
     },
 
+    updateGuildChannel: (guildId, channelId, channel) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id !== guildId) return g;
+
+                return {
+                    ...g,
+                    channels: g.channels.map((c) => {
+                        if (c.id === channelId) {
+                            return {
+                                ...c,
+                                ...channel,
+                            };
+                        }
+
+                        return c;
+                    }),
+                };
+            }),
+        }));
+    },
+
     removeGuildChannel: (guildId, channelId) => {
         set((state) => ({
             guilds: state.guilds.map((g) => {
@@ -554,6 +587,121 @@ export const useData = create<UseDataState>()((set) => ({
                 return {
                     ...g,
                     channels: handleChannelDeletion(g.channels, channelId),
+                };
+            }),
+        }));
+    },
+
+    addGuildRole: (guildId, role) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id !== guildId) return g;
+
+                return {
+                    ...g,
+                    roles: [role, ...g.roles],
+                };
+            }),
+        }));
+    },
+
+    updateGuildRole: (guildId, roleId, role) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id !== guildId) return g;
+
+                const positionChange = role.position !== undefined;
+                const oldPosition = g.roles.find((r) => r.id === roleId)?.position || 0;
+
+                return {
+                    ...g,
+                    roles: g.roles.map((r) => {
+                        let newPosition = r.position;
+
+                        if (r.id === roleId) {
+                            return {
+                                ...r,
+                                ...role,
+                                permissions: BigInt(role.permissions || r.permissions),
+                                position: role.position || r.position,
+                            };
+                        }
+
+                        if (positionChange) {
+                            if (oldPosition < role.position) {
+                                if (r.position > oldPosition && r.position <= role.position) {
+                                    newPosition = r.position - 1;
+                                }
+                            } else if (oldPosition > role.position) {
+                                if (r.position >= role.position && r.position < oldPosition) {
+                                    newPosition = r.position + 1;
+                                }
+                            }
+                        }
+
+                        return {
+                            ...r,
+                            position: role.position ? newPosition : r.position,
+                        };
+                    }),
+                };
+            }),
+        }));
+    },
+
+    removeGuildRole: (guildId, roleId) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id !== guildId) return g;
+                const role = g.roles.find((r) => r.id === roleId);
+
+                return {
+                    ...g,
+                    roles: g.roles
+                        .filter((r) => r.id !== roleId)
+                        .map((r) => {
+                            if (r.position > role?.position) {
+                                return { ...r, position: r.position - 1 };
+                            }
+
+                            return r;
+                        }),
+                };
+            }),
+        }));
+    },
+
+    updateGuildMember: (guildId, memberId, member) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id !== guildId) return g;
+
+                return {
+                    ...g,
+                    members: g.members.map((m) => {
+                        if (m.id === memberId) {
+                            return {
+                                ...m,
+                                ...member,
+                                permissions: BigInt(member.permissions || m.permissions),
+                            };
+                        }
+
+                        return m;
+                    }),
+                };
+            }),
+        }));
+    },
+
+    removeMember: (guildId, memberId) => {
+        set((state) => ({
+            guilds: state.guilds.map((g) => {
+                if (g.id !== guildId) return g;
+
+                return {
+                    ...g,
+                    members: g.members.filter((m) => m.id !== memberId),
                 };
             }),
         }));

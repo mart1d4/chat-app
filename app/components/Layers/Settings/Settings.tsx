@@ -1,6 +1,6 @@
 "use client";
 
-import { FriendRequests, MyAccount, Profiles, Overview, GuildRoles } from "./index";
+import { FriendRequests, MyAccount, Profiles, Overview, GuildRoles, GuildOverview } from "./index";
 import { Dialog, DialogContent, DialogTrigger, Icon } from "@components";
 import { useData, useShowSettings, useWindowSettings } from "@/store";
 import { useRequests } from "@/hooks/useRequests";
@@ -30,13 +30,6 @@ export function Settings() {
         setMinified(true);
     }
 
-    if (showSettings?.tab && activeTab !== showSettings.tab) {
-        setActiveTab(showSettings.tab);
-        if (minified) setHideNav(true);
-    } else if (showSettings !== null && activeTab === "") {
-        setActiveTab(["GUILD", "CHANNEL"].includes(showSettings.type) ? "Overview" : "My Account");
-    }
-
     useEffect(() => {
         const handleEsc = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
@@ -52,11 +45,16 @@ export function Settings() {
         { name: "User Settings", type: "title" },
         {
             name: "My Account",
-            component: <MyAccount setActiveTab={setActiveTab} />,
+            component: (props) => (
+                <MyAccount
+                    setActiveTab={setActiveTab}
+                    {...props}
+                />
+            ),
         },
         {
             name: "Profiles",
-            component: <Profiles />,
+            component: (props) => <Profiles {...props} />,
         },
         { name: "Privacy & Safety" },
         { name: "Authorized Apps" },
@@ -64,7 +62,7 @@ export function Settings() {
         { name: "Connections" },
         {
             name: "Friend Requests",
-            component: <FriendRequests />,
+            component: (props) => <FriendRequests {...props} />,
         },
         { name: "separator" },
         { name: "App Settings", type: "title" },
@@ -86,8 +84,24 @@ export function Settings() {
     const guildTabs = guild
         ? [
               { name: `Server`, type: `title` },
-              { name: "Overview" },
-              { name: "Roles", component: <GuildRoles guildId={guild.id} /> },
+              {
+                  name: "Overview",
+                  component: (props) => (
+                      <GuildOverview
+                          guildId={guild.id}
+                          {...props}
+                      />
+                  ),
+              },
+              {
+                  name: "Roles",
+                  component: (props) => (
+                      <GuildRoles
+                          guildId={guild.id}
+                          {...props}
+                      />
+                  ),
+              },
               { name: "Emoji" },
               { name: "Stickers" },
               { name: "Soundboard" },
@@ -121,7 +135,15 @@ export function Settings() {
     const channelTabs = channel
         ? [
               { name: channel.name, type: `title` },
-              { name: "Overview", component: <Overview channel={channel} /> },
+              {
+                  name: "Overview",
+                  component: (props) => (
+                      <Overview
+                          channel={channel}
+                          {...props}
+                      />
+                  ),
+              },
               { name: "Permissions" },
               { name: "Invites", hide: channel.type === 4 },
               { name: "Integrations", hide: channel.type === 4 },
@@ -135,6 +157,24 @@ export function Settings() {
         GUILD: guildTabs,
         CHANNEL: channelTabs,
     }[showSettings?.type ?? "USER"];
+
+    if (showSettings) {
+        if (minified) setHideNav(true);
+
+        const def = ["GUILD", "CHANNEL"].includes(showSettings.type) ? "Overview" : "My Account";
+        const tab = showSettings.tab || def;
+
+        if (activeTab === "") {
+            setActiveTab(tab);
+        }
+
+        // If current tab isn't present in the tabs, set it to the first one
+        if (!tabs.find((t) => t.name === activeTab)) {
+            setActiveTab(def);
+        }
+    }
+
+    const component = tabs.find((tab) => tab.name === activeTab)?.component || (() => <></>);
 
     return (
         <Dialog open={showSettings !== null}>
@@ -184,7 +224,7 @@ export function Settings() {
                                                 }
                                                 className={
                                                     tab.type === "title"
-                                                        ? styles.title
+                                                        ? "subtitle ml-[10px] mb-1"
                                                         : tab.name === "separator"
                                                         ? styles.separator
                                                         : activeTab === tab.name
@@ -311,7 +351,7 @@ export function Settings() {
                                         </div>
                                     )}
 
-                                    {tabs.find((tab) => tab.name === activeTab)?.component}
+                                    {component({})}
                                 </div>
 
                                 {!minified && (

@@ -126,6 +126,7 @@ export const DefaultGuildRoleSelect: (keyof Role)[] = [
     "color",
     "position",
     "hoist",
+    "everyone",
     "permissions",
 ];
 

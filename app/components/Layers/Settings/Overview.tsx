@@ -21,29 +21,50 @@ export function Overview({ channel }: { channel: GuildChannel }) {
 
     const needsSaving = channelName !== channel.name || channelTopic !== (channel.topic || "");
 
+    const variants = {
+        enter: {
+            y: 0, // Starts at the final position
+            transition: {
+                type: "spring",
+                stiffness: 500,
+                damping: 30,
+            },
+        },
+        exit: {
+            y: [0, -40, 1000], // Moves up slightly, then plunges down
+            transition: {
+                duration: 0.6,
+                ease: [0.4, 0, 0.2, 1], // Snappy easing
+            },
+        },
+        initial: {
+            y: 250, // Starts off-screen at the bottom
+        },
+    };
+
     return (
         <div>
             <AnimatePresence>
                 {needsSaving && (
                     <motion.div
                         className={styles.saveAlert}
-                        transition={{ duration: 0.1 }}
-                        initial={{ transform: "translateY(80px)" }}
-                        animate={{ transform: "translateY(0)" }}
-                        exit={{ transform: "translateY(80px)" }}
+                        variants={variants}
+                        initial="initial"
+                        animate="enter"
+                        exit="exit"
                     >
                         <p>Careful — you have unsaved changes!</p>
 
                         <div>
                             <button
-                                className="button underline"
+                                className="button regular underline"
                                 onClick={() => resetState()}
                             >
                                 Reset
                             </button>
 
                             <button
-                                className="button green"
+                                className="button regular green"
                                 onClick={() =>
                                     updateGuildChannel.send(
                                         {

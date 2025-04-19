@@ -236,7 +236,7 @@
 
 .actions > section > div > div > button:first-child:hover,
 .actions > section > div > div > button:first-child:focus-visible {
-    background-color: var(--bg-2);
+    background-color: var(--bg-4);
 }
 
 .actions > section > div > div > button:last-child {
@@ -257,7 +257,7 @@
 
 .actions > section > div > div > button:last-child:hover,
 .actions > section > div > div > button:last-child:focus-visible {
-    background-color: var(--bg-2);
+    background-color: var(--bg-4);
 }
 
 .actions > section > div > div:hover > button,

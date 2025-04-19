@@ -24,7 +24,7 @@ export class EmojiNode extends TextNode {
 
     constructor(text: string, key?: NodeKey) {
         super(text, key); // Initialize the parent TextNode
-        this.__className = "emoji"; // Default class name
+        this.__className = "editor-emoji"; // Default class name
         this.__emoji = text; // Store the emoji text
     }
 

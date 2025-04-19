@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import type { GuildChannel, UserGuild } from "@/type";
 import { useState, useRef, useMemo } from "react";
 import { useRequests } from "@/hooks/useRequests";
@@ -15,7 +16,6 @@ import {
     Avatar,
     Icon,
 } from "@components";
-import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 
 export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild: UserGuild }) {
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -139,7 +139,7 @@ export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild:
                                     <TooltipTrigger>
                                         <button
                                             className={`
-                                                button ${styles.inviteButton}
+                                                button regular ${styles.inviteButton}
                                                 ${failed.includes(channel.id) ? styles.failed : ""}
                                                 ${sentTo.includes(channel.id) ? styles.sent : ""}
                                             `}
@@ -204,7 +204,7 @@ export function InviteDialog({ channel, guild }: { channel: GuildChannel; guild:
                     </div>
 
                     <button
-                        className={copied ? "button green" : "button blue"}
+                        className={copied ? "button regular green" : "button regular blue"}
                         onClick={() => {
                             try {
                                 navigator.clipboard.writeText(`${window.location.origin}/${link}`);

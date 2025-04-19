@@ -110,12 +110,11 @@
     justify-content: flex-start;
 }
 
-.marker > span {
-    position: absolute;
+.marker > div {
     display: block;
-    width: 8px;
-    border-radius: 0 4px 4px 0;
     margin-left: -4px;
+    position: absolute;
+    border-radius: 0 4px 4px 0;
     background-color: var(--fg-1);
 }
 
@@ -138,7 +137,7 @@
     align-items: center;
     border-radius: 20px;
     justify-content: center;
-    background-color: var(--bg-1);
+    background-color: var(--bg-0);
 }
 
 .topBadge {

@@ -53,8 +53,8 @@ export default async function GuildChannelPage({
 
     const channels = channelsQuery
         .map((channel) => {
-            const everyoneRole = roles.find((role) => role.name === "@everyone")?.id;
-            const overwrites = channel.permissionOverwrites || [];
+            const everyone = roles.find((role) => role.everyone)!.id;
+            const overwrites = channel.permissionOverwrites;
 
             const newOverwrites = overwrites.map((o: { allow: string; deny: string }) => ({
                 ...o,
@@ -62,8 +62,8 @@ export default async function GuildChannelPage({
                 deny: BigInt(o.deny),
             }));
 
-            const isPrivate = everyoneRole
-                ? isChannelPrivate(channel.permissionOverwrites, everyoneRole)
+            const isPrivate = everyone
+                ? isChannelPrivate(channel.permissionOverwrites, everyone)
                 : false;
 
             return {
@@ -118,7 +118,6 @@ export default async function GuildChannelPage({
                   return obj;
               })
             : [];
-
     return (
         <>
             <GuildChannels
@@ -130,6 +129,7 @@ export default async function GuildChannelPage({
             <ClickLayer>
                 <div className={styles.main}>
                     <AppHeader
+                        guildId={guildId}
                         initChannel={{
                             ...channel,
                             recipients: guildMembers,

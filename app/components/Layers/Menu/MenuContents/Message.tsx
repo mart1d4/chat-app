@@ -6,7 +6,9 @@ import type { Attachment, DMChannel, GuildChannel, ResponseMessage, UserGuild } 
 import type { MessageFunctions } from "@/app/components/Message/Message";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { isInline as isMessageInline } from "@/lib/message";
+import { usePermissions } from "@/hooks/usePermissions";
 import { getNamesFromCode } from "@/lib/emojis";
+import { useRequests } from "@/hooks/useRequests";
 
 export function MessageMenuContent({
     message,
@@ -18,7 +20,7 @@ export function MessageMenuContent({
 }: {
     message: ResponseMessage;
     channel: DMChannel | GuildChannel;
-    guild: UserGuild | undefined;
+    guild?: UserGuild;
     functions: MessageFunctions;
     attachment?: Attachment;
     attachmentFunctions?: {
@@ -31,22 +33,58 @@ export function MessageMenuContent({
     const shift = useWindowSettings((s) => s.shiftKeyDown);
     const { setData: setEmojiPicker } = useEmojiPicker();
     const { triggerDialog } = useTriggerDialog();
+    const { removeAllReactions } = useRequests();
     const { emojis } = useMostUsedEmojis();
     const appUser = useAuthenticatedUser();
     const { setOpen } = useMenuContext();
 
     const hasVoice = !!message.attachments.find((a) => a.voiceMessage);
     const isInline = isMessageInline(message.type);
+    const isDM = [0, 1].includes(channel.type);
 
     const isAuthor = message.author.id === appUser.id;
     const isPinnedMessage = message.type === 7;
 
+    const { hasPermission } = usePermissions({ guildId: guild?.id });
+
     const canDelete =
-        (isAuthor || ([0, 1].includes(channel.type) ? false : false)) &&
+        (isAuthor ||
+            (isDM
+                ? false
+                : hasPermission({
+                      permission: "MANAGE_MESSAGES",
+                      specificChannelId: channel.id,
+                  }))) &&
         (!isInline || isPinnedMessage);
 
-    const canPin = !isInline && ([0, 1].includes(channel.type) ? true : false);
-    const canReact = [0, 1].includes(channel.type) ? true : false;
+    const canRemoveAllReactions =
+        hasPermission({
+            permission: "MANAGE_MESSAGES",
+            specificChannelId: channel.id,
+        }) &&
+        !isDM &&
+        !!message.reactions.length;
+
+    const canPin =
+        (hasPermission({
+            permission: "MANAGE_MESSAGES",
+            specificChannelId: channel.id,
+        }) ||
+            isDM) &&
+        !isInline;
+
+    const canReact =
+        hasPermission({
+            permission: "ADD_REACTIONS",
+            specificChannelId: channel.id,
+        }) || isDM;
+
+    const canSendMessage =
+        hasPermission({
+            permission: "SEND_MESSAGES",
+            specificChannelId: channel.id,
+        }) || isDM;
+
     const hasText = message.content?.length > 0;
 
     return (
@@ -105,7 +143,22 @@ export function MessageMenuContent({
                 </Menu>
             )}
 
-            {canReact && <MenuDivider />}
+            {!!message.reactions.length && (
+                <MenuItem
+                    icon="emoji"
+                    onClick={() => {
+                        triggerDialog({
+                            type: "VIEW_REACTIONS",
+                            data: { message, functions },
+                        });
+                        setOpen(false);
+                    }}
+                >
+                    View Reactions
+                </MenuItem>
+            )}
+
+            {(canReact || !!message.reactions.length) && <MenuDivider />}
 
             {isAuthor && !isInline && !hasVoice && (
                 <MenuItem
@@ -119,17 +172,19 @@ export function MessageMenuContent({
                 </MenuItem>
             )}
 
-            <MenuItem
-                icon="reply"
-                onClick={() => {
-                    functions.setReplyToMessage();
-                    setOpen(false);
-                }}
-            >
-                Reply
-            </MenuItem>
+            {canSendMessage && (
+                <MenuItem
+                    icon="reply"
+                    onClick={() => {
+                        functions.setReplyToMessage();
+                        setOpen(false);
+                    }}
+                >
+                    Reply
+                </MenuItem>
+            )}
 
-            <MenuDivider />
+            {(canSendMessage || (isAuthor && !isInline && !hasVoice)) && <MenuDivider />}
 
             {hasText && (
                 <MenuItem
@@ -149,7 +204,7 @@ export function MessageMenuContent({
                     onClick={() => {
                         triggerDialog({
                             type: message.pinned ? "UNPIN_MESSAGE" : "PIN_MESSAGE",
-                            data: { message, functions },
+                            data: { message, channel, functions },
                         });
                         setOpen(false);
                     }}
@@ -204,6 +259,32 @@ export function MessageMenuContent({
 
             <MenuDivider />
 
+            {canRemoveAllReactions && (
+                <MenuItem
+                    danger
+                    onClick={() => {
+                        if (shift) {
+                            removeAllReactions.send({
+                                channelId: channel.id,
+                                messageId: message.id,
+                            });
+                        } else {
+                            triggerDialog({
+                                type: "REMOVE_REACTIONS",
+                                data: {
+                                    channelId: channel.id,
+                                    messageId: message.id,
+                                },
+                            });
+                        }
+
+                        setOpen(false);
+                    }}
+                >
+                    Remove All Reactions
+                </MenuItem>
+            )}
+
             {canDelete && (
                 <MenuItem
                     danger
@@ -233,7 +314,7 @@ export function MessageMenuContent({
                 </MenuItem>
             )}
 
-            {(canDelete || !isAuthor) && <MenuDivider />}
+            {(canDelete || !isAuthor || canRemoveAllReactions) && <MenuDivider />}
 
             {attachment && attachmentFunctions && (
                 <>

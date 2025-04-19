@@ -28,7 +28,12 @@
 .container:focus-within + .container,
 .container[data-state="open"] + .container,
 .container:has([data-state="open"]) + .container,
-.container[aria-expanded="true"] + .container {
+.container[aria-expanded="true"] + .container,
+.container:hover + span + .container,
+.container:focus-within + span + .container,
+.container[data-state="open"] + span + .container,
+.container:has([data-state="open"]) + span + .container,
+.container[aria-expanded="true"] + span + .container {
     border-color: transparent !important;
 }
 

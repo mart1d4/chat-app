@@ -20,6 +20,7 @@ export function ImageCropper({
     setImage?: (image: HTMLImageElement) => void;
 }) {
     const [isReady, setIsReady] = useState(false);
+    const [zoom, setZoom] = useState(0);
 
     const imageRef = useRef<HTMLImageElement>(null);
     const cropperRef = useRef<Cropper>(null);
@@ -73,20 +74,21 @@ export function ImageCropper({
 
                         <div>
                             <Range
-                                min={1}
-                                max={5}
+                                min={0}
+                                max={4}
+                                val={zoom}
                                 step={0.05}
-                                initValue={1}
                                 onChange={(value) => {
+                                    setZoom(value);
                                     if (!cropperRef.current) return;
-                                    cropperRef.current.zoomTo(value - 0.5);
+                                    cropperRef.current.zoomTo(value);
                                 }}
                             />
                         </div>
 
                         <Icon
-                            name="image"
                             size={48}
+                            name="image"
                         />
                     </>
                 )}

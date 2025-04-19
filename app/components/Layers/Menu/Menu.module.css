@@ -58,6 +58,7 @@
 .item.disabled {
     opacity: 0.5;
     cursor: default;
+    pointer-events: none;
     color: var(--fg-3) !important;
     background-color: transparent !important;
 }
@@ -156,4 +157,16 @@
 .item.isPicked:active circle,
 .menu [data-state="open"] .item.isPicked circle {
     color: var(--fg-1);
+}
+
+.role {
+    display: flex;
+    align-items: center;
+}
+
+.roleColor {
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+    border-radius: 50%;
 }

@@ -1,33 +1,40 @@
 "use client";
 
+import { AttachmentList, TooltipContent, TooltipTrigger, Tooltip, Avatar, Icon } from "@components";
+import type { DMChannelWithRecipients, Message } from "@/type";
 import { getLongDate, getMidDate } from "@/lib/time";
-import styles from "./FixedMessage.module.css";
 import { FormatMessage } from "./Formatter/Format";
-import type { AppMessage } from "@/type";
+import { useRequests } from "@/hooks/useRequests";
+import styles from "./FixedMessage.module.css";
+import { useTriggerDialog } from "@/store";
 import { useState } from "react";
-import {
-    AttachmentList,
-    TooltipContent,
-    TooltipTrigger,
-    DialogTrigger,
-    Tooltip,
-    Dialog,
-    Avatar,
-    Icon,
-} from "@components";
 
-export function FixedMessage({ message, pinned }: { message: AppMessage; pinned?: boolean }) {
+export function FixedMessage({
+    pinned,
+    message,
+    channel,
+    canPin = false,
+}: {
+    pinned?: boolean;
+    message: Message;
+    canPin?: boolean;
+    channel: DMChannelWithRecipients;
+}) {
     const [messageContent, setMessageContent] = useState<JSX.Element | null>(null);
     const [referenceContent, setReferenceContent] = useState<JSX.Element | null>(null);
 
+    const { triggerDialog } = useTriggerDialog();
+    const { unpinMessage } = useRequests();
     const isLocal = "send" in message;
 
     if (message.content && messageContent === null) {
-        setMessageContent(FormatMessage({ message: message, fixed: true }));
+        setMessageContent(FormatMessage({ message, channel }));
     }
 
     if (!isLocal && message.reference?.content && referenceContent === null) {
-        setReferenceContent(FormatMessage({ message: message.reference, fixed: true }));
+        setReferenceContent(
+            FormatMessage({ message: message.reference, channel, reference: true })
+        );
     }
 
     function edited(time: Date) {
@@ -55,22 +62,34 @@ export function FixedMessage({ message, pinned }: { message: AppMessage; pinned?
                         <div>Jump</div>
                     </div>
 
-                    <Dialog>
-                        <DialogTrigger>
-                            <svg
-                                aria-hidden="true"
-                                role="img"
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    fill="currentColor"
-                                    d="M18.4 4L12 10.4L5.6 4L4 5.6L10.4 12L4 18.4L5.6 20L12 13.6L18.4 20L20 18.4L13.6 12L20 5.6L18.4 4Z"
-                                />
-                            </svg>
-                        </DialogTrigger>
-                    </Dialog>
+                    {canPin && (
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                triggerDialog({
+                                    type: "UNPIN_MESSAGE",
+                                    data: {
+                                        message,
+                                        channel,
+                                        functions: {
+                                            unpinMessage: () => {
+                                                unpinMessage.send({
+                                                    channelId: channel.id,
+                                                    messageId: message.id,
+                                                });
+                                            },
+                                        },
+                                    },
+                                });
+                            }}
+                        >
+                            <Icon
+                                size={16}
+                                name="cross"
+                            />
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -169,8 +188,8 @@ export function FixedMessage({ message, pinned }: { message: AppMessage; pinned?
 
                         {message.attachments.length > 0 && (
                             <AttachmentList
+                                noInteraction
                                 message={message}
-                                noInteraction={true}
                             />
                         )}
 

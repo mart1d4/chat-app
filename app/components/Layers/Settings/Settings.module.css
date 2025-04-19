@@ -2,7 +2,7 @@
     display: flex;
     width: var(--dvw);
     height: var(--dvh);
-    pointer-events: auto;
+    /* pointer-events: auto; */
 }
 
 .sidebar {
@@ -45,7 +45,7 @@
     overflow: hidden scroll;
     align-items: flex-start;
     justify-content: flex-end;
-    background-color: var(--bg-3);
+    background-color: var(--bg-2);
 }
 
 @-moz-document url-prefix() {
@@ -56,26 +56,9 @@
 
 .sidebarWrapper nav {
     width: 218px;
-    padding: 60px 6px 60px 20px;
     display: flex;
     flex-direction: column;
-}
-
-.title {
-    flex-shrink: 0;
-    font-size: 12px;
-    font-weight: 700;
-    text-align: left;
-    overflow: hidden;
-    line-height: 16px;
-    user-select: none;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    letter-spacing: 0.02rem;
-    padding: 0 10px 6px 10px;
-    text-transform: uppercase;
-    color: var(--fg-5);
-    background-color: transparent;
+    padding: 60px 6px 60px 20px;
 }
 
 .separator {
@@ -92,7 +75,7 @@
     font-weight: 500;
     overflow: hidden;
     user-select: none;
-    padding: 6px 10px;
+    padding: 4px 10px;
     margin-bottom: 2px;
     border-radius: 4px;
     position: relative;
@@ -111,8 +94,8 @@
 
 .tab:hover,
 .tabActive {
-    background-color: var(--bg-5);
     color: var(--fg-2);
+    background-color: var(--bg-4);
 }
 
 .tab:hover path,
@@ -122,8 +105,8 @@
 
 .tab:hover:active,
 .tabActive:active {
-    background-color: var(--bg-hover-2);
     color: var(--fg-1);
+    background-color: var(--bg-hover-2);
 }
 
 .tab:hover:active path,
@@ -140,49 +123,47 @@
 }
 
 .sidebarWrapper::-webkit-scrollbar-track {
-    border-radius: 1000px;
     background-clip: padding-box;
     background-color: transparent;
-    border: 2px var(--bg-3) solid;
+    border: 2px var(--bg-2) solid;
 }
 
 .sidebarWrapper::-webkit-scrollbar-thumb {
     border-radius: 1000px;
     background-clip: padding-box;
     background-color: transparent;
-    border: 2px var(--bg-3) solid;
+    border: 2px var(--bg-2) solid;
 }
 
 .sidebarWrapper:hover::-webkit-scrollbar-thumb {
-    background-color: var(--bg-1);
+    background-color: var(--bg-0);
 }
 
 .contentContainer {
-    position: relative;
     display: flex;
     flex: 1 1 800px;
+    overflow: hidden;
+    position: relative;
     align-items: flex-start;
 }
 
 .contentWrapper {
-    overflow: hidden scroll;
-    padding-right: 0px;
-    justify-content: flex-start;
     height: 100%;
-    flex: 1 0 auto;
     display: flex;
+    flex: 1 0 auto;
+    padding-right: 0px;
     align-items: flex-start;
-    background-color: var(--bg-4);
+    justify-content: flex-start;
+    background-color: var(--bg-3);
 }
 
 .contentWrapper > .content {
-    position: relative;
-    padding: 60px 40px 80px 40px;
     flex: 1 1 auto;
-    max-width: 740px;
-    /* min-width: 460px; */
     min-height: 100%;
+    max-width: 740px;
     overflow: hidden;
+    padding: 60px 40px 80px 40px;
+    /* min-width: 460px; */
 }
 
 .closeButton {
@@ -265,14 +246,24 @@
     display: flex;
 }
 
+.sectionTitle.roleTitle {
+    display: block;
+    margin-bottom: 12px;
+}
+
+.sectionTitle.roleTitle > p {
+    font-size: 14px;
+    font-weight: 500;
+}
+
 .sectionTitle > h2 {
-    margin-bottom: 20px;
-    font-weight: 600;
-    font-size: 20px;
-    line-height: 24px;
     flex: 1;
     cursor: default;
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 24px;
     color: var(--fg-1);
+    margin-bottom: 20px;
 }
 
 .content .label {
@@ -338,11 +329,11 @@
     font-weight: 600;
     line-height: 24px;
     user-select: none;
+    color: var(--fg-1);
     align-items: center;
     height: fit-content;
     white-space: nowrap;
     text-overflow: ellipsis;
-    color: var(--fg-1);
 }
 
 .username > :nth-child(2) {
@@ -375,14 +366,14 @@
 }
 
 .field > div > h3 {
-    margin-bottom: 4px;
-    color: var(--fg-3);
     font-size: 12px;
-    line-height: 16px;
     font-weight: 700;
     user-select: none;
-    text-transform: uppercase;
+    line-height: 16px;
+    color: var(--fg-3);
+    margin-bottom: 4px;
     letter-spacing: 0.02rem;
+    text-transform: uppercase;
 }
 
 .field > div > div {
@@ -430,21 +421,20 @@
 }
 
 .saveAlert {
-    position: absolute;
-    bottom: 20px;
-    margin-bottom: 20px;
-    margin-left: -20px;
-    width: calc(100% - 40px);
-    max-width: 740px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 10px 10px 16px;
-    border-radius: 5px;
-    background-color: var(--bg-0);
-    color: var(--fg-2);
-    box-shadow: var(--elevation-high);
     z-index: 1;
+    left: 20px;
+    bottom: 20px;
+    display: flex;
+    max-width: 740px;
+    color: var(--fg-2);
+    position: absolute;
+    border-radius: 5px;
+    align-items: center;
+    width: calc(100% - 40px);
+    padding: 10px 10px 10px 16px;
+    background-color: var(--bg-0);
+    justify-content: space-between;
+    box-shadow: var(--elevation-high);
 }
 
 .saveAlert > p {
@@ -509,8 +499,8 @@
 }
 
 .customSection {
-    margin-bottom: 24px;
-    padding-bottom: 24px;
+    margin-bottom: 40px;
+    padding-bottom: 40px;
 }
 
 .customSection:not(:last-child) {
@@ -1143,30 +1133,38 @@
     display: flex;
     padding: 16px;
     cursor: pointer;
-    border-radius: 4px;
-    padding-right: 24px;
-    align-items: center;
     color: var(--fg-3);
-    background-color: var(--bg-3);
+    border-radius: 4px;
+    align-items: center;
+    padding-right: 24px;
+    background-color: var(--bg-2);
 }
 
 .defaultRoleTab:hover,
 .defaultRoleTab:focus-visible {
     color: var(--fg-2);
-    background-color: var(--bg-5);
+    background-color: var(--bg-4);
 }
 
 .defaultRoleTab > :first-child {
     width: 32px;
     height: 32px;
     display: flex;
+    border-radius: 50%;
     align-items: center;
     justify-content: center;
+    background-color: var(--bg-3);
 }
 
 .defaultRoleTab > :nth-child(2) {
+    font-size: 16px;
     margin-left: 16px;
     user-select: none;
+}
+
+.defaultRoleTab > :nth-child(2) > p {
+    font-size: 12px;
+    font-weight: 500;
 }
 
 .defaultRoleTab > :nth-child(2) > :first-child {
@@ -1264,8 +1262,9 @@
 
 .listItemDraggable:hover,
 .listItemDraggable:focus-visible,
+.listItemDraggable:focus-within,
 .listItemDraggable.dragging {
-    background-color: var(--bg-5);
+    background-color: var(--bg-4);
 }
 
 .listItemDraggable.dragging > * {
@@ -1285,6 +1284,7 @@
 
 .listItemDraggable:hover:not(.over)::before,
 .listItemDraggable:focus-visible::before,
+.listItemDraggable:focus-within::before,
 .listItemDraggable.dragging::before {
     background-color: transparent;
 }
@@ -1297,7 +1297,9 @@
 
 .listItemDraggable:hover + .listItemDraggable::before,
 .listItemDraggable:focus-visible + .listItemDraggable::before,
-.listItemDraggable.dragging + .listItemDraggable::before {
+.listItemDraggable:focus-within + .listItemDraggable::before,
+.listItemDraggable.dragging + .listItemDraggable::before,
+.listItemDraggable:hover + span + .listItemDraggable::before {
     background-color: transparent;
 }
 
@@ -1314,7 +1316,8 @@
     justify-content: center;
 }
 
-.listItemDraggable:hover > .dragger {
+.listItemDraggable:hover > .dragger,
+.listItemDraggable:focus-within > .dragger {
     visibility: visible;
 }
 
@@ -1333,9 +1336,11 @@
 
 .listItemDraggable > :nth-child(3) {
     height: 100%;
+    cursor: pointer;
     flex: 0 0 112px;
     margin-left: 16px;
     justify-content: flex-end;
+    background-color: transparent;
 }
 
 .listItemDraggable > :nth-child(3) > :last-child {
@@ -1343,7 +1348,7 @@
 }
 
 .listItemDraggable > :nth-child(4) {
-    gap: 16px;
+    gap: 8px;
     flex: 1 0 88;
     margin-left: 16px;
     justify-content: flex-end;
@@ -1380,8 +1385,8 @@
 .roleEditAside > div {
     display: flex;
     align-items: center;
-    padding: 60px 8px 16px;
-    margin: 0 8px 8px 16px;
+    padding: 0 8px 16px;
+    margin: 60px 8px 8px 16px;
     justify-content: space-between;
 }
 
@@ -1399,7 +1404,14 @@
     text-transform: uppercase;
 }
 
-.roleEditAside > div > div > svg {
+.roleEditAside > div > div > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+}
+
+.roleEditAside > div > div svg {
     transform: rotate(-90deg);
 }
 
@@ -1408,17 +1420,17 @@
     color: var(--fg-1);
 }
 
-.roleEditAside > div > svg {
+.roleEditAside > div svg {
     color: var(--fg-3);
 }
 
-.roleEditAside > div > svg:hover,
-.roleEditAside > div > svg:focus-visible {
+.roleEditAside > div svg:hover,
+.roleEditAside > div svg:focus-visible {
     color: var(--fg-1);
 }
 
 .roleEditAside > div > div,
-.roleEditAside > div > svg {
+.roleEditAside > div svg {
     cursor: pointer;
     user-select: none;
 }
@@ -1434,6 +1446,7 @@
     height: 34px;
     display: flex;
     cursor: pointer;
+    user-select: none;
     padding: 6px 10px;
     margin-left: -6px;
     margin-bottom: 2px;
@@ -1486,7 +1499,9 @@
     position: sticky;
     margin-bottom: 16px;
     padding: 60px 8px 16px 8px;
-    background-color: var(--bg-4);
+    background-color: var(--bg-3);
+    /* box-shadow: 0 1px 0 hsl(240 calc(1 * 20%) 0.98% /0.2),
+        0 1.5px 0 hsl(240 calc(1 * 9.091%) 2.157% /0.05), 0 2px 0 hsl(240 calc(1 * 20%) 0.98% /0.05); */
 }
 
 .roleEditHeader > :first-child {
@@ -1536,8 +1551,14 @@
     border-bottom: 2px solid transparent;
 }
 
-.roleEditTabs > li:hover,
-.roleEditTabs > li:focus-visible {
+.roleEditTabs > li.disabled {
+    opacity: 0.5;
+    color: var(--fg-3);
+    cursor: not-allowed;
+}
+
+.roleEditTabs > li:hover:not(.disabled),
+.roleEditTabs > li:focus-visible:not(.disabled) {
     color: var(--fg-2);
     border-bottom-color: var(--accent-0);
 }
@@ -1610,6 +1631,159 @@ nav > .returnBack {
     transform: rotate(-90deg);
 }
 
+.noResults {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.noResults > img {
+    margin-bottom: 16px;
+}
+
+.noResults > p {
+    font-size: 14px;
+    line-height: 1.285;
+}
+
+.roleName {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-2);
+}
+
+.roleColorPreview {
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-2);
+}
+
+.roleColorPreview > section {
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid var(--border-1);
+}
+
+.messagePreview {
+    display: flex;
+    padding: 16px 0;
+}
+
+.messagePreview > div {
+    user-select: none;
+    position: relative;
+    padding: 0.125rem 0 0.125rem 72px;
+}
+
+.messagePreview > div > :first-child {
+    left: 16px;
+    position: absolute;
+    margin-top: 0.125rem;
+}
+
+.messagePreview > div > h2 {
+    display: block;
+    line-height: 1.375rem;
+    white-space: break-spaces;
+}
+
+.messagePreview > div > h2 > :first-child {
+    font-weight: 600;
+    color: var(--fg-1);
+}
+
+.messagePreview.first > div > h2 > :first-child {
+    color: var(--bg-3);
+}
+
+.messagePreview > div > h2 > :last-child {
+    margin-left: 4px;
+    color: var(--fg-4);
+    font-size: 0.75rem;
+}
+
+.messagePreview.first > div > h2 > :last-child {
+    color: var(--bg-6);
+}
+
+.messagePreview > div > p {
+    color: var(--fg-2);
+}
+
+.messagePreview.first > div > p {
+    color: var(--bg-3);
+}
+
+.roleColors {
+    user-select: none;
+    padding-bottom: 24px;
+}
+
+.roleColors > div {
+    display: flex;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fg-1);
+    margin-bottom: 8px;
+}
+
+.roleColors > div > span {
+    margin-left: 4px;
+    color: var(--danger-fg);
+}
+
+.roleColors > p {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fg-2);
+}
+
+.roleColors > section {
+    display: flex;
+    margin-top: 8px;
+}
+
+.roleColors > section > button {
+    width: 100%;
+    display: flex;
+    cursor: pointer;
+    min-height: 100%;
+    margin-right: 8px;
+    border-radius: 4px;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    background-color: #99aab5;
+    border: 1px solid var(--border-1);
+}
+
+.roleColors > section > button:nth-child(2) {
+    background-color: transparent;
+}
+
+.roleColors > section > button:nth-child(2) > svg {
+    top: 4px;
+    right: 4px;
+    position: absolute;
+}
+
+.roleColors > section > ul {
+    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+}
+
+.roleColors > section > ul > li {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    cursor: pointer;
+    color: var(--fg-0);
+    border-radius: 4px;
+    align-items: center;
+    justify-content: center;
+}
+
 @media (max-width: 562px) {
     .contentWrapper > .content {
         padding-left: 16px;
@@ -1620,4 +1794,13 @@ nav > .returnBack {
         padding-left: 16px;
         padding-right: 16px;
     }
+}
+
+.flex {
+    gap: 20px;
+    display: flex;
+}
+
+.flex > * {
+    flex: 1;
 }

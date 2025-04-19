@@ -225,7 +225,7 @@
 .usercard .mutuals > hr {
     height: 1px;
     margin: 0 12px;
-    background-color: var(--border-0);
+    background-color: var(--border-1);
 }
 
 .cardInput {
@@ -359,16 +359,16 @@ textarea.cardInput::-webkit-scrollbar-track {
 
 .memberList > div::-webkit-scrollbar-track {
     background-color: transparent;
-    border: 2px var(--bg-3) solid;
+    border: 2px solid transparent;
 }
 
 .memberList > div::-webkit-scrollbar-thumb {
     background-color: transparent;
-    border: 2px var(--bg-3) solid;
+    border: 2px solid transparent;
 }
 
 .memberList > div:hover::-webkit-scrollbar-thumb {
-    background-color: var(--bg-1);
+    background-color: var(--bg-0);
 }
 
 .memberList > div > h2 {

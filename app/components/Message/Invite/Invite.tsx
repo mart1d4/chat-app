@@ -74,7 +74,7 @@ export function MessageInvite({
 
                     {!isSender && (
                         <button
-                            className="button blue"
+                            className="button regular blue"
                             // onClick={() => setMention(message.author.id)}
                         >
                             Mention
@@ -159,7 +159,7 @@ export function MessageInvite({
                 </div>
 
                 <button
-                    className="button green"
+                    className="button regular green"
                     onClick={handleAcceptInvite}
                 >
                     {acceptInvite.isLoading ? (

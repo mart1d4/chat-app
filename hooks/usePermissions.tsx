@@ -29,6 +29,8 @@ export const usePermissions = ({
             specificChannelId?: number;
             userId?: number;
         }) => {
+            if (!guildId && !channelId) return false;
+
             if (!userId) userId = user.id;
             if (specificChannelId) channelId = specificChannelId;
 
@@ -55,7 +57,7 @@ export const usePermissions = ({
                 return doesUserHaveGuildPermission(guild.roles, member, permission);
             }
         },
-        [guilds, user]
+        [guilds, user, guildId, channelId]
     );
 
     return { hasPermission };

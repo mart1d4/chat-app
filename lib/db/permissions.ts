@@ -21,6 +21,11 @@ export async function hasChannelPermission({
     returnChannelType?: boolean;
 }) {
     try {
+        // Here we need to get a lot of things because we dont know
+        // whether the channel is in a guild or not
+        // we need to get the channel's type, its permission overwrites,
+        // the guild it is in, the guild's owner, the user's roles in the guild
+        // and the user's permissions in the guild (if the channel is in a guild)
         const channel = await db
             .selectFrom("channels")
             .leftJoin("channelRecipients", "channelRecipients.channelId", "channels.id")
@@ -34,7 +39,6 @@ export async function hasChannelPermission({
                 "guildMembers.profile as memberProfile",
             ])
             .where("channels.id", "=", channelId)
-            .where("channels.isDeleted", "=", false)
             .where(({ eb, or }) =>
                 or([
                     eb("channelRecipients.userId", "=", userId),
@@ -45,7 +49,11 @@ export async function hasChannelPermission({
 
         if (!channel) return false;
 
+        // At this point we know the user is at least in the channel or in the guild the channel is in
+
         if (channel.type === 0) {
+            // If DM, we need to make sure neither of the users have blocked each other
+
             const otherUser = await db
                 .selectFrom("channelRecipients")
                 .select("userId as id")
@@ -60,7 +68,11 @@ export async function hasChannelPermission({
             }
         }
 
+        // If channel is DM, cannot modify the channel
         if (channel.type === 0 && permission === "MANAGE_CHANNELS") return false;
+
+        // If channel is a voice channel, cannot send messages
+        if (channel.type === 3 && permission === "SEND_MESSAGES") return false;
 
         if ([0, 1].includes(channel.type)) {
             if (dontAllowDMs) return false;
@@ -76,9 +88,24 @@ export async function hasChannelPermission({
 
         if (!channel.memberProfile) return false;
 
-        const { permissions, roles } = channel.memberProfile;
+        const { roles } = channel.memberProfile;
         const overwrites = channel.permissionOverwrites;
 
+        const rolesWithPerm = await db
+            .selectFrom("roles")
+            .select("permissions")
+            .where("id", "in", roles)
+            .execute();
+
+        const maxRolePerms = combinePermissions(rolesWithPerm.map((r) => r.permissions));
+
+        if (hasPermission(maxRolePerms, PERMISSIONS.ADMINISTRATOR)) {
+            if (returnGuildId) return channel.guildId;
+            if (returnGuildOwner) return channel.guildOwnerId;
+            return true;
+        }
+
+        // Check if user has permission in overwrites
         for (const overwrite of overwrites) {
             if (overwrite.type === 0 && roles.includes(overwrite.id)) {
                 if (hasPermission(overwrite.deny, PERMISSIONS[permission])) {
@@ -99,10 +126,7 @@ export async function hasChannelPermission({
             }
         }
 
-        if (
-            hasPermission(permissions, PERMISSIONS[permission]) ||
-            hasPermission(permissions, PERMISSIONS.ADMINISTRATOR)
-        ) {
+        if (hasPermission(maxRolePerms, PERMISSIONS[permission])) {
             if (returnGuildId) return channel.guildId;
             if (returnGuildOwner) return channel.guildOwnerId;
             return true;
@@ -138,14 +162,7 @@ export async function hasGuildPermission({
         if (guild.ownerId === userId) return true;
         if (!guild.memberProfile) return false;
 
-        const { permissions, roles: userRoles } = guild.memberProfile;
-
-        if (
-            hasPermission(permissions, PERMISSIONS[permission]) ||
-            hasPermission(permissions, PERMISSIONS.ADMINISTRATOR)
-        ) {
-            return true;
-        }
+        const { roles: userRoles } = guild.memberProfile;
 
         const roles = await db
             .selectFrom("roles")
@@ -154,7 +171,13 @@ export async function hasGuildPermission({
             .execute();
 
         const maxPermissions = combinePermissions(roles.map((r) => r.permissions));
-        if (hasPermission(maxPermissions, PERMISSIONS[permission])) return true;
+
+        if (
+            hasPermission(maxPermissions, PERMISSIONS[permission]) ||
+            hasPermission(maxPermissions, PERMISSIONS.ADMINISTRATOR)
+        ) {
+            return true;
+        }
 
         return false;
     } catch (error) {

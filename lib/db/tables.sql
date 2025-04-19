@@ -114,7 +114,9 @@ CREATE TABLE IF NOT EXISTS `guilds` (
 
 	`system_channel_id` BIGINT,
 	`afk_channel_id` BIGINT,
-	`afk_timeout` INT,
+	`afk_timeout` INT NOT NULL DEFAULT '5',
+
+	`notify_everyone` TINYINT(1) NOT NULL DEFAULT '1',
     
 	`vanity_url` VARCHAR(255),
 	`vanity_url_uses` INT,
@@ -338,6 +340,19 @@ CREATE TABLE IF NOT EXISTS `guild_members` (
     KEY `members_user_id_idx` (`user_id`),
 
 	INDEX `idx_members_guild` (`guild_id`)
+) ENGINE InnoDB,
+  CHARSET utf8mb4,
+  COLLATE utf8mb4_unicode_ci;
+
+
+CREATE TABLE IF NOT EXISTS `guild_bans` (
+	`guild_id` BIGINT NOT NULL,
+	`user_id` BIGINT NOT NULL,
+	`reason` VARCHAR(1024) NULL,
+
+	UNIQUE KEY `bans_guild_id_idx` (`guild_id`, `user_id`),
+	KEY `idx_bans_user` (`user_id`),
+	KEY `idx_bans_guild` (`guild_id`)
 ) ENGINE InnoDB,
   CHARSET utf8mb4,
   COLLATE utf8mb4_unicode_ci;

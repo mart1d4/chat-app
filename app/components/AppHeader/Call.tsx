@@ -134,7 +134,7 @@ export function Call({
                     <h1>{currentChannel.name}</h1>
                     <p>No one is currently in voice</p>
                     <button
-                        className="button green"
+                        className="button regular green"
                         onClick={() => {
                             setChannelId(currentChannel.id);
                         }}
@@ -205,7 +205,7 @@ export function Call({
                             <TooltipTrigger>
                                 <button
                                     style={{ height: 48 }}
-                                    className="button green"
+                                    className="button regular green"
                                     onClick={() => {
                                         setChannelId(currentChannel.id);
                                     }}
@@ -224,7 +224,7 @@ export function Call({
                             <TooltipTrigger>
                                 <button
                                     style={{ height: 48 }}
-                                    className="button green"
+                                    className="button regular green"
                                     onClick={() => {
                                         setChannelId(currentChannel.id);
                                     }}
@@ -244,7 +244,7 @@ export function Call({
                                 <TooltipTrigger>
                                     <button
                                         style={{ height: 48 }}
-                                        className="button red"
+                                        className="button regular red"
                                         onClick={() => {
                                             // to implement
                                         }}

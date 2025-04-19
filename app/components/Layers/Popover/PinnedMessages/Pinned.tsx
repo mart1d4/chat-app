@@ -1,18 +1,34 @@
 "use client";
 
-import { type DMChannelWithRecipients, type GuildChannel } from "@/type";
+import { type DMChannelWithRecipients, type Guild, type GuildChannel } from "@/type";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useFetchPinnedMessages } from "@/hooks/useFetchData";
+import { usePermissions } from "@/hooks/usePermissions";
 import { FixedMessage, Icon } from "@components";
 import { usePopoverContext } from "../Popover";
 import styles from "./Pinned.module.css";
 
-export function Pinned({ channel }: { channel: DMChannelWithRecipients | GuildChannel }) {
+export function Pinned({
+    channel,
+    guild,
+}: {
+    channel: DMChannelWithRecipients | GuildChannel;
+    guild?: Guild;
+}) {
+    const { hasPermission } = usePermissions({ guildId: guild?.id });
     const { data: pinned } = useFetchPinnedMessages(channel.id);
     const { setOpen } = usePopoverContext();
     const user = useAuthenticatedUser();
 
     const friend = channel.type === 0 && channel.recipients.find((r) => r.id !== user.id);
+
+    const canPin = [0, 1].includes(channel.type)
+        ? true
+        : hasPermission({
+              permission: "MANAGE_MESSAGES",
+              specificChannelId: channel.id,
+              userId: user.id,
+          });
 
     return (
         <div
@@ -48,6 +64,8 @@ export function Pinned({ channel }: { channel: DMChannelWithRecipients | GuildCh
                         >
                             <FixedMessage
                                 pinned
+                                canPin={canPin}
+                                channel={channel}
                                 message={message}
                             />
                         </div>

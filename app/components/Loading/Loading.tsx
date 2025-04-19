@@ -2,11 +2,14 @@
 
 import { useChannelSettings, useGuildSettings } from "@/store/settings";
 import { useActiveVoice, useData, useShowChannels } from "@/store";
+import { sendBrowserNotification } from "@/lib/notifications";
 import { useNotifications } from "@/store/notifications";
 import { usePathname, useRouter } from "next/navigation";
-import { getApiUrl } from "@/lib/uploadthing";
+import { getApiUrl, getCdnUrl } from "@/lib/uploadthing";
+import { memo, useEffect, useMemo, useRef } from "react";
+import { getFullChannel } from "@/lib/strings";
+import { getRandomImage } from "@/lib/utils";
 import { useSocket } from "@/store/socket";
-import { useEffect, useRef } from "react";
 import { isStillMuted } from "@/lib/mute";
 import { AppSpinner } from "./Spinner";
 import Pusher from "pusher-js";
@@ -19,6 +22,7 @@ import type {
     UserGuild,
     KnownUser,
     AppUser,
+    GuildRole,
 } from "@/type";
 
 const PUSHER_KEY = process.env.NEXT_PUBLIC_PUSHER_KEY;
@@ -28,9 +32,7 @@ if (!PUSHER_KEY) {
     throw new Error("PUSHER_KEY is not defined");
 }
 
-let hasLoaded = false;
-
-export function Loading({
+export const Loading = memo(function Loading({
     children,
     data,
 }: {
@@ -63,14 +65,21 @@ export function Loading({
         removeGuildChannel,
         addOnlineRecipient,
         removeOnlineMember,
+        updateGuildChannel,
+        updateGuildMember,
         setFriendsStatus,
         setOnlineMembers,
         addGuildChannel,
         addOnlineMember,
+        updateGuildRole,
+        removeGuildRole,
         moveChannelUp,
         updateChannel,
         removeChannel,
+        addGuildRole,
+        removeMember,
         setReceived,
+        updateGuild,
         setChannels,
         removeGuild,
         setFriends,
@@ -99,6 +108,7 @@ export function Loading({
 
     const guildsSettingsRef = useRef(guildsSettings);
     const pathnameRef = useRef(pathname);
+    const hasLoaded = useRef(false);
     const mutedRef = useRef(muted);
 
     if (mutedRef.current !== muted) {
@@ -113,7 +123,7 @@ export function Loading({
         pathnameRef.current = pathname;
     }
 
-    if (!hasLoaded) {
+    if (!hasLoaded.current) {
         setUser(data.user);
         setFriends(data.friends);
         setBlocked(data.blocked);
@@ -122,7 +132,7 @@ export function Loading({
         setChannels(data.channels);
         setGuilds(data.guilds);
         setRooms(data.rooms);
-        hasLoaded = true;
+        hasLoaded.current = true;
     }
 
     useEffect(() => {
@@ -200,7 +210,6 @@ export function Loading({
         );
 
         presence.bind("pusher:member_added", ({ info: user }: { info: KnownUser }) => {
-            console.log("added", user);
             addOnlineRecipient(channel.id, { ...user, id: Number(user.id) });
         });
 
@@ -224,6 +233,28 @@ export function Loading({
                 const audio = new Audio("/assets/sounds/ping.mp3");
                 audio.volume = 0.5;
                 audio.play();
+
+                const fullChannel = getFullChannel(channel, user);
+                if (!fullChannel) return;
+
+                let icon = fullChannel.icon;
+
+                if (!icon) {
+                    if (channel.type === 1) {
+                        icon = getRandomImage(channel.id, "icon");
+                    } else {
+                        const friend = channel.recipients.find((r) => r.id !== userId);
+                        if (friend) {
+                            icon = getRandomImage(friend.id, "avatar");
+                        }
+                    }
+                }
+
+                sendBrowserNotification(
+                    fullChannel.name,
+                    `You have a new message in ${fullChannel.name}`,
+                    fullChannel.icon ? `${getCdnUrl}${icon}` : icon
+                );
             }
         });
 
@@ -307,6 +338,10 @@ export function Loading({
             removeOnlineMember(guild.id, Number(id));
         });
 
+        chan.bind("guild-update", ({ updates }: { updates: Partial<UserGuild> }) => {
+            updateGuild(guild.id, updates);
+        });
+
         chan.bind(
             "message",
             ({
@@ -330,6 +365,11 @@ export function Loading({
                     const audio = new Audio("/assets/sounds/ping.mp3");
                     audio.volume = 0.5;
                     audio.play();
+
+                    sendBrowserNotification(
+                        `New message in ${guild.name}`,
+                        `You have a new message in ${guild.name}`
+                    );
                 }
             }
         );
@@ -337,6 +377,13 @@ export function Loading({
         chan.bind("channel-add", ({ channel }: { channel: GuildChannel }) => {
             addGuildChannel(guild.id, channel);
         });
+
+        chan.bind(
+            "channel-update",
+            ({ channelId, updates }: { channelId: number; updates: Record<string, any> }) => {
+                updateGuildChannel(guild.id, channelId, updates);
+            }
+        );
 
         chan.bind(
             "channel-remove",
@@ -358,8 +405,43 @@ export function Loading({
             }
         );
 
+        chan.bind("role-add", ({ role }: { role: GuildRole }) => {
+            addGuildRole(guild.id, role);
+        });
+
+        chan.bind(
+            "role-update",
+            ({ roleId, updates }: { roleId: number; updates: Partial<GuildRole> }) => {
+                updateGuildRole(guild.id, roleId, updates);
+            }
+        );
+
+        chan.bind("role-remove", ({ roleId }: { roleId: number }) => {
+            removeGuildRole(guild.id, roleId);
+        });
+
+        chan.bind(
+            "member-update",
+            ({ memberId, updates }: { memberId: number; updates: Partial<GuildMember> }) => {
+                updateGuildMember(guild.id, memberId, updates);
+            }
+        );
+
+        chan.bind("member-remove", ({ memberId }: { memberId: number }) => {
+            if (memberId === userId) {
+                removeGuild(guild.id);
+                socket.unsubscribe(`private-guild-${guild.id}`);
+
+                if (pathnameRef.current.includes(guild.id.toString())) {
+                    setShowChannels(true);
+                    router.push("/channels/me");
+                }
+            } else {
+                removeMember(guild.id, memberId);
+            }
+        });
+
         chan.bind("livekit", ({ event, data }: { event: string; data: any }) => {
-            console.log(event, data);
             if (event === "roomStarted") {
                 addRoom({
                     ...data,
@@ -398,8 +480,6 @@ export function Loading({
                 type: "friends" | "received" | "sent" | "blocked";
                 user: KnownUser | UnknownUser | number;
             }) => {
-                console.log(type, user);
-
                 if (typeof user === "number") {
                     removeUser(user, type);
                 } else {
@@ -410,13 +490,26 @@ export function Loading({
                     const audio = new Audio("/assets/sounds/ping.mp3");
                     audio.volume = 0.5;
                     audio.play();
+
+                    sendBrowserNotification(
+                        `New friend request from ${user.username}`,
+                        `You have a new friend request from ${user.username}`
+                    );
                 }
             }
         );
 
         userChannel.bind(
             "join-group",
-            ({ channel, moveTo }: { channel: DMChannelWithRecipients; moveTo?: number }) => {
+            ({
+                channel,
+                moveTo,
+                addPing,
+            }: {
+                channel: DMChannelWithRecipients;
+                moveTo?: number;
+                addPing?: boolean;
+            }) => {
                 addChannel(channel);
                 subToChannel(socket, channel);
                 otherChannelsSubs.push(channel.id);
@@ -424,6 +517,17 @@ export function Loading({
                 if (moveTo === user.id) {
                     setShowChannels(false);
                     router.push(`/channels/me/${channel.id}`);
+                }
+
+                if (addPing) {
+                    const audio = new Audio("/assets/sounds/ping.mp3");
+                    audio.volume = 0.5;
+                    audio.play();
+
+                    sendBrowserNotification(
+                        `New message in ${channel.name}`,
+                        `You have a new message in ${channel.name}`
+                    );
                 }
             }
         );
@@ -473,6 +577,11 @@ export function Loading({
         };
     }, [socket]);
 
+    const content = useMemo(
+        () => <div onContextMenu={(e) => e.preventDefault()}>{children}</div>,
+        [children]
+    );
+
     if (!user) return <AppSpinner />;
-    return <div onContextMenu={(e) => e.preventDefault()}>{children}</div>;
-}
+    return content;
+});

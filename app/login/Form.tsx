@@ -110,7 +110,7 @@ export default function Form() {
 
                     <button
                         type="submit"
-                        className={`button ${styles.button} ${styles.submit}`}
+                        className={`button regular ${styles.button} ${styles.submit}`}
                     >
                         {isLoading ? <LoadingDots /> : "Log In"}
                     </button>

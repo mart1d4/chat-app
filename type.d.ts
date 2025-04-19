@@ -105,7 +105,19 @@ export type GuildChannelRecipient = Pick<
 export type Guild = Selectable<Guilds>;
 export type OptionalGuild = Partial<Guild>;
 
-export type UserGuild = Pick<Guild, "id" | "name" | "icon" | "systemChannelId" | "ownerId"> & {
+export type UserGuild = Pick<
+    Guild,
+    | "id"
+    | "name"
+    | "icon"
+    | "banner"
+    | "systemChannelId"
+    | "sendWelcomeMessages"
+    | "afkChannelId"
+    | "afkTimeout"
+    | "notifyEveryone"
+    | "ownerId"
+> & {
     roles: GuildRole[];
     members: (GuildMember & {
         dbStatus: string;

@@ -1,16 +1,16 @@
 .container {
     gap: 16px;
+    width: 254px;
     padding: 16px;
     display: flex;
-    width: 254px;
     border-radius: 4px;
     flex-direction: column;
+    background-color: var(--bg-2);
     box-shadow: var(--shadow-high);
     border: 1px solid var(--border-0);
-    background-color: var(--bg-4);
 }
 
-.container > div:not(:first-child) {
+.container > ul {
     gap: 12px;
     display: flex;
     align-items: center;

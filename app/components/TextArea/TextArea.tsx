@@ -37,6 +37,7 @@ import type {
     ChannelRecipient,
     ResponseMessage,
     Attachment,
+    Guild,
 } from "@/type";
 
 import { AutoLinkPlugin, createLinkMatcherWithRegExp } from "@lexical/react/LexicalAutoLinkPlugin";
@@ -46,37 +47,40 @@ import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { InlineStylePlugin } from "./plugins/InlineStylePlugin";
 import EmojiPickerPlugin from "./plugins/EmojiPickerPlugin";
 import NewMentionsPlugin from "./plugins/MentionsPlugin";
+import { usePermissions } from "@/hooks/usePermissions";
 import { InlineStyleNode } from "./ui/InlineStyleNode";
 import { EmojisPlugin } from "./plugins/EmojisPlugin";
-import {
-    $getRoot,
-    $getSelection,
-    $isRangeSelection,
-    COMMAND_PRIORITY_CRITICAL,
-    INSERT_LINE_BREAK_COMMAND,
-    INSERT_PARAGRAPH_COMMAND,
-    KEY_ENTER_COMMAND,
-} from "lexical";
 import { MentionNode } from "./ui/MentionNode";
 import { SymbolNode } from "./ui/SymbolNode";
 import { AutoLinkNode } from "@lexical/link";
 import { EmojiNode } from "./ui/EmojiNode";
+import {
+    COMMAND_PRIORITY_CRITICAL,
+    INSERT_LINE_BREAK_COMMAND,
+    KEY_ENTER_COMMAND,
+    $isRangeSelection,
+    $getSelection,
+    $getRoot,
+} from "lexical";
 
 const URL_REGEX =
     /((https?:\/\/(www\.)?)|(www\.))[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)(?<![-.+():%])/;
 
 export function TextArea({
     edit,
+    guild,
     channel,
     functions,
     setMessages,
     messageObject,
 }: {
     edit?: string;
+    guild?: Guild;
     functions?: MessageFunctions;
     messageObject?: ResponseMessage;
     channel: DMChannelWithRecipients;
@@ -93,6 +97,7 @@ export function TextArea({
         <LexicalComposer initialConfig={initialConfig}>
             <TextAreaContent
                 edit={edit}
+                guild={guild}
                 channel={channel}
                 functions={functions}
                 setMessages={setMessages}
@@ -104,12 +109,14 @@ export function TextArea({
 
 export function TextAreaContent({
     edit,
+    guild,
     channel,
     functions,
     setMessages,
     messageObject,
 }: {
     edit?: string;
+    guild?: Guild;
     functions?: MessageFunctions;
     messageObject?: ResponseMessage;
     channel: DMChannelWithRecipients;
@@ -121,8 +128,9 @@ export function TextAreaContent({
         .getState()
         .edits.find((d) => d.messageId === messageObject?.id)?.content;
 
-    const isEditing = typeof edit === "string";
+    const isEditing = typeof edit === "string" && editContent !== null;
 
+    const { hasPermission } = usePermissions({ guildId: guild?.id, channelId: channel.id });
     const { data: emojiPickerData, setData: setEmojiPickerData } = useEmojiPicker();
     const { triggerDialog, removeDialog } = useTriggerDialog();
     const { setDraft, setEdit, setReply } = useMessages();
@@ -136,8 +144,8 @@ export function TextAreaContent({
     const [editor] = useLexicalComposerContext();
     const [text, setText] = useState("");
 
-    const friend = channel.recipients.find((r) => r.id !== user?.id);
-    const placeholder = `Message ${channel.type === 0 ? friend?.username : channel.name}`;
+    const friend = channel.recipients.find((r) => r.id !== user.id);
+    const isDM = [0, 1].includes(channel.type);
 
     const [voiceMessage, setVoiceMessage] = useState<Blob | null>(null);
     const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -146,6 +154,27 @@ export function TextAreaContent({
 
     const canSend = text.length > 0 || attachments.length > 0;
     const isFirstRender = useRef(true);
+
+    const canSendMessage =
+        hasPermission({
+            permission: "SEND_MESSAGES",
+            specificChannelId: channel.id,
+            userId: user.id,
+        }) ||
+        isDM ||
+        isEditing;
+
+    const canSendFiles =
+        hasPermission({
+            permission: "ATTACH_FILES",
+            specificChannelId: channel.id,
+            userId: user.id,
+        }) || isDM;
+
+    const placeholder =
+        !canSendMessage && !isDM
+            ? "You do not have permission to send messages in this channel."
+            : `Message ${channel.type === 0 ? friend?.username : channel.name}`;
 
     useEffect(() => {
         const removeListener = editor.registerCommand<KeyboardEvent | null>(
@@ -226,7 +255,7 @@ export function TextAreaContent({
                 setDraft(channel.id, stringifiedEditorState);
             }
         }, 500),
-        [channel.id, isEditing]
+        [messageObject, channel.id, isEditing]
     );
 
     function onChange(editorState: any) {
@@ -239,7 +268,7 @@ export function TextAreaContent({
     }
 
     async function handleFileSubmit(files: File[], e: DragEvent | ChangeEvent<HTMLInputElement>) {
-        if (files.length === 0) return;
+        if (files.length === 0 || !canSendFiles) return;
 
         if (attachments.length + files.length > 10) {
             triggerDialog({ type: "FILE_NUMBER" });
@@ -252,7 +281,7 @@ export function TextAreaContent({
         }
 
         let checkedFiles: Attachment[] = [];
-        const maxFileSize = 1024 * 1024 * 8; // 8MB
+        const maxFileSize = 1024 * 1024 * 50; // 50MB
 
         for (const file of files) {
             if (file.size > maxFileSize) {
@@ -393,7 +422,7 @@ export function TextAreaContent({
     useEffect(() => {
         function handleKeyDown(e: KeyboardEvent) {
             if (e.key === "Escape") {
-                if (edit) setEdit(messageObject?.id, null);
+                if (isEditing) setEdit(messageObject!.id, null);
                 if (reply) setReply(channel.id, null);
             }
         }
@@ -403,7 +432,7 @@ export function TextAreaContent({
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [edit, reply]);
+    }, [messageObject, isEditing, reply]);
 
     function sendMessage() {
         if (!canSend) return;
@@ -536,6 +565,10 @@ export function TextAreaContent({
         }
     }, [voiceMessage]);
 
+    useEffect(() => {
+        editor.setEditable(canSendMessage);
+    }, [canSendMessage]);
+
     const textContainer = (
         <div
             className={styles.textContainer}
@@ -546,6 +579,7 @@ export function TextAreaContent({
                 }
             }}
         >
+            <HistoryPlugin />
             <AutoFocusPlugin />
             <OnChangePlugin onChange={onChange} />
             <AutoLinkPlugin matchers={[createLinkMatcherWithRegExp(URL_REGEX)]} />
@@ -554,7 +588,14 @@ export function TextAreaContent({
                 contentEditable={
                     <ContentEditable
                         aria-placeholder={placeholder}
+                        focus-id={`text-area-${isEditing ? "edit" : ""}`}
                         placeholder={<div className={styles.placeholder}>{placeholder}</div>}
+                        onPaste={(e) => {
+                            e.preventDefault();
+
+                            const files = Array.from(e.clipboardData.files);
+                            handleFileSubmit(files, e);
+                        }}
                     />
                 }
                 ErrorBoundary={LexicalErrorBoundary}
@@ -579,7 +620,7 @@ export function TextAreaContent({
                     <InlineStylePlugin />
 
                     <div
-                        id="text-area"
+                        id="text-area-edit"
                         className={styles.textArea}
                         style={{ marginBottom: "0" }}
                     >
@@ -605,8 +646,7 @@ export function TextAreaContent({
                                                     editor.update(() => {
                                                         const selection = $getSelection();
                                                         if (!selection) return;
-
-                                                        selection.insertText(`:${emoji}: `);
+                                                        selection.insertText(`:${emoji}:`);
                                                     });
                                                 },
                                             });
@@ -636,11 +676,27 @@ export function TextAreaContent({
                 </div>
             </>
         );
-    } else if (!blocked.find((b) => b.id === friend?.id) || channel.type !== 0) {
+    } else if (blocked.find((b) => b.id === friend?.id) && channel.type === 0) {
+        return (
+            <form className={styles.form}>
+                <div className={styles.wrapperBlocked}>
+                    <div>You cannot send messages to a user you have blocked.</div>
+
+                    <button
+                        type="button"
+                        className="button regular grey"
+                        onClick={() => unblockUser.send({ userId: friend.id })}
+                    >
+                        {unblockUser.isLoading ? <LoadingDots /> : "Unblock"}
+                    </button>
+                </div>
+            </form>
+        );
+    } else {
         return (
             <form
-                className={styles.form}
                 id={`text-area-${channel.id}`}
+                className={`${styles.form} ${!canSendMessage ? styles.disabled : ""}`}
             >
                 <NewMentionsPlugin members={channel.recipients} />
 
@@ -670,7 +726,7 @@ export function TextAreaContent({
                 )}
 
                 <div
-                    id="text-area"
+                    id="text-area-"
                     className={styles.textArea}
                     style={{ borderRadius: reply?.messageId ? "0 0 8px 8px" : "8px" }}
                 >
@@ -686,6 +742,7 @@ export function TextAreaContent({
                                         />
                                     ))}
                                 </ul>
+
                                 <div className={styles.formDivider} />
                             </>
                         )}
@@ -696,84 +753,88 @@ export function TextAreaContent({
                                 borderRadius: attachments.length > 0 ? "0 0 8px 8px" : "8px",
                             }}
                         >
-                            <div className={styles.attachWrapper}>
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="*"
-                                    multiple
-                                    onChange={async (e) => {
-                                        const files = Array.from(e.target.files as FileList);
-                                        await handleFileSubmit(files, e);
-                                    }}
-                                    style={{ display: "none" }}
-                                />
+                            {canSendMessage && canSendFiles && (
+                                <div className={styles.attachWrapper}>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="*"
+                                        multiple
+                                        onChange={async (e) => {
+                                            const files = Array.from(e.target.files as FileList);
+                                            await handleFileSubmit(files, e);
+                                        }}
+                                        style={{ display: "none" }}
+                                    />
 
-                                <Menu placement="top-start">
-                                    <MenuTrigger>
-                                        <button
-                                            type="button"
-                                            onDoubleClick={(e) => {
-                                                e.preventDefault();
-                                                fileInputRef.current?.click();
-                                            }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter") {
+                                    <Menu placement="top-start">
+                                        <MenuTrigger>
+                                            <button
+                                                type="button"
+                                                onDoubleClick={(e) => {
                                                     e.preventDefault();
                                                     fileInputRef.current?.click();
-                                                }
-                                            }}
-                                        >
-                                            <div>
-                                                <Icon name="add-circle" />
-                                            </div>
-                                        </button>
-                                    </MenuTrigger>
+                                                }}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        e.preventDefault();
+                                                        fileInputRef.current?.click();
+                                                    }
+                                                }}
+                                            >
+                                                <div>
+                                                    <Icon name="add-circle" />
+                                                </div>
+                                            </button>
+                                        </MenuTrigger>
 
-                                    <MenuContent>
-                                        <MenuItem
-                                            leftIcon="upload"
-                                            onClick={() => fileInputRef.current?.click()}
-                                        >
-                                            Upload File
-                                        </MenuItem>
+                                        <MenuContent>
+                                            <MenuItem
+                                                leftIcon="upload"
+                                                onClick={() => fileInputRef.current?.click()}
+                                            >
+                                                Upload File
+                                            </MenuItem>
 
-                                        <MenuItem
-                                            leftIcon="mic"
-                                            onClick={() => {
-                                                triggerDialog({
-                                                    type: "RECORD_VOICE_MESSAGE",
-                                                    data: { setVoiceMessage },
-                                                });
-                                            }}
-                                        >
-                                            Voice Message
-                                        </MenuItem>
-                                    </MenuContent>
-                                </Menu>
-                            </div>
+                                            <MenuItem
+                                                leftIcon="mic"
+                                                onClick={() => {
+                                                    triggerDialog({
+                                                        type: "RECORD_VOICE_MESSAGE",
+                                                        data: { setVoiceMessage },
+                                                    });
+                                                }}
+                                            >
+                                                Voice Message
+                                            </MenuItem>
+                                        </MenuContent>
+                                    </Menu>
+                                </div>
+                            )}
 
                             {textContainer}
 
                             <div className={styles.toolsContainer}>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
+                                {canSendMessage && (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.preventDefault();
 
-                                        setEmojiPickerData({
-                                            open: true,
-                                            container,
-                                            placement: "top-end",
-                                            tab: "gif",
-                                            onClick: (gif) => {},
-                                        });
-                                    }}
-                                >
-                                    <Icon name="gif" />
-                                </button>
+                                            setEmojiPickerData({
+                                                open: true,
+                                                container,
+                                                placement: "top-end",
+                                                tab: "gif",
+                                                onClick: (gif) => {},
+                                            });
+                                        }}
+                                    >
+                                        <Icon name="gif" />
+                                    </button>
+                                )}
 
-                                {container && (
+                                {container && canSendMessage && (
                                     <EmojiButton
                                         open={
                                             emojiPickerData.open &&
@@ -802,7 +863,7 @@ export function TextAreaContent({
                                         type="button"
                                         className={`${styles.send} ${!canSend ? styles.empty : ""}`}
                                         onClick={() => !edit && sendMessage()}
-                                        disabled={!canSend}
+                                        disabled={!canSend || !canSendMessage}
                                     >
                                         <div>
                                             <svg
@@ -839,47 +900,33 @@ export function TextAreaContent({
                         )}
                     </div>
 
-                    <div className={styles.counterContainer}>
-                        <Tooltip>
-                            <TooltipTrigger>
-                                <span>
-                                    <span
-                                        style={{
-                                            color:
-                                                text.length > 16000
-                                                    ? "var(--danger-0)"
-                                                    : "var(--fg-3)",
-                                        }}
-                                    >
-                                        {text.length}
+                    {canSendMessage && (
+                        <div className={styles.counterContainer}>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <span>
+                                        <span
+                                            style={{
+                                                color:
+                                                    text.length > 16000
+                                                        ? "var(--danger-0)"
+                                                        : "var(--fg-3)",
+                                            }}
+                                        >
+                                            {text.length}
+                                        </span>
+                                        /16000
                                     </span>
-                                    /16000
-                                </span>
-                            </TooltipTrigger>
+                                </TooltipTrigger>
 
-                            <TooltipContent>
-                                {text.length > 16000
-                                    ? "Message is too long"
-                                    : `${16000 - text.length} characters remaining`}
-                            </TooltipContent>
-                        </Tooltip>
-                    </div>
-                </div>
-            </form>
-        );
-    } else {
-        return (
-            <form className={styles.form}>
-                <div className={styles.wrapperBlocked}>
-                    <div>You cannot send messages to a user you have blocked.</div>
-
-                    <button
-                        type="button"
-                        className="button grey"
-                        onClick={() => unblockUser.send({ userId: friend.id })}
-                    >
-                        {unblockUser.isLoading ? <LoadingDots /> : "Unblock"}
-                    </button>
+                                <TooltipContent>
+                                    {text.length > 16000
+                                        ? "Message is too long"
+                                        : `${16000 - text.length} characters remaining`}
+                                </TooltipContent>
+                            </Tooltip>
+                        </div>
+                    )}
                 </div>
             </form>
         );
@@ -964,7 +1011,7 @@ export function RecordVoiceMessage({ setVoiceMessage }: { setVoiceMessage: (blob
             <div className={styles.voiceRecording}>
                 <button
                     type="button"
-                    className="button blue submit"
+                    className="button regular blue submit"
                     onClick={() => (recording ? stopRecording() : startRecording())}
                 >
                     {recording ? "Stop Recording" : "Start Recording"}

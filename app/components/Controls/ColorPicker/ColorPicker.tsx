@@ -21,33 +21,54 @@ export function ColorPicker({
     onColorChange,
     initColor,
 }: {
-    onColorChange?: (color: string) => void;
-    initColor?: string;
+    onColorChange?: (color: string | null) => void;
+    initColor?: string | null;
 }) {
-    const [selectedColor, setSelectedColor] = useState(initColor ?? suggestedColors[0]);
-    const [hue, setHue] = useState(convert.hex.hsl(initColor ?? selectedColor)[0]);
-    const [inputValue, setInputValue] = useState(initColor ?? suggestedColors[0]);
+    // Color is the color that's sent to the onColorChange function
+    const [oldColor, setOldColor] = useState<string | null>(initColor ?? null);
+    const [color, setColor] = useState<string | null>(initColor ?? null);
     const [isPickingPixel, setIsPickingPixel] = useState(false);
 
+    const [inputValue, setInputValue] = useState(initColor ?? "#000000");
+
+    // From that color value we can then get the hue, saturation and lightness values
+    const [hue, setHue] = useState<number>(0);
+    const [saturation, setSaturation] = useState<number>(0);
+    const [lightness, setLightness] = useState<number>(0);
+
+    if (color !== oldColor) {
+        setOldColor(color);
+
+        if (onColorChange) {
+            onColorChange(color);
+        }
+
+        if (typeof color !== "string") {
+            setHue(0);
+            setSaturation(0);
+            setLightness(0);
+            setInputValue("#000000");
+        } else {
+            const [h, s, l] = convert.hex.hsl(color);
+            setHue(h);
+            setSaturation(s);
+            setLightness(l);
+            setInputValue(color);
+        }
+    }
+
     const handlePixelPick = (color: string) => {
-        setSelectedColor(color);
+        setColor(color);
         setIsPickingPixel(false);
     };
-
-    useEffect(() => {
-        setInputValue(selectedColor);
-
-        if (!onColorChange) return;
-        onColorChange(selectedColor);
-    }, [selectedColor]);
 
     return (
         <div className={styles.container}>
             <div className={styles.box}>
                 <GradientBox
-                    color={convert.hex.rgb(selectedColor)}
+                    color={color ? convert.hex.rgb(color) : null}
                     onColorSelect={([r, g, b]) => {
-                        setSelectedColor(`#${convert.rgb.hex([r, g, b])}`);
+                        setColor(`#${convert.rgb.hex([r, g, b])}`);
                     }}
                 />
 
@@ -57,11 +78,13 @@ export function ColorPicker({
                         max={360}
                         size="sm"
                         val={hue}
-                        initValue={hue}
                         homogeneousBg="hsl"
                         onChange={(hue) => {
-                            const [, s, l] = convert.hex.hsl(selectedColor);
-                            setSelectedColor(`#${convert.hsl.hex([hue, s, l])}`);
+                            const newColor = `#${convert.hsl.hex([hue, saturation, lightness])}`;
+
+                            if (color !== newColor) {
+                                setColor(newColor);
+                            }
                         }}
                     />
                 </div>
@@ -131,32 +154,38 @@ export function ColorPicker({
                                 .match(/[0-9A-Fa-f]/g)
                                 ?.join("")
                                 ?.slice(0, 6) ?? "";
-                        setInputValue(hex);
+
+                        if (hex.length === 6) {
+                            setColor(`#${hex}`);
+                        }
                     }}
                     onChange={(v) => {
-                        setInputValue(v);
-                        if (v.length === 7) {
-                            setSelectedColor(v);
-                            setHue(convert.hex.hsl(v)[0]);
+                        setInputValue(v as string);
+
+                        if (typeof v === "string") {
+                            if (v.length > 0 && v[0] !== "#") {
+                                setInputValue(`#${v.length > 6 ? v.slice(1, 7) : v}`);
+                            }
+
+                            if (v.length === 7 && /^[0-9A-Fa-f]{6}$/.test(v.slice(1))) {
+                                setColor(v);
+                            }
                         }
                     }}
                 />
             </div>
 
-            <div>
-                {suggestedColors.map((color) => (
+            <ul>
+                {suggestedColors.map((c) => (
                     <InteractiveElement
-                        key={color}
-                        element="div"
+                        key={c}
+                        element="li"
                         className={styles.swatch}
-                        style={{ backgroundColor: color }}
-                        onClick={() => {
-                            setSelectedColor(color);
-                            setHue(convert.hex.hsl(color)[0]);
-                        }}
+                        onClick={() => setColor(c)}
+                        style={{ backgroundColor: c }}
                     />
                 ))}
-            </div>
+            </ul>
 
             {isPickingPixel && (
                 <PixelPicker

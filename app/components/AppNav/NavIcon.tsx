@@ -12,11 +12,11 @@ import { getRandomImage } from "@/lib/utils";
 import type { GuildChannel } from "@/type";
 import { isStillMuted } from "@/lib/mute";
 import styles from "./AppNav.module.css";
-import { memo, useState } from "react";
 import { Track } from "livekit-client";
+import { useState } from "react";
 import Link from "next/link";
 
-export const NavIcon = memo(function NavIcon({
+export const NavIcon = function NavIcon({
     voice,
     green,
     special,
@@ -41,8 +41,7 @@ export const NavIcon = memo(function NavIcon({
     hasUnread?: boolean;
     channelType?: number;
 }) {
-    const [markHeight, setMarkHeight] = useState(0);
-    const [active, setActive] = useState(false);
+    const [hovering, setHovering] = useState(false);
 
     const { guilds: guildUrls, me: meUrl } = useUrls();
     const { received, updateGuild } = useData();
@@ -78,60 +77,6 @@ export const NavIcon = memo(function NavIcon({
 
     const isActive = pathname.startsWith(special ? "/channels/me" : link);
 
-    function fetchGuildChannels() {
-        if (currentGuild && !currentGuild.channels.length) {
-            getGuildChannels.send(
-                { guildId: currentGuild.id },
-                {
-                    onComplete: (data: { channels: GuildChannel[] }) => {
-                        if (data.channels) {
-                            const everyoneRole = currentGuild.roles.find(
-                                (role) => role.name === "@everyone"
-                            )?.id;
-
-                            const channels = data.channels
-                                .map((channel) => {
-                                    const overwrites = channel.permissionOverwrites || [];
-
-                                    const newOverwrites = overwrites.map(
-                                        (o: { allow: string; deny: string }) => ({
-                                            ...o,
-                                            allow: BigInt(o.allow),
-                                            deny: BigInt(o.deny),
-                                        })
-                                    );
-
-                                    const isPrivate = everyoneRole
-                                        ? isChannelPrivate(
-                                              channel.permissionOverwrites,
-                                              everyoneRole
-                                          )
-                                        : false;
-
-                                    return {
-                                        ...channel,
-                                        permissionOverwrites: newOverwrites,
-                                        isPrivate,
-                                    };
-                                })
-                                .sort((a, b) => a.position - b.position);
-
-                            updateGuild(currentGuild.id, { channels });
-                        }
-                    },
-                }
-            );
-        }
-    }
-
-    if (isActive && !active) {
-        setActive(true);
-        setMarkHeight(40);
-    } else if (!isActive && active) {
-        setActive(false);
-        setMarkHeight(hasUnread ? 7 : 0);
-    }
-
     const firstLetters = name
         .split(" ")
         .map((word) => word[0])
@@ -141,29 +86,30 @@ export const NavIcon = memo(function NavIcon({
         <div className={`${styles.navIcon} ${green ? styles.green : ""}`}>
             <div className={styles.marker}>
                 <AnimatePresence>
-                    {markHeight > 0 && (
-                        <motion.span
-                            initial={{
-                                opacity: 0,
-                                scale: 0,
-                                height: 0,
-                            }}
-                            animate={{
-                                opacity: 1,
-                                scale: 1,
-                                height: markHeight,
-                            }}
-                            exit={{
-                                opacity: 0,
-                                scale: 0,
-                                height: 0,
-                            }}
-                            transition={{
-                                duration: 0.15,
-                                ease: "easeInOut",
-                            }}
-                        />
-                    )}
+                    <motion.div
+                        initial={{
+                            opacity: 0,
+                            scale: 0,
+                            height: 0,
+                            width: 4,
+                        }}
+                        animate={{
+                            opacity: 1,
+                            scale: 1,
+                            width: isActive || hovering || hasUnread ? 8 : 0,
+                            height: isActive ? 40 : hovering ? 20 : hasUnread ? 7 : 0,
+                        }}
+                        exit={{
+                            opacity: 0,
+                            scale: 0,
+                            height: 0,
+                            width: 0,
+                        }}
+                        transition={{
+                            duration: 0.15,
+                            ease: "easeInOut",
+                        }}
+                    />
                 </AnimatePresence>
             </div>
 
@@ -177,15 +123,9 @@ export const NavIcon = memo(function NavIcon({
                         <Link
                             href={url}
                             onClick={() => router.push(link)}
-                            className={`${styles.wrapper} ${active ? styles.active : ""}`}
-                            onMouseEnter={() => {
-                                if (!active) setMarkHeight(20);
-                                fetchGuildChannels();
-                            }}
-                            onFocus={() => {
-                                fetchGuildChannels();
-                            }}
-                            onMouseLeave={() => !active && setMarkHeight(hasUnread ? 7 : 0)}
+                            onMouseEnter={() => setHovering(true)}
+                            onMouseLeave={() => setHovering(false)}
+                            className={`${styles.wrapper} ${isActive ? styles.active : ""}`}
                             style={{
                                 fontWeight: !src && !svg ? "500" : "",
                                 backgroundColor: src ? "transparent" : "",
@@ -280,7 +220,7 @@ export const NavIcon = memo(function NavIcon({
             </Tooltip>
         </div>
     );
-});
+};
 
 function getFontSize(length: number) {
     if (length < 3) {

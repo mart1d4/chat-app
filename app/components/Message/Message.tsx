@@ -44,6 +44,7 @@ import type {
     DMChannel,
     Invite,
 } from "@/type";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const messageIcons = {
     2: "joined-channel",
@@ -113,6 +114,7 @@ export const Message = memo(
         const [contentRef, setReferenceContent] = useState<JSX.Element | null>(null);
         const [attachmentIds, setAttachmentIds] = useState<string[]>([]);
         const [startUploading, setStartUploading] = useState(false);
+        const [hasHovered, setHasHovered] = useState(false);
         const [hasRun, setHasRun] = useState(false);
 
         const isEditing =
@@ -120,6 +122,7 @@ export const Message = memo(
                 0) > 0;
 
         const reply = useMessages((state) => state.replies.find((r) => r.messageId === message.id));
+        const { hasPermission } = usePermissions({ guildId: guild?.id });
         const { setData: setEmojiPickerData } = useEmojiPicker();
         const { setEdit, setReply } = useMessages();
         const { setChannelId } = useVoice();
@@ -138,8 +141,45 @@ export const Message = memo(
             getInvites,
         } = useRequests();
 
+        const userColor = useMemo(() => {
+            if (!guild) return null;
+
+            const member = guild?.members.find((m) => m.id === message.author.id);
+            if (!member) return null;
+
+            const memberRoles = guild.roles
+                .filter((r) => member.roles.includes(r.id) && !r.everyone)
+                .sort((a, b) => a.position - b.position);
+
+            return memberRoles[0]?.color || null;
+        }, [guild?.members, message.author]);
+
+        const referenceAuthorColor = useMemo(() => {
+            if (!guild) return null;
+
+            const member = guild?.members.find((m) => m.id === message.reference?.author?.id);
+            if (!member) return null;
+
+            const memberRoles = guild.roles
+                .filter((r) => member.roles.includes(r.id) && !r.everyone)
+                .sort((a, b) => a.position - b.position);
+
+            return memberRoles[0]?.color || null;
+        }, [guild?.members, message.reference?.author?.id]);
+
+        const canReact = [0, 1].includes(channel.type)
+            ? true
+            : hasPermission({
+                  permission: "ADD_REACTIONS",
+                  specificChannelId: channel.id,
+                  userId: user.id,
+              });
+
         const isLocal = "local" in message;
-        const isMentioned = message.mentions.some((m) => m.id === user.id);
+
+        const isMentioned =
+            message.mentions.some((m) => m.id === user.id) ||
+            (message.reference?.author?.id === user.id && message.author.id !== user.id);
 
         const controller = useMemo(() => new AbortController(), []);
         const hasAttachments = message.attachments.length > 0;
@@ -149,12 +189,26 @@ export const Message = memo(
         const [messageContentPlain, setMessageContentPlain] = useState(message.content);
 
         if (message.content && !inline && content === null) {
-            setMessageContent(FormatMessage({ message: message }));
+            setMessageContent(FormatMessage({ message: message, channel }));
         }
 
         if (!isLocal && message.reference?.content && contentRef === null) {
-            setReferenceContent(FormatMessage({ message: message.reference }));
+            setReferenceContent(
+                FormatMessage({ message: message.reference, channel, reference: true })
+            );
         }
+
+        useEffect(() => {
+            if (!hasHovered) return;
+
+            const timeout = setTimeout(() => {
+                setHasHovered(false);
+            }, 90000);
+
+            return () => {
+                clearTimeout(timeout);
+            };
+        }, [hasHovered]);
 
         useEffect(() => {
             if (message.content !== messageContentPlain) {
@@ -181,7 +235,7 @@ export const Message = memo(
             let inviteRegex = /https:\/\/spark.mart1d4.dev\/[a-zA-Z0-9]{7,32}/g;
 
             if (process.env.NODE_ENV === "development") {
-                inviteRegex = /http:\/\/localhost:3000\/[a-zA-Z0-9]{7,32}/g;
+                inviteRegex = /https:\/\/localfront.mart1d4.dev\/[a-zA-Z0-9]{7,32}/g;
             }
 
             const matches = message.content?.match(inviteRegex);
@@ -480,14 +534,32 @@ export const Message = memo(
                         <li
                             className={classNames(true)}
                             style={{ marginTop: large ? "1.0625rem" : "" }}
+                            onFocus={() => {
+                                if (!hasHovered) {
+                                    setHasHovered(true);
+                                }
+                            }}
+                            onMouseEnter={() => {
+                                if (!hasHovered) {
+                                    setHasHovered(true);
+                                }
+                            }}
+                            onDoubleClick={(e) => {
+                                e.stopPropagation();
+                                if ([2, 3, 4, 8, 9].includes(message.type)) {
+                                    setReplyToMessage();
+                                }
+                            }}
                         >
-                            <MessageMenu
-                                guild={guild}
-                                inline={inline}
-                                channel={channel}
-                                message={message}
-                                functions={functions}
-                            />
+                            {hasHovered.current && (
+                                <MessageMenu
+                                    guild={guild}
+                                    inline={inline}
+                                    channel={channel}
+                                    message={message}
+                                    functions={functions}
+                                />
+                            )}
 
                             <div className={styles.message}>
                                 <div className={styles.specialIcon}>
@@ -513,18 +585,25 @@ export const Message = memo(
                                         {message.type === 2 && !!guild && (
                                             <span>
                                                 {welcome.slice(0, welcome.indexOf("{user}"))}
-                                                <UserMention user={message.author} />
+                                                <UserMention
+                                                    guild={guild}
+                                                    user={message.author}
+                                                />
                                                 {welcome.slice(welcome.indexOf("{user}") + 6)}{" "}
                                             </span>
                                         )}
 
                                         {((message.type === 2 && !guild) || message.type === 3) && (
                                             <span>
-                                                <UserMention user={message.author} />{" "}
+                                                <UserMention
+                                                    guild={guild}
+                                                    user={message.author}
+                                                />{" "}
                                                 {!!message.mentions.length ? (
                                                     <>
                                                         {message.type === 2 ? "added " : "removed "}
                                                         <UserMention
+                                                            guild={guild}
                                                             user={message.mentions[0]}
                                                         />{" "}
                                                         {message.type === 2 ? "to " : "from "}
@@ -538,7 +617,11 @@ export const Message = memo(
 
                                         {message.type === 4 && (
                                             <span>
-                                                <UserMention user={message.author} /> changed the{" "}
+                                                <UserMention
+                                                    guild={guild}
+                                                    user={message.author}
+                                                />{" "}
+                                                changed the{" "}
                                                 {message.content ? (
                                                     <>
                                                         channel name:
@@ -558,7 +641,11 @@ export const Message = memo(
 
                                         {message.type === 7 && (
                                             <span>
-                                                <UserMention user={message.author} /> pinned{" "}
+                                                <UserMention
+                                                    guild={guild}
+                                                    user={message.author}
+                                                />{" "}
+                                                pinned{" "}
                                                 <span
                                                     className={styles.inlineMention}
                                                     onClick={() => {}}
@@ -587,7 +674,10 @@ export const Message = memo(
                                             <span>
                                                 {hasCall ? (
                                                     <>
-                                                        <UserMention user={message.author} />{" "}
+                                                        <UserMention
+                                                            guild={guild}
+                                                            user={message.author}
+                                                        />{" "}
                                                         started a call.{" "}
                                                         {canJoinVoice && (
                                                             <>
@@ -604,7 +694,10 @@ export const Message = memo(
                                                     </>
                                                 ) : message.content.includes(user.id) ? (
                                                     <>
-                                                        <UserMention user={message.author} />{" "}
+                                                        <UserMention
+                                                            guild={guild}
+                                                            user={message.author}
+                                                        />{" "}
                                                         started a call that lasted{" "}
                                                         {getRelativeDuration(
                                                             new Date(endedTime).getTime() -
@@ -617,8 +710,11 @@ export const Message = memo(
                                                 ) : (
                                                     <>
                                                         You missed a call from{" "}
-                                                        <UserMention user={message.author} /> that
-                                                        lasted{" "}
+                                                        <UserMention
+                                                            guild={guild}
+                                                            user={message.author}
+                                                        />{" "}
+                                                        that lasted{" "}
                                                         {getRelativeDuration(
                                                             new Date(endedTime).getTime() -
                                                                 new Date(
@@ -676,42 +772,46 @@ export const Message = memo(
                                             </button>
                                         ))}
 
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <button
-                                                    ref={emojiPickerRef}
-                                                    className={styles.reaction}
-                                                    onClick={() => {
-                                                        setEmojiPickerData({
-                                                            open: true,
-                                                            container: emojiPickerRef.current,
-                                                            placement: "right-start",
-                                                            onClick: (emoji) =>
-                                                                functions.addReaction(emoji),
-                                                        });
-                                                    }}
-                                                >
-                                                    <Icon
-                                                        size={20}
-                                                        name="emoji"
-                                                    />
-                                                </button>
-                                            </TooltipTrigger>
+                                        {canReact && (
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <button
+                                                        ref={emojiPickerRef}
+                                                        className={styles.reaction}
+                                                        onClick={() => {
+                                                            setEmojiPickerData({
+                                                                open: true,
+                                                                container: emojiPickerRef.current,
+                                                                placement: "right-start",
+                                                                onClick: (emoji) =>
+                                                                    functions.addReaction(emoji),
+                                                            });
+                                                        }}
+                                                    >
+                                                        <Icon
+                                                            size={20}
+                                                            name="emoji"
+                                                        />
+                                                    </button>
+                                                </TooltipTrigger>
 
-                                            <TooltipContent>Add Reaction</TooltipContent>
-                                        </Tooltip>
+                                                <TooltipContent>Add Reaction</TooltipContent>
+                                            </Tooltip>
+                                        )}
                                     </div>
                                 )}
                             </div>
                         </li>
                     </MenuTrigger>
 
-                    <MessageMenuContent
-                        guild={guild}
-                        channel={channel}
-                        message={message}
-                        functions={functions}
-                    />
+                    {hasHovered && (
+                        <MessageMenuContent
+                            guild={guild}
+                            channel={channel}
+                            message={message}
+                            functions={functions}
+                        />
+                    )}
                 </Menu>
             );
         }
@@ -726,15 +826,36 @@ export const Message = memo(
                     <li
                         className={classNames()}
                         style={{ backgroundColor: !!isEditing ? "var(--bg-hover-4)" : "" }}
+                        onFocus={() => {
+                            if (!hasHovered) {
+                                setHasHovered(true);
+                            }
+                        }}
+                        onMouseEnter={() => {
+                            if (!hasHovered) {
+                                setHasHovered(true);
+                            }
+                        }}
+                        onDoubleClick={(e) => {
+                            e.stopPropagation();
+
+                            if (message.author.id === user.id) {
+                                startEditingMessage();
+                            } else {
+                                setReplyToMessage();
+                            }
+                        }}
                     >
-                        <MessageMenu
-                            large={large}
-                            guild={guild}
-                            inline={inline}
-                            channel={channel}
-                            message={message}
-                            functions={functions}
-                        />
+                        {hasHovered && (
+                            <MessageMenu
+                                large={large}
+                                guild={guild}
+                                inline={inline}
+                                channel={channel}
+                                message={message}
+                                functions={functions}
+                            />
+                        )}
 
                         <div className={styles.message}>
                             {message.type === 1 && (
@@ -777,11 +898,15 @@ export const Message = memo(
                                                 </PopoverTrigger>
 
                                                 <PopoverContent>
-                                                    <UserCard initUser={message.reference.author} />
+                                                    <UserCard
+                                                        guild={guild}
+                                                        initUser={message.reference.author}
+                                                    />
                                                 </PopoverContent>
 
                                                 <UserMenu
                                                     type="author"
+                                                    guild={guild}
                                                     channelType={channel.type}
                                                     user={message.reference.author}
                                                 />
@@ -817,6 +942,11 @@ export const Message = memo(
                                                                 e.stopPropagation();
                                                                 e.preventDefault();
                                                             }}
+                                                            style={{
+                                                                color:
+                                                                    referenceAuthorColor ||
+                                                                    undefined,
+                                                            }}
                                                         >
                                                             {message.reference.author.displayName}
                                                         </span>
@@ -824,11 +954,15 @@ export const Message = memo(
                                                 </PopoverTrigger>
 
                                                 <PopoverContent>
-                                                    <UserCard initUser={message.reference.author} />
+                                                    <UserCard
+                                                        guild={guild}
+                                                        initUser={message.reference.author}
+                                                    />
                                                 </PopoverContent>
 
                                                 <UserMenu
                                                     type="author"
+                                                    guild={guild}
                                                     channelType={channel.type}
                                                     user={message.reference.author}
                                                 />
@@ -904,11 +1038,15 @@ export const Message = memo(
                                             </PopoverTrigger>
 
                                             <PopoverContent>
-                                                <UserCard initUser={message.author} />
+                                                <UserCard
+                                                    guild={guild}
+                                                    initUser={message.author}
+                                                />
                                             </PopoverContent>
 
                                             <UserMenu
                                                 type="author"
+                                                guild={guild}
                                                 user={message.author}
                                                 channelType={channel.type}
                                             />
@@ -935,6 +1073,9 @@ export const Message = memo(
                                                                 e.stopPropagation();
                                                                 e.preventDefault();
                                                             }}
+                                                            style={{
+                                                                color: userColor || undefined,
+                                                            }}
                                                         >
                                                             {message.author?.displayName}
                                                         </span>
@@ -942,11 +1083,15 @@ export const Message = memo(
                                                 </PopoverTrigger>
 
                                                 <PopoverContent>
-                                                    <UserCard initUser={message.author} />
+                                                    <UserCard
+                                                        guild={guild}
+                                                        initUser={message.author}
+                                                    />
                                                 </PopoverContent>
 
                                                 <UserMenu
                                                     type="author"
+                                                    guild={guild}
                                                     user={message.author}
                                                     channelType={channel.type}
                                                 />
@@ -1006,6 +1151,7 @@ export const Message = memo(
                                 >
                                     {isEditing ? (
                                         <TextArea
+                                            guild={guild}
                                             channel={channel}
                                             functions={functions}
                                             messageObject={message}
@@ -1093,6 +1239,7 @@ export const Message = memo(
                                                             </div>
 
                                                             <div>
+                                                                {" "}
                                                                 —{" "}
                                                                 {(
                                                                     message.attachments.reduce(
@@ -1192,30 +1339,32 @@ export const Message = memo(
                                             </button>
                                         ))}
 
-                                        <Tooltip>
-                                            <TooltipTrigger>
-                                                <button
-                                                    ref={emojiPickerRef}
-                                                    className={styles.reaction}
-                                                    onClick={() => {
-                                                        setEmojiPickerData({
-                                                            open: true,
-                                                            container: emojiPickerRef.current,
-                                                            placement: "right-start",
-                                                            onClick: (emoji) =>
-                                                                functions.addReaction(emoji),
-                                                        });
-                                                    }}
-                                                >
-                                                    <Icon
-                                                        size={20}
-                                                        name="emoji"
-                                                    />
-                                                </button>
-                                            </TooltipTrigger>
+                                        {canReact && (
+                                            <Tooltip>
+                                                <TooltipTrigger>
+                                                    <button
+                                                        ref={emojiPickerRef}
+                                                        className={styles.reaction}
+                                                        onClick={() => {
+                                                            setEmojiPickerData({
+                                                                open: true,
+                                                                container: emojiPickerRef.current,
+                                                                placement: "right-start",
+                                                                onClick: (emoji) =>
+                                                                    functions.addReaction(emoji),
+                                                            });
+                                                        }}
+                                                    >
+                                                        <Icon
+                                                            size={20}
+                                                            name="emoji"
+                                                        />
+                                                    </button>
+                                                </TooltipTrigger>
 
-                                            <TooltipContent>Add Reaction</TooltipContent>
-                                        </Tooltip>
+                                                <TooltipContent>Add Reaction</TooltipContent>
+                                            </Tooltip>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -1234,12 +1383,14 @@ export const Message = memo(
                     </li>
                 </MenuTrigger>
 
-                <MessageMenuContent
-                    guild={guild}
-                    channel={channel}
-                    message={message}
-                    functions={functions}
-                />
+                {hasHovered && (
+                    <MessageMenuContent
+                        guild={guild}
+                        channel={channel}
+                        message={message}
+                        functions={functions}
+                    />
+                )}
             </Menu>
         );
     }

@@ -27,8 +27,7 @@ export function LeaveGroup({ channelId, channelName }: { channelId: number; chan
 
             <Input
                 type="checkbox"
-                name="noNotify"
-                checked={noNotify}
+                value={noNotify}
                 onChange={() => setNoNotify((prev) => !prev)}
                 label="Leave without notifying other members"
             />

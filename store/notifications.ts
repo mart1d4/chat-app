@@ -1,5 +1,5 @@
-import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { create } from "zustand";
 
 interface notificationsState {
     notifications: {
@@ -19,6 +19,8 @@ interface notificationsState {
     addNotification: (channelId: number, isPing: boolean, guildId?: number) => void;
     removeNotification: (channelId: number, guildId?: number) => void;
     removeGuildNotifications: (guildId: number) => void;
+    removeAllDMNotifications: () => void;
+    removeAllNotifications: () => void;
 }
 
 export const useNotifications = create(
@@ -121,6 +123,24 @@ export const useNotifications = create(
                         guilds: state.notifications.guilds.map((g) =>
                             g.id === guildId ? { ...g, hasUnread: false, pings: 0 } : g
                         ),
+                    },
+                }));
+            },
+
+            removeAllDMNotifications: () => {
+                set((state) => ({
+                    notifications: {
+                        channels: state.notifications.channels.filter((c) => !!c.guildId),
+                        guilds: state.notifications.guilds,
+                    },
+                }));
+            },
+
+            removeAllNotifications: () => {
+                set(() => ({
+                    notifications: {
+                        channels: [],
+                        guilds: [],
                     },
                 }));
             },

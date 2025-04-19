@@ -8,6 +8,7 @@ import { useKeenSlider } from "keen-slider/react";
 import { useRequests } from "@/hooks/useRequests";
 import styles from "./CreateGuild.module.css";
 import Link from "next/link";
+import { useTriggerAlert } from "@/store";
 
 const types = [
     {
@@ -75,6 +76,7 @@ export function CreateGuild() {
     ];
 
     const { createGuild, acceptInvite } = useRequests();
+    const { triggerAlert } = useTriggerAlert();
     const { setOpen } = useDialogContext();
     const user = useAuthenticatedUser();
 
@@ -393,22 +395,18 @@ export function CreateGuild() {
 
                                                 <input
                                                     type="file"
-                                                    accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
                                                     className={styles.iconInput}
+                                                    accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
                                                     onChange={(e) => {
                                                         if (e.target.files) {
                                                             if (
                                                                 e.target.files[0].size >
                                                                 4 * 1024 * 1024
                                                             ) {
-                                                                setError(
+                                                                return triggerAlert(
+                                                                    "error",
                                                                     "File size should be less than 4MB"
                                                                 );
-                                                                setTimeout(
-                                                                    () => setError(""),
-                                                                    5000
-                                                                );
-                                                                return;
                                                             }
 
                                                             setIcon(e.target.files[0]);
@@ -445,7 +443,7 @@ export function CreateGuild() {
                                     <h2>Have an invite already?</h2>
                                     <button
                                         type="button"
-                                        className="button grey"
+                                        className="button regular grey"
                                         onClick={() => {
                                             setType("invite");
                                             setCurrent(1);
@@ -458,7 +456,7 @@ export function CreateGuild() {
                                 <footer className={styles.footer}>
                                     <button
                                         type="button"
-                                        className="button"
+                                        className="button regular"
                                         onClick={() => {
                                             if (whoFor) {
                                                 setWhoFor(null);
@@ -475,7 +473,7 @@ export function CreateGuild() {
                                         <button
                                             type="submit"
                                             tabIndex={i === 2 && !name ? -1 : 0}
-                                            className={`button submit blue ${
+                                            className={`button regular submit blue ${
                                                 i === 2 && !name ? "disabled" : ""
                                             }`}
                                             onClick={() => {

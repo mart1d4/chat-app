@@ -449,7 +449,7 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: Channe
 
                         {isFriend ? (
                             <button
-                                className="button grey"
+                                className="button regular grey"
                                 onClick={() => removeFriend.send({ username: friend.username })}
                             >
                                 {removeFriend.isLoading ? <LoadingDots /> : "Remove Friend"}
@@ -457,13 +457,13 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: Channe
                         ) : wasRequested ? (
                             <button
                                 tabIndex={-1}
-                                className="button blue disabled"
+                                className="button regular blue disabled"
                             >
                                 {addFriend.isLoading ? <LoadingDots /> : "Friend Request Sent"}
                             </button>
                         ) : hasRequested ? (
                             <button
-                                className="button grey"
+                                className="button regular grey"
                                 onClick={() => addFriend.send({ username: friend.username })}
                             >
                                 {addFriend.isLoading ? <LoadingDots /> : "Accept Friend Request"}
@@ -471,7 +471,7 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: Channe
                         ) : (
                             !isBlocked && (
                                 <button
-                                    className="button blue"
+                                    className="button regular blue"
                                     onClick={() => addFriend.send({ username: friend.username })}
                                 >
                                     {addFriend.isLoading ? <LoadingDots /> : "Add Friend"}
@@ -481,14 +481,14 @@ function FirstMessage({ channel, friend }: { channel: DMChannel; friend?: Channe
 
                         {!isBlocked ? (
                             <button
-                                className="button grey"
+                                className="button regular grey"
                                 onClick={() => blockUser.send({ userId: friend.id })}
                             >
                                 {blockUser.isLoading ? <LoadingDots /> : "Block"}
                             </button>
                         ) : (
                             <button
-                                className="button grey"
+                                className="button regular grey"
                                 onClick={() => unblockUser.send({ userId: friend.id })}
                             >
                                 {unblockUser.isLoading ? <LoadingDots /> : "Unblock"}

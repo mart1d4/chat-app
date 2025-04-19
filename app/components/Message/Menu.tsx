@@ -15,6 +15,7 @@ import {
     Icon,
     Menu,
 } from "@components";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export const MessageMenu = memo(function MessageMenu({
     message,
@@ -34,10 +35,16 @@ export const MessageMenu = memo(function MessageMenu({
     const shift = useWindowSettings((s) => s.shiftKeyDown);
     const user = useAuthenticatedUser();
 
+    const { hasPermission } = usePermissions({ guildId: guild?.id, channelId: channel.id });
     const { data: emojiPickerData, setData: setEmojiPickerData } = useEmojiPicker();
     const hasVoice = !!message.attachments.find((a) => a.voiceMessage);
     const menuSender = message.author.id === user.id;
+    const isDM = [0, 1].includes(channel.type);
     const emojiPickerRef = useRef(null);
+
+    const canManageMessages = hasPermission({ permission: "MANAGE_MESSAGES" }) || isDM;
+    const canSendMessage = hasPermission({ permission: "SEND_MESSAGES" }) || isDM;
+    const canReact = hasPermission({ permission: "ADD_REACTIONS" }) || isDM;
 
     const isPickerOpen =
         emojiPickerData.open && emojiPickerData.container === emojiPickerRef.current;
@@ -223,7 +230,7 @@ export const MessageMenu = memo(function MessageMenu({
                             {shift && !inline && (
                                 <>
                                     {renderButton("COPY_ID")}
-                                    {renderButton("PIN_MESSAGE")}
+                                    {canManageMessages && renderButton("PIN_MESSAGE")}
 
                                     {message.content && renderButton("COPY_TEXT")}
                                     {message.content && renderButton("TRANSLATE")}
@@ -244,16 +251,18 @@ export const MessageMenu = memo(function MessageMenu({
                                 </>
                             )}
 
-                            {renderButton("ADD_REACTION")}
+                            {canReact && renderButton("ADD_REACTION")}
 
                             {!inline &&
                                 (menuSender && !hasVoice
                                     ? renderButton("EDIT")
-                                    : renderButton("REPLY"))}
+                                    : canSendMessage
+                                    ? renderButton("REPLY")
+                                    : null)}
 
                             {!shift || inline
                                 ? renderButton("MORE")
-                                : menuSender
+                                : menuSender || canManageMessages
                                 ? renderButton("DELETE")
                                 : renderButton("REPORT")}
                         </>

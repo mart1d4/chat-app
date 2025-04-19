@@ -26,7 +26,7 @@ export function ImageViewer({
 
     const { setOpen } = useDialogContext();
 
-    const url = `${getCdnUrl}${attachment.id}`;
+    const url = attachment.url ? attachment.url : `${getCdnUrl}${attachment.id}`;
 
     function copyImage() {
         try {

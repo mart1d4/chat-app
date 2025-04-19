@@ -28,7 +28,7 @@ export default function Error({
                 </p>
 
                 <button
-                    className="button blue submit"
+                    className="button regular blue submit"
                     onClick={
                         // Attempt to recover by trying to re-render the segment
                         () => reset()

@@ -11,8 +11,13 @@ import type {
     AppUser,
     Channel,
     User,
+    GuildChannel,
+    Role,
 } from "@/type";
 import { client } from "../redis/client";
+import { DefaultGuildChannelSelect } from "../default-selects";
+import { hasGuildPermission } from "./permissions";
+import { isChannelPrivate } from "../permissions";
 
 export const SelectAppUnknownUser: (keyof User)[] = ["id", "username", "avatar"];
 export const selectAppRequest: (keyof User)[] = [...SelectAppUnknownUser, "displayName"];
@@ -31,8 +36,13 @@ export const SelectAppGuild: (keyof Guilds)[] = [
     "id",
     "name",
     "icon",
+    "banner",
     "ownerId",
     "systemChannelId",
+    "sendWelcomeMessages",
+    "afkChannelId",
+    "afkTimeout",
+    "notifyEveryone",
 ];
 
 export async function doesUserExist({ id, username }: Selectable<Users>) {
@@ -239,8 +249,6 @@ export async function getInitialData() {
             }
         }
 
-        // console.log("Guilds:", JSON.stringify(guilds, null, 4));
-
         const end = Date.now();
 
         console.log(`Initial data fetched in ${end - start}ms.`);
@@ -256,19 +264,42 @@ export async function getInitialData() {
             // @ts-ignore - Need to figure this one out
             guilds: guilds.map((g) => ({
                 ...g,
-                members: [
-                    {
-                        // @ts-ignore - Need to figure this one out
-                        ...g.profile.profile,
-                        // @ts-ignore - Need to figure this one out
-                        permissions: BigInt(g.profile.profile.permissions),
-                        username: user.username,
-                        avatar: user.avatar,
-                        status: user.status,
-                        customStatus: user.customStatus,
-                        displayName: user.displayName,
-                    },
-                ],
+                members: g.members.map((m) => ({
+                    ...m,
+                    permissions: BigInt(m.profile.permissions),
+                    roles: m.profile.roles,
+                    nickname: m.profile.nickname,
+                    joinedAt: m.profile.joinedAt,
+                    profile: undefined,
+                })),
+                roles: g.roles.map((r) => ({
+                    ...r,
+                    permissions: BigInt(r.permissions),
+                })),
+                channels: g.channels
+                    .map((c) => {
+                        const everyone = g.roles.find((role) => role.everyone)!.id;
+                        const overwrites = c.permissionOverwrites;
+
+                        const newOverwrites = overwrites.map(
+                            (o: { allow: string; deny: string }) => ({
+                                ...o,
+                                allow: BigInt(o.allow),
+                                deny: BigInt(o.deny),
+                            })
+                        );
+
+                        const isPrivate = everyone
+                            ? isChannelPrivate(c.permissionOverwrites, everyone)
+                            : false;
+
+                        return {
+                            ...c,
+                            isPrivate,
+                            permissionOverwrites: newOverwrites,
+                        };
+                    })
+                    .sort((a, b) => a.position - b.position),
             })) as UserGuild[],
             rooms,
         };
@@ -500,8 +531,6 @@ export async function getUserGuilds({
     userId: number;
     select?: (keyof Guilds)[];
 }) {
-    // At least get the user's profile in the guild
-
     try {
         const guilds = await db
             .selectFrom("guilds")
@@ -510,35 +539,44 @@ export async function getUserGuilds({
                     .onRef("guildMembers.guildId", "=", "guilds.id")
                     .on("guildMembers.userId", "=", userId)
             )
-            .innerJoin("roles", "roles.guildId", "guilds.id")
-            .select(select.map((key) => `guilds.${key}`) as (keyof Guilds)[])
-            // @ts-ignore - Need to figure this one out
-            .select([
-                JsonArray({
-                    table: "roles",
-                    columns: [
-                        "id",
-                        "name",
-                        "color",
-                        "permissions",
-                        "position",
-                        "everyone",
-                        "hoist",
-                        "mentionable",
-                    ],
-                    as: "roles",
-                }),
-                JsonObject({
-                    table: "guild_members",
-                    columns: ["profile"],
-                    as: "profile",
-                }),
+            .select(select)
+            .select((eb) => [
+                jsonArrayFrom(
+                    eb
+                        .selectFrom("roles")
+                        .select([
+                            "id",
+                            "name",
+                            "color",
+                            "permissions",
+                            "position",
+                            "everyone",
+                            "hoist",
+                            "mentionable",
+                        ])
+                        .whereRef("roles.guildId", "=", "guilds.id")
+                ).as("roles"),
+                jsonArrayFrom(
+                    eb
+                        .selectFrom("channels")
+                        .select(DefaultGuildChannelSelect)
+                        .whereRef("channels.guildId", "=", "guilds.id")
+                        .orderBy("position", "asc")
+                ).as("channels"),
+                jsonArrayFrom(
+                    eb
+                        .selectFrom("guildMembers")
+                        .innerJoin("users", "users.id", "guildMembers.userId")
+                        .select(SelectAppFriend)
+                        .select("profile")
+                        .whereRef("guildMembers.guildId", "=", "guilds.id")
+                        .where("guildMembers.userId", "=", userId)
+                ).as("members"),
             ])
             .where("guilds.isDeleted", "=", false)
-            .groupBy("guilds.id")
             .execute();
 
-        return guilds || [];
+        return guilds;
     } catch (error) {
         console.error(error);
         return [];

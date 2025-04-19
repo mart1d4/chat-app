@@ -100,8 +100,12 @@ export interface Guilds {
     description: string | null;
 
     systemChannelId: number | null;
+    sendWelcomeMessages: Generated<boolean>;
+
     afkChannelId: number | null;
     afkTimeout: number | null;
+
+    notifyEveryone: Generated<boolean>;
 
     vanityUrl: string | null;
     vanityUrlUses: number | null;

@@ -60,52 +60,29 @@ export function CreateGuildChannel({
         >
             {!isCategory && (
                 <div className={styles.channelType}>
-                    <h2>Channel Type</h2>
-
-                    {["text", "voice"].map((t) => (
-                        <button
-                            key={t}
-                            type="button"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setType(t);
-                            }}
-                            className={`${styles.typePick} ${type === t ? styles.active : ""}`}
-                        >
-                            <div>
-                                <div className={styles.check}>
-                                    <Icon name={type === t ? "circleChecked" : "circle"} />
-                                </div>
-
-                                <div>
-                                    <div className={styles.icon}>
-                                        <Icon
-                                            name={
-                                                lock
-                                                    ? t === "text"
-                                                        ? "hashtagLock"
-                                                        : "voiceLock"
-                                                    : t === "text"
-                                                    ? "hashtag"
-                                                    : "voice"
-                                            }
-                                        />
-                                    </div>
-
-                                    <div className={styles.content}>
-                                        <h3>{t === "text" ? "Text" : "Voice"}</h3>
-
-                                        <div>
-                                            {t === "text"
-                                                ? "Send messages, images, GIFs, emoji, opinions, and puns"
-                                                : "Hang out together with voice, video, and screen share"}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </button>
-                    ))}
+                    <Input
+                        value={type}
+                        type="radio"
+                        radioSide="right"
+                        label="Channel Type"
+                        onChange={(v) => setType(v as string)}
+                        choices={[
+                            {
+                                label: "Text",
+                                value: "text",
+                                icon: lock ? "hashtagLock" : "hashtag",
+                                description:
+                                    "Send messages, images, GIFs, emoji, opinions, and puns",
+                            },
+                            {
+                                label: "Voice",
+                                value: "voice",
+                                icon: lock ? "voiceLock" : "voice",
+                                description:
+                                    "Hang out together with voice, video, and screen share",
+                            },
+                        ]}
+                    />
                 </div>
             )}
 
@@ -137,14 +114,19 @@ export function CreateGuildChannel({
             />
 
             <div className={styles.privateCheck}>
-                <div onClick={() => setLock((prev) => !prev)}>
-                    <label>
-                        <Icon name="lock" />
-                        {isCategory ? "Private Category" : "Private Channel"}
-                    </label>
+                <div className="flex items-center gap-2">
+                    <Icon
+                        name="lock"
+                        size={18}
+                    />
 
-                    <div>
-                        <Checkbox checked={lock} />
+                    <div className="grow">
+                        <Input
+                            value={lock}
+                            type="checkbox"
+                            onChange={(v) => setLock(v as boolean)}
+                            label={isCategory ? "Private Category" : "Private Channel"}
+                        />
                     </div>
                 </div>
 

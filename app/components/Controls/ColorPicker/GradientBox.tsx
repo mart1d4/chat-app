@@ -8,7 +8,7 @@ export function GradientBox({
     color,
     onColorSelect,
 }: {
-    color: [number, number, number];
+    color: [number, number, number] | null;
     onColorSelect: ([r, g, b]: [number, number, number]) => void;
 }) {
     const [isPicking, setIsPicking] = useState(false);
@@ -26,7 +26,7 @@ export function GradientBox({
         const width = canvas.width;
         const height = canvas.height;
 
-        const [hue] = convert.rgb.hsl(color);
+        const [hue] = color ? convert.rgb.hsl(color) : [0];
 
         // Create gradient: left-to-right white to color, top-to-bottom transparent to black
         const colorGradient = ctx.createLinearGradient(0, 0, width, 0);

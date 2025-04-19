@@ -22,7 +22,7 @@ const FocusOverlay: React.FC<FocusOverlayProps> = ({ active, bounds, borderRadiu
         border: "4px solid var(--accent-fg)",
         borderRadius: borderRadius,
         boxSizing: "border-box",
-        zIndex: 9999,
+        zIndex: 99999999,
         pointerEvents: "none",
     };
 
@@ -30,7 +30,12 @@ const FocusOverlay: React.FC<FocusOverlayProps> = ({ active, bounds, borderRadiu
 };
 
 const TabFocusHighlighter: React.FC = () => {
-    const [bounds, setBounds] = useState<DOMRect | null>(null);
+    const [bounds, setBounds] = useState<{
+        top: number;
+        left: number;
+        width: number;
+        height: number;
+    } | null>(null);
     const [borderRadius, setBorderRadius] = useState<string>("0px");
     const [active, setActive] = useState(false);
     const lastInputMode = useRef<"keyboard" | "mouse" | null>(null);
@@ -55,12 +60,16 @@ const TabFocusHighlighter: React.FC = () => {
                 const computedStyle = window.getComputedStyle(targetElement);
                 const borderRadius = computedStyle.borderRadius;
 
+                // Get the focus-gap value
+                const focusGap = targetElement.getAttribute("focus-gap");
+                const gap = focusGap ? parseFloat(focusGap) : 0;
+
                 if (borderRadius.includes("px")) {
                     const updatedRadius = borderRadius
                         .split(" ")
                         .map((value) => {
                             const numericValue = parseFloat(value);
-                            return isNaN(numericValue) ? value : `${numericValue + 4}px`;
+                            return isNaN(numericValue) ? value : `${numericValue + 4 + gap}px`;
                         })
                         .join(" ");
                     setBorderRadius(updatedRadius);
@@ -68,7 +77,13 @@ const TabFocusHighlighter: React.FC = () => {
                     setBorderRadius(borderRadius);
                 }
 
-                setBounds(rect);
+                // Adjust bounds to include the gap
+                setBounds({
+                    top: rect.top - gap,
+                    left: rect.left - gap,
+                    width: rect.width + 2 * gap,
+                    height: rect.height + 2 * gap,
+                });
             }
         };
 

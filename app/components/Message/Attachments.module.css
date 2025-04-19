@@ -396,8 +396,8 @@
     overflow: hidden;
     position: absolute;
     border-radius: 5px;
-    background-color: var(--bg-4);
-    outline: 1px solid var(--bg-2);
+    background-color: var(--bg-3);
+    outline: 1px solid var(--bg-1);
 }
 
 .actions > button {
@@ -411,7 +411,7 @@
 }
 
 .actions > button:hover {
-    background-color: var(--bg-2);
+    background-color: var(--bg-4);
 }
 
 .actions > .delete:hover {

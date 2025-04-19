@@ -4,3 +4,4 @@ export { Profiles } from "./Profiles";
 export { Overview } from "./Overview";
 
 export { Roles as GuildRoles } from "./Guild/Roles/Roles";
+export { Overview as GuildOverview } from "./Guild/Overview/Overview";

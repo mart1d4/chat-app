@@ -70,7 +70,7 @@ const invalid = (
 
             <Link
                 href="/login"
-                className="button blue"
+                className="button regular blue"
             >
                 Log In
             </Link>
@@ -259,7 +259,7 @@ export default async function VerifyEmailPage({
                 <Link
                     draggable={false}
                     href="/channels/me"
-                    className="button blue"
+                    className="button regular blue"
                 >
                     Continue to Spark
                 </Link>

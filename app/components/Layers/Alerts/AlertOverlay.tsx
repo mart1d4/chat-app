@@ -11,7 +11,7 @@ export function AlertOverlay() {
     return (
         <div className={`${styles.alert} ${styles[alert.type]}`}>
             <Icon
-                size={16}
+                size={18}
                 name={alert.type === "error" ? "cross" : "checkmark"}
             />
 

@@ -233,6 +233,14 @@ export const MenuContent = forwardRef<HTMLDivElement, HTMLProps<HTMLDivElement>>
                 >
                     <div
                         ref={ref}
+                        onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }}
+                        onContextMenu={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }}
                         className={styles.menu}
                         aria-labelledby={context.labelId}
                         aria-describedby={context.descriptionId}

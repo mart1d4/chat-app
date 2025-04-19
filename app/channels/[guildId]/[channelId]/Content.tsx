@@ -3,6 +3,7 @@
 import type { GuildChannel, GuildMember, ResponseMessage, UserGuild } from "@/type";
 import { useRef, useEffect, useMemo, useState, useLayoutEffect } from "react";
 import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useData, useShowSettings, useUrls } from "@/store";
 import { isInline, isLarge, isNewDay } from "@/lib/message";
 import { useNotifications } from "@/store/notifications";
@@ -165,13 +166,20 @@ export default function Content({ guildId, channelId }: { guildId: number; chann
             }: {
                 messageId: number;
                 reactorId: number;
-                reaction: string;
+                reaction: string | null;
             }) => {
                 mutate(
                     (prev) => {
                         return prev?.map((a) =>
                             a.map((m) => {
                                 if (m.id === messageId) {
+                                    if (reaction === null) {
+                                        return {
+                                            ...m,
+                                            reactions: [],
+                                        };
+                                    }
+
                                     const existing = m.reactions.find((r) => {
                                         if (typeof reaction === "string") {
                                             return r.name === reaction;
@@ -324,6 +332,7 @@ export default function Content({ guildId, channelId }: { guildId: number; chann
     });
 
     const canManageGuild = hasPermission({ permission: "MANAGE_GUILD" });
+    const canSendMessages = hasPermission({ permission: "SEND_MESSAGES" });
 
     return useMemo(
         () => (
@@ -346,26 +355,57 @@ export default function Content({ guildId, channelId }: { guildId: number; chann
                                         channel={channel}
                                         canInvite={canInvite}
                                         canManageGuild={canManageGuild}
+                                        canSendMessages={canSendMessages}
                                     />
                                 )}
 
-                                {messages.map((message, index) => (
-                                    <div key={message.id}>
-                                        {isNewDay(messages, index) && (
-                                            <div className={styles.divider}>
-                                                <span>{getDayDate(message.createdAt)}</span>
-                                            </div>
-                                        )}
+                                {messages.map((message, index) => {
+                                    const mess = message;
 
-                                        <Message
-                                            guild={guild}
-                                            message={message}
-                                            channel={channel}
-                                            large={isLarge(messages, index)}
-                                            setMessages={handleUpdateMessages}
-                                        />
-                                    </div>
-                                ))}
+                                    // Since there's a guild involved here,
+                                    // we want to modify the author and reference author
+                                    // to add their guild profile to the object
+
+                                    const profile = guild.members.find(
+                                        (m) => m.id === mess.author.id
+                                    );
+
+                                    if (profile) {
+                                        mess.author = {
+                                            ...mess.author,
+                                            ...profile,
+                                        };
+                                    }
+
+                                    const reference = guild.members.find(
+                                        (m) => m.id === mess.reference?.author.id
+                                    );
+
+                                    if (reference) {
+                                        mess.reference!.author = {
+                                            ...mess.reference!.author,
+                                            ...reference,
+                                        };
+                                    }
+
+                                    return (
+                                        <div key={mess.id}>
+                                            {isNewDay(messages, index) && (
+                                                <div className={styles.divider}>
+                                                    <span>{getDayDate(mess.createdAt)}</span>
+                                                </div>
+                                            )}
+
+                                            <Message
+                                                guild={guild}
+                                                message={mess}
+                                                channel={channel}
+                                                large={isLarge(messages, index)}
+                                                setMessages={handleUpdateMessages}
+                                            />
+                                        </div>
+                                    );
+                                })}
 
                                 <div
                                     className={styles.spacer}
@@ -377,6 +417,7 @@ export default function Content({ guildId, channelId }: { guildId: number; chann
                 </div>
 
                 <TextArea
+                    guild={guild}
                     channel={channel}
                     setMessages={(message: ResponseMessage) => {
                         handleUpdateMessages("add", message.id, message);
@@ -394,14 +435,19 @@ export function FirstMessage({
     members,
     canInvite,
     canManageGuild,
+    canSendMessages,
 }: {
     guild: UserGuild;
     channel: GuildChannel & { isPrivate: boolean };
     members: GuildMember[];
     canInvite: boolean;
     canManageGuild: boolean;
+    canSendMessages: boolean;
 }) {
     const { setShowSettings } = useShowSettings();
+    const user = useAuthenticatedUser();
+
+    const isOwner = guild.ownerId === user.id;
 
     const content = [
         {
@@ -426,6 +472,7 @@ export function FirstMessage({
                 const el = document.getElementById(`textarea-${channel.id}`);
                 if (el) el.focus();
             },
+            disabled: !canSendMessages,
         },
         {
             text: "Add your first app",
@@ -446,68 +493,76 @@ export function FirstMessage({
                                 <p>{guild.name}</p>
                             </h3>
 
-                            <div>
-                                This is your brand new, shiny server. Here are some steps to help
-                                you get started. For more, check out our{" "}
-                                <Link href="/forum/getting-started">Getting Started guide</Link>.
-                            </div>
+                            {isOwner ? (
+                                <div>
+                                    This is your brand new, shiny server. Here are some steps to
+                                    help you get started. For more, check out our{" "}
+                                    <Link href="/forum/getting-started">Getting Started guide</Link>
+                                    .
+                                </div>
+                            ) : (
+                                <div>This is the beginning of this server.</div>
+                            )}
                         </div>
 
-                        {content.map((c) => {
-                            if (c.disabled) return null;
+                        {isOwner &&
+                            content.map((c) => {
+                                if (c.disabled) return null;
 
-                            const item = (
-                                <InteractiveElement
-                                    key={c.text}
-                                    className={styles.welcomeCard}
-                                    {...(c.onClick ? { onClick: c.onClick } : {})}
-                                >
-                                    <div
-                                        style={{
-                                            backgroundImage: `url(${c.icon})`,
-                                            opacity: c.completed ? 0.6 : 1,
-                                        }}
-                                    />
+                                const item = (
+                                    <InteractiveElement
+                                        key={c.text}
+                                        className={styles.welcomeCard}
+                                        {...(c.onClick ? { onClick: c.onClick } : {})}
+                                    >
+                                        <div
+                                            style={{
+                                                backgroundImage: `url(${c.icon})`,
+                                                opacity: c.completed ? 0.6 : 1,
+                                            }}
+                                        />
 
-                                    <div style={{ opacity: c.completed ? 0.6 : 1 }}>{c.text}</div>
+                                        <div style={{ opacity: c.completed ? 0.6 : 1 }}>
+                                            {c.text}
+                                        </div>
 
-                                    {c.completed ? (
-                                        <svg
-                                            className={styles.completedMark}
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 24 24"
-                                            width="24"
-                                            height="24"
-                                            fill="none"
-                                        >
-                                            <path
-                                                fill="currentColor"
-                                                d="M21.7 5.3a1 1 0 0 1 0 1.4l-12 12a1 1 0 0 1-1.4 0l-6-6a1 1 0 1 1 1.4-1.4L9 16.58l11.3-11.3a1 1 0 0 1 1.4 0Z"
-                                            />
-                                        </svg>
-                                    ) : (
-                                        <Icon name="caret" />
-                                    )}
-                                </InteractiveElement>
-                            );
-
-                            if (c.text === "Invite your friends") {
-                                return (
-                                    <Dialog key={c.text}>
-                                        <DialogTrigger>{item}</DialogTrigger>
-
-                                        <DialogContent blank>
-                                            <InviteDialog
-                                                guild={guild}
-                                                channel={channel}
-                                            />
-                                        </DialogContent>
-                                    </Dialog>
+                                        {c.completed ? (
+                                            <svg
+                                                className={styles.completedMark}
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24"
+                                                width="24"
+                                                height="24"
+                                                fill="none"
+                                            >
+                                                <path
+                                                    fill="currentColor"
+                                                    d="M21.7 5.3a1 1 0 0 1 0 1.4l-12 12a1 1 0 0 1-1.4 0l-6-6a1 1 0 1 1 1.4-1.4L9 16.58l11.3-11.3a1 1 0 0 1 1.4 0Z"
+                                                />
+                                            </svg>
+                                        ) : (
+                                            <Icon name="caret" />
+                                        )}
+                                    </InteractiveElement>
                                 );
-                            }
 
-                            return item;
-                        })}
+                                if (c.text === "Invite your friends") {
+                                    return (
+                                        <Dialog key={c.text}>
+                                            <DialogTrigger>{item}</DialogTrigger>
+
+                                            <DialogContent blank>
+                                                <InviteDialog
+                                                    guild={guild}
+                                                    channel={channel}
+                                                />
+                                            </DialogContent>
+                                        </Dialog>
+                                    );
+                                }
+
+                                return item;
+                            })}
                     </div>
                 </div>
             </div>

@@ -69,7 +69,7 @@ export function AddFriend() {
                         <button
                             type="submit"
                             tabIndex={!input.length ? -1 : 0}
-                            className={`button blue ${!input.length ? "disabled" : ""}`}
+                            className={`button regular blue ${!input.length ? "disabled" : ""}`}
                         >
                             Send Friend Request
                         </button>

@@ -1,6 +1,12 @@
 "use client";
 
-import { type ChannelRecipient, type DMChannel, type GuildChannel, type GuildMember } from "@/type";
+import {
+    type ChannelRecipient,
+    type DMChannel,
+    type Guild,
+    type GuildChannel,
+    type GuildMember,
+} from "@/type";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useData, useSettings, useWindowSettings } from "@/store";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -44,9 +50,25 @@ export const ChannelAside = memo(function ChannelAside({
         if (channel) arr = channel.recipients;
 
         if (guild) {
-            arr = guild.members.filter((r) =>
-                hasPermission({ permission: "VIEW_CHANNEL", userId: r.id })
-            );
+            arr = guild.members
+                .filter((m) => hasPermission({ permission: "VIEW_CHANNEL", userId: m.id }))
+                .map((m) => {
+                    const userRolesWithColor = guild.roles
+                        .filter((r) => m.roles.includes(r.id))
+                        .filter((r) => !r.everyone)
+                        .sort((a, b) => a.position - b.position);
+
+                    let color = null;
+
+                    if (userRolesWithColor.length) {
+                        color = userRolesWithColor[0].color;
+                    }
+
+                    return {
+                        ...m,
+                        color,
+                    };
+                });
         }
 
         return arr;
@@ -69,7 +91,7 @@ export const ChannelAside = memo(function ChannelAside({
 
     return (
         <aside className={styles.memberList}>
-            <div>
+            <div className="scrollbar">
                 {!initChannel && <h2>Members—{channel.recipients.length}</h2>}
                 {initChannel && !!online.length && <h2>Online — {online.length}</h2>}
 
@@ -78,8 +100,8 @@ export const ChannelAside = memo(function ChannelAside({
                         <UserItem
                             user={user}
                             key={user.id}
+                            guild={guild}
                             channel={channel}
-                            isGuild={!!guild}
                             offline={user.status === "offline"}
                             isOwner={
                                 guild
@@ -96,8 +118,8 @@ export const ChannelAside = memo(function ChannelAside({
                                 <UserItem
                                     user={user}
                                     key={user.id}
+                                    guild={guild}
                                     channel={channel}
-                                    isGuild={!!guild}
                                     isOwner={
                                         guild
                                             ? guild.ownerId === user.id
@@ -114,8 +136,8 @@ export const ChannelAside = memo(function ChannelAside({
                                     offline
                                     user={user}
                                     key={user.id}
+                                    guild={guild}
                                     channel={channel}
-                                    isGuild={!!guild}
                                     isOwner={
                                         guild
                                             ? guild.ownerId === user.id
@@ -132,16 +154,16 @@ export const ChannelAside = memo(function ChannelAside({
 
 export const UserItem = memo(function UserItem({
     user,
+    guild,
     channel,
     offline,
     isOwner,
-    isGuild,
 }: {
+    guild?: Guild;
     user: GuildMember | ChannelRecipient;
     channel: DMChannel | GuildChannel;
     offline?: boolean;
     isOwner?: boolean;
-    isGuild?: boolean;
 }) {
     const statusRef = useRef<HTMLDivElement>(null);
     const nameRef = useRef<HTMLDivElement>(null);
@@ -188,7 +210,10 @@ export const UserItem = memo(function UserItem({
                                         </div>
 
                                         <div className={styles.layoutContent}>
-                                            <div className={styles.contentName}>
+                                            <div
+                                                className={styles.contentName}
+                                                style={{ color: user.color || undefined }}
+                                            >
                                                 <Tooltip
                                                     delay={750}
                                                     show={nameBigger}
@@ -220,7 +245,7 @@ export const UserItem = memo(function UserItem({
                                                         </TooltipTrigger>
 
                                                         <TooltipContent>
-                                                            {isGuild ? "Server" : "Group"} Owner
+                                                            {guild ? "Server" : "Group"} Owner
                                                         </TooltipContent>
                                                     </Tooltip>
                                                 )}
@@ -254,13 +279,17 @@ export const UserItem = memo(function UserItem({
                 </PopoverTrigger>
 
                 <PopoverContent>
-                    <UserCard initUser={user} />
+                    <UserCard
+                        guild={guild}
+                        initUser={user}
+                    />
                 </PopoverContent>
             </Popover>
 
             <UserMenu
                 user={user}
                 type="author"
+                guild={guild}
                 channelId={channel.id}
                 channelType={channel.type}
                 channelOwnerId={"ownerId" in channel ? channel.ownerId : undefined}

@@ -2,10 +2,10 @@
 
 import { Menu, MenuContent, MenuDivider, MenuItem, MenuTrigger, useMenuContext } from "../Menu";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import { useShowSettings, useTriggerDialog } from "@/store";
 import { getDateUntilEnd, isStillMuted } from "@/lib/mute";
 import { useNotifications } from "@/store/notifications";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useSettings, useShowSettings, useTriggerDialog } from "@/store";
 import { useGuildSettings } from "@/store/settings";
 import type { UserGuild } from "@/type";
 import styles from "../Menu.module.css";
@@ -20,9 +20,15 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
     const { setGuildSettings } = useGuildSettings();
     const { setShowSettings } = useShowSettings();
     const { triggerDialog } = useTriggerDialog();
-    const { settings } = useSettings();
 
     const hasUnread = notifications.guilds.find((g) => g.id === guild.id)?.hasUnread || false;
+    const canInvite = hasPermission({ permission: "CREATE_INSTANT_INVITE" });
+    const canManageRoles = hasPermission({ permission: "MANAGE_ROLES" });
+    const canViewAuditLog = hasPermission({ permission: "VIEW_AUDIT_LOG" });
+    const canManageWebhooks = hasPermission({ permission: "MANAGE_WEBHOOKS" });
+    const canManageGuild = hasPermission({ permission: "MANAGE_GUILD" });
+
+    const canSeeSettings = canManageRoles || canViewAuditLog || canManageWebhooks || canManageGuild;
 
     function muteGuild(duration: string) {
         setGuildSettings(guild.id, [
@@ -152,11 +158,12 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
                     </MenuItem>
                 )}
 
-                {hasPermission({ permission: "MANAGE_GUILD" }) && (
+                {canSeeSettings && (
                     <>
                         <MenuItem
                             icon="cog"
                             onClick={() => {
+                                setOpen(false);
                                 setShowSettings({
                                     type: "GUILD",
                                     guild: guild,
@@ -268,8 +275,11 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
                         danger
                         icon="leave"
                         onClick={() => {
-                            console.log("Not implemented");
                             setOpen(false);
+                            triggerDialog({
+                                type: "LEAVE_GUILD",
+                                data: { guild },
+                            });
                         }}
                     >
                         Leave Server
@@ -517,7 +527,7 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
 
             <MenuDivider />
 
-            {hasPermission({ permission: "MANAGE_GUILD" }) && (
+            {canSeeSettings && (
                 <Menu
                     gap={12}
                     openOnHover
@@ -527,7 +537,18 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
                 >
                     <MenuTrigger>
                         <div>
-                            <MenuItem submenu>Server Settings</MenuItem>
+                            <MenuItem
+                                submenu
+                                onClick={() => {
+                                    setOpen(false);
+                                    setShowSettings({
+                                        type: "GUILD",
+                                        guild: guild,
+                                    });
+                                }}
+                            >
+                                Server Settings
+                            </MenuItem>
                         </div>
                     </MenuTrigger>
 
@@ -594,8 +615,11 @@ export function GuildMenu({ guild, type }: { guild: UserGuild; type?: "settings"
                     <MenuItem
                         danger
                         onClick={() => {
-                            console.log("Not implemented");
                             setOpen(false);
+                            triggerDialog({
+                                type: "LEAVE_GUILD",
+                                data: { guild },
+                            });
                         }}
                     >
                         Leave Server

@@ -102,7 +102,7 @@ export default function ResetPasswordPage() {
 
                     <button
                         type="submit"
-                        className="button blue submit"
+                        className="button regular blue submit"
                     >
                         Change Password
                     </button>

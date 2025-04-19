@@ -1,238 +1,331 @@
-import { Icon, Tooltip, TooltipContent, TooltipTrigger, UserMention } from "@components";
-import type { LocalMessage, ResponseMessage } from "@/type";
-import SimpleMarkdown from "simple-markdown";
+import type { Channel, LocalMessage, ResponseMessage } from "@/type";
+import Markdown, { RuleType } from "markdown-to-jsx";
+import { Fragment, useEffect, useRef, type Key } from "react";
+import { emojiCodes } from "@/lib/emoji-codes";
 import styles from "../Message.module.css";
-import { createElement } from "react";
 import { nanoid } from "nanoid";
 import hljs from "highlight.js";
+import Image from "next/image";
 import Link from "next/link";
-import { getCodeFromName } from "@/lib/emojis";
+import {
+    TooltipContent,
+    TooltipTrigger,
+    UserMention,
+    MenuTrigger,
+    UserMenu,
+    Tooltip,
+    Icon,
+    Menu,
+} from "@components";
 
 export function FormatMessage({
     message,
-    fixed = false,
+    channel,
+    reference = false,
 }: {
     message: ResponseMessage | LocalMessage;
-    fixed?: boolean;
+    channel: Channel;
+    reference?: boolean;
 }) {
-    const newlineRule = {
-        order: SimpleMarkdown.defaultRules.newline.order - 0.5,
-        match: (source: any) => /^(\r\n|\r|\n)/.exec(source),
-        parse: (capture: any) => ({ content: capture[1] }),
-        react: () => <br key={nanoid()} />,
-    };
+    const isEmojiOnly = isEmojiOnlyMessage(message.content) && !reference;
 
-    const emojiCharRule = {
-        order: SimpleMarkdown.defaultRules.text.order,
-        match: (source: any) => {
-            const emojiRegex =
-                /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/;
-            const match = emojiRegex.exec(source);
+    return (
+        <span style={{ whiteSpace: "pre-wrap" }}>
+            <Markdown
+                children={addnewlines(message.content)}
+                options={{
+                    forceBlock: true,
+                    disableParsingRawHTML: true,
+                    overrides: {
+                        // code: SyntaxHighlightedCode,
+                        pre: SyntaxHighlightedCode,
+                        a: {
+                            component: LinkElement,
+                            props: { message },
+                        },
+                    },
+                    renderRule(next, node, renderChildren, state) {
+                        if (node?.type === RuleType.text) {
+                            const text = node.text;
 
-            if (!match || typeof match !== "string") {
-                return null;
-            }
+                            // Regex for emojis and mentions
+                            const emojiRegex = /:([a-zA-Z0-9_]+|[a-fA-F0-9]+(?:-[a-fA-F0-9]+)*):/g;
+                            const mentionRegex = /<@([a-zA-Z0-9_]+)>/g;
+                            const spoilerRegex = /\|\|([\s\S]+?)\|\|/g;
 
-            return match;
-        },
-        parse: (capture: any) => {
-            const emoji = capture[0];
-            console.log(emoji);
-            return null;
-            // const emojiHex = getEmojiHex(emoji);
-            return { emoji };
-        },
-        react: (node: any, output: any, state: any) => {
-            return null;
-            return (
-                <img
-                    key={nanoid()}
-                    alt={node.emoji}
+                            if (spoilerRegex.test(text)) {
+                                console.log("Spoiler detected:", text);
+
+                                const parts = [];
+                                let lastIndex = 0;
+
+                                text.replace(spoilerRegex, (match, spoilerContent, index) => {
+                                    // Push the text before the spoiler
+                                    if (index > lastIndex) {
+                                        parts.push(text.slice(lastIndex, index));
+                                    }
+
+                                    // Push the spoiler content wrapped in a Spoiler component
+                                    parts.push(
+                                        <span
+                                            className={styles.spoiler}
+                                            key={state.key || nanoid()}
+                                            onClick={(e) =>
+                                                e.currentTarget.classList.add(styles.display)
+                                            }
+                                        >
+                                            <span>{renderChildren(spoilerContent, state)}</span>
+                                        </span>
+                                    );
+
+                                    lastIndex = index + match.length;
+                                    return match;
+                                });
+
+                                // Push the remaining text after the last spoiler
+                                if (lastIndex < text.length) {
+                                    parts.push(text.slice(lastIndex));
+                                }
+
+                                // Return the parts as a React fragment
+                                return <>{parts}</>;
+                            }
+
+                            // Combined regex to match both emojis and mentions
+                            const combinedRegex = new RegExp(
+                                `${emojiRegex.source}|${mentionRegex.source}`,
+                                "g"
+                            );
+
+                            // Split the text into parts based on matches
+                            const parts = [];
+                            let lastIndex = 0;
+
+                            text.replace(combinedRegex, (match, emoji, mention, index) => {
+                                // Push the text before the match
+                                if (index > lastIndex) {
+                                    parts.push(text.slice(lastIndex, index));
+                                }
+
+                                // Push the matched emoji or mention
+                                if (emoji) {
+                                    parts.push(
+                                        Emoji({
+                                            code: emoji,
+                                            reference,
+                                            isEmojiOnly,
+                                            key: state.key,
+                                        })
+                                    );
+                                } else if (mention) {
+                                    parts.push(
+                                        Mention({
+                                            channel,
+                                            key: state.key,
+                                            userId: mention,
+                                            mentions: message.mentions,
+                                        })
+                                    );
+                                }
+
+                                lastIndex = index + match.length;
+                                return match;
+                            });
+
+                            // Push the remaining text after the last match
+                            if (lastIndex < text.length) {
+                                parts.push(text.slice(lastIndex));
+                            }
+
+                            // Return the parts as a React fragment
+                            return <>{parts}</>;
+                        }
+
+                        return next();
+                    },
+                }}
+            />
+        </span>
+    );
+}
+
+function isEmojiOnlyMessage(message: string) {
+    // Regex to match individual emojis (your provided regex)
+    const emojiRegex = /^(:([a-zA-Z0-9_]+|[a-fA-F0-9]+(?:-[a-fA-F0-9]+)*):\s*)+$/g;
+
+    // Match all emojis in the string
+    const matches = message.match(emojiRegex);
+
+    // Check if the string contains only emojis and at most 5 of them
+    return !!matches && matches.length <= 30 && matches.join("") === message;
+}
+
+function LinkElement(props: any) {
+    const hasError = "error" in props.message && props.message.error;
+
+    return (
+        <Link
+            key={nanoid()}
+            target="_blank"
+            href={props.href}
+            rel="noopener noreferrer"
+            className={styles.messageLink}
+            style={{ color: hasError ? "var(--danger-0)" : "" }}
+        >
+            {props.href}
+        </Link>
+    );
+}
+
+function Emoji({
+    key,
+    code,
+    reference,
+    isEmojiOnly,
+}: {
+    key?: Key;
+    code: string;
+    reference?: boolean;
+    isEmojiOnly?: boolean;
+}) {
+    const emoji = `:${code}:`;
+
+    if (!emojiCodes.includes(code)) {
+        return <span key={nanoid()}>{emoji}</span>;
+    }
+
+    return (
+        <Tooltip
+            delay={500}
+            key={key || nanoid()}
+            show={reference ? false : undefined}
+        >
+            <TooltipTrigger>
+                <Image
+                    alt={emoji}
                     className="emoji"
                     draggable={false}
-                    src={`https://cdn.jsdelivr.net/gh/twitter/twemoji/assets/72x72/${node.emojiHex}.png`}
+                    width={reference ? 18 : isEmojiOnly ? 48 : 22}
+                    height={reference ? 18 : isEmojiOnly ? 48 : 22}
+                    style={{ marginBottom: reference ? "-3px" : undefined }}
+                    src={`https://cdn.jsdelivr.net/gh/twitter/twemoji/assets/72x72/${code}.png`}
                 />
-            );
-        },
-    };
+            </TooltipTrigger>
 
-    const headingRule = {
-        order: SimpleMarkdown.defaultRules.heading.order,
-        match: (source: any) => {
-            return source.match(/^#{1,6} .+/);
-        },
-        parse: (capture: any) => {
-            const level = capture[0].match(/^#{1,6}/)[0].length;
-            const content = capture[0].slice(level + 1).trim();
-            return {
-                level,
-                content,
-            };
-        },
-        react: (node: any, _: any, state: any) => {
-            const Tag = `h${node.level}`;
-            return createElement(Tag, { key: state.key }, node.content);
-        },
-    };
+            <TooltipContent>
+                <div>
+                    <p style={{ textAlign: "center" }}>{emoji}</p>
+                    <span style={{ color: "var(--fg-4)" }}>Click to learn more</span>
+                </div>
+            </TooltipContent>
+        </Tooltip>
+    );
+}
 
-    const emojiRule = {
-        order: SimpleMarkdown.defaultRules.text.order - 0.5,
-        match: (source: any) => /^:([a-zA-Z0-9_]+):/.exec(source),
-        parse: (capture: any) => ({ name: capture[1], id: capture[2] }),
-        react: (node: any) => {
-            const hex = getCodeFromName(node.name);
+function Mention({
+    key,
+    userId,
+    channel,
+    mentions,
+}: {
+    key?: Key;
+    userId: string;
+    channel: Channel;
+    mentions: ResponseMessage["mentions"];
+}) {
+    const user = mentions?.find((u) => u.id === parseInt(userId));
 
-            if (!hex) {
-                return <span key={nanoid()}>{node.name}</span>;
-            }
+    return (
+        <span
+            key={key || nanoid()}
+            onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }}
+        >
+            <Menu
+                positionOnClick
+                openOnRightClick
+                placement="bottom-start"
+            >
+                <MenuTrigger>
+                    <span>
+                        <UserMention
+                            full
+                            user={user || { id: parseInt(userId), displayName: "unknown-user" }}
+                        />
+                    </span>
+                </MenuTrigger>
 
-            return (
-                <img
-                    key={nanoid()}
-                    alt={node.name}
-                    className="emoji"
-                    draggable={false}
-                    src={`https://cdn.jsdelivr.net/gh/twitter/twemoji/assets/72x72/${hex}.png`}
-                />
-            );
-        },
-    };
+                {user && (
+                    <UserMenu
+                        user={user}
+                        type="author"
+                        channelType={channel.type}
+                    />
+                )}
+            </Menu>
+        </span>
+    );
+}
 
-    const codeBlockRule = {
-        match: SimpleMarkdown.blockRegex(/^```([\s\S]*?)```/),
-        parse: (capture: any) => ({ content: capture[1] }),
-        react: function (node: any) {
-            const id = nanoid();
-            const content = node.content.replace(/^[^\n]*\n/, "").replace(/\n[^\n]*$/, "");
+function SyntaxHighlightedCode(props: any) {
+    const ref = useRef<HTMLPreElement | null>(null);
 
-            let language = node.content
-                .match(/^[^\n]*\n/)?.[0]
-                .replace(/^```/, "")
-                .trim();
+    useEffect(() => {
+        const childProps = props.children?.props || {};
 
-            return (
-                <pre key={nanoid()}>
-                    <code
-                        className={`language-${language}`}
-                        ref={(el) => {
-                            if (el) hljs.highlightElement(el);
+        if (ref.current && childProps.className?.includes("lang-") && hljs) {
+            hljs.highlightElement(ref.current.children[0] as HTMLElement);
+
+            // hljs won't reprocess the element unless this attribute is removed
+            ref.current.children[0].removeAttribute("data-highlighted");
+        }
+    }, [props.children]);
+
+    return (
+        <pre
+            ref={ref}
+            key={nanoid()}
+        >
+            <Fragment {...props} />
+
+            <Tooltip>
+                <TooltipTrigger>
+                    <button
+                        type="button"
+                        className={styles.copyCodeSnippet}
+                        onClick={() => {
+                            try {
+                                navigator.clipboard.writeText(props.children as string);
+                                const el = document.getElementById(
+                                    `copy-code-snippet-${props.id}`
+                                )!;
+                                el.innerText = "Copied!";
+                                setTimeout(() => {
+                                    el.innerText = "Copy Code Snippet";
+                                }, 2000);
+                            } catch (e) {
+                                console.error(e);
+                            }
                         }}
                     >
-                        {content}
-                    </code>
+                        <Icon
+                            size={20}
+                            name="copy"
+                        />
+                    </button>
+                </TooltipTrigger>
 
-                    <Tooltip>
-                        <TooltipTrigger>
-                            <button
-                                type="button"
-                                className={styles.copyCodeSnippet}
-                                onClick={() => {
-                                    try {
-                                        navigator.clipboard.writeText(content);
-                                        const el = document.getElementById(
-                                            `copy-code-snippet-${id}`
-                                        )!;
-                                        el.innerText = "Copied!";
-                                        setTimeout(() => {
-                                            el.innerText = "Copy Code Snippet";
-                                        }, 2000);
-                                    } catch (e) {
-                                        console.error(e);
-                                    }
-                                }}
-                            >
-                                <Icon
-                                    size={20}
-                                    name="copy"
-                                />
-                            </button>
-                        </TooltipTrigger>
+                <TooltipContent>
+                    <span id={`copy-code-snippet-${props.id}`}>Copy Code Snippet</span>
+                </TooltipContent>
+            </Tooltip>
+        </pre>
+    );
+}
 
-                        <TooltipContent>
-                            <span id={`copy-code-snippet-${id}`}>Copy Code Snippet</span>
-                        </TooltipContent>
-                    </Tooltip>
-                </pre>
-            );
-        },
-    };
-
-    const spoilerRule = {
-        order: SimpleMarkdown.defaultRules.blockQuote.order + 0.5,
-        match: (source: any) => /^\|\|([\s\S]+?)\|\|/.exec(source),
-        parse: (capture: any, parse: any, state: any) => ({ content: parse(capture[1], state) }),
-        react: (node: any, output: any) => {
-            console.log(node);
-            return (
-                <span
-                    key={nanoid()}
-                    className={styles.spoiler}
-                    onClick={(e) => e.currentTarget.classList.add(styles.display)}
-                >
-                    <span>{output(node.content)}</span>
-                </span>
-            );
-        },
-    };
-
-    const userMentionRule = {
-        order: SimpleMarkdown.defaultRules.text.order - 0.5,
-        match: (source: any) => /^<@!?(\d+)>/.exec(source),
-        parse: (capture: any) => ({ id: capture[1] }),
-        react: (node: any) => {
-            console.log("Message", message);
-            const user = message.mentions?.find((u) => u.id === parseInt(node.id));
-
-            return (
-                <UserMention
-                    full
-                    fixed={fixed}
-                    key={nanoid()}
-                    user={user || { id: parseInt(node.id), displayName: "Unknown User" }}
-                />
-            );
-        },
-    };
-
-    const linkRule = {
-        ...SimpleMarkdown.defaultRules.link,
-        react: (node: any, output: any, state: any) => (
-            <Link
-                key={nanoid()}
-                target="_blank"
-                href={node.target}
-                rel="noopener noreferrer"
-                className={styles.messageLink}
-                style={{ color: "error" in message && message.error ? "var(--danger-0)" : "" }}
-            >
-                {output(node.content, state)}
-            </Link>
-        ),
-    };
-
-    const rules = {
-        ...SimpleMarkdown.defaultRules,
-        spoiler: spoilerRule,
-        userMention: userMentionRule,
-        link: linkRule,
-        codeBlock: codeBlockRule,
-        emoji: emojiRule,
-        heading: headingRule,
-        emojiChar: emojiCharRule,
-        newline: newlineRule,
-        text: {
-            ...SimpleMarkdown.defaultRules.text,
-            match: SimpleMarkdown.anyScopeRegex(
-                new RegExp(
-                    SimpleMarkdown.defaultRules.text.match.regex.source.replace("?=", "?=\n|\r|")
-                )
-            ),
-        },
-    };
-
-    const parser = SimpleMarkdown.parserFor(rules);
-    const reactOutput = SimpleMarkdown.outputFor(rules, "react");
-
-    const syntaxTree = parser(message.content);
-    return <div>{reactOutput(syntaxTree)}</div>;
+export function addnewlines(text: string): string {
+    const newText = text.replace(/\n\n/g, "\n​\n");
+    return newText;
 }

@@ -3,6 +3,7 @@
     display: flex;
     padding: 0 16px;
     min-width: 300px;
+    max-width: 350px;
     color: var(--fg-3);
     align-items: center;
     border-radius: 24px;

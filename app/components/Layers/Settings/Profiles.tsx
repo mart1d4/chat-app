@@ -209,6 +209,27 @@ export function Profiles() {
         setFileTemp(null);
     }
 
+    const variants = {
+        enter: {
+            y: 0, // Starts at the final position
+            transition: {
+                type: "spring",
+                stiffness: 500,
+                damping: 30,
+            },
+        },
+        exit: {
+            y: [0, -40, 1000], // Moves up slightly, then plunges down
+            transition: {
+                duration: 0.6,
+                ease: [0.4, 0, 0.2, 1], // Snappy easing
+            },
+        },
+        initial: {
+            y: 250, // Starts off-screen at the bottom
+        },
+    };
+
     return (
         <div>
             {fileTemp && (
@@ -308,14 +329,14 @@ export function Profiles() {
                         <div className={styles.buttonContainer}>
                             <button
                                 onClick={() => avatarInputRef.current?.click()}
-                                className="button blue"
+                                className="button regular blue"
                             >
                                 Change Avatar
                             </button>
 
                             {avatar && (
                                 <button
-                                    className="button underline"
+                                    className="button regular underline"
                                     onClick={() => setAvatar(null)}
                                 >
                                     Remove Avatar
@@ -329,7 +350,7 @@ export function Profiles() {
 
                         <div className={styles.buttonContainer}>
                             <button
-                                className="button blue"
+                                className="button regular blue"
                                 onClick={() => bannerInputRef.current?.click()}
                             >
                                 Change Banner
@@ -337,7 +358,7 @@ export function Profiles() {
 
                             {banner && (
                                 <button
-                                    className="button underline"
+                                    className="button regular underline"
                                     onClick={() => setBanner(null)}
                                 >
                                     Remove Banner
@@ -370,7 +391,7 @@ export function Profiles() {
                                             </div>
                                         </PopoverTrigger>
 
-                                        <PopoverContent>
+                                        <PopoverContent highIndex>
                                             <ColorPicker
                                                 initColor={bannerColor}
                                                 onColorChange={(color) => setBannerColor(color)}
@@ -401,7 +422,7 @@ export function Profiles() {
                                         </div>
                                     </PopoverTrigger>
 
-                                    <PopoverContent>
+                                    <PopoverContent highIndex>
                                         <ColorPicker
                                             initColor={accentColor}
                                             onColorChange={(color) => setAccentColor(color)}
@@ -507,10 +528,10 @@ export function Profiles() {
                 {needsSaving && (
                     <motion.div
                         className={styles.saveAlert}
-                        initial={{ transform: "translateY(80px)" }}
-                        animate={{ transform: "translateY(0)" }}
-                        exit={{ transform: "translateY(80px)" }}
-                        transition={{ duration: 0.1 }}
+                        variants={variants}
+                        initial="initial"
+                        animate="enter"
+                        exit="exit"
                     >
                         <p>
                             {errors.server ? errors.server : "Careful — you have unsaved changes!"}
@@ -519,7 +540,7 @@ export function Profiles() {
                         <div>
                             <button
                                 type="button"
-                                className="button underline"
+                                className="button regular underline"
                                 onClick={() => resetState()}
                             >
                                 Reset
@@ -534,8 +555,8 @@ export function Profiles() {
                                         className={
                                             (description?.length || 0) > 190 ||
                                             displayName.length < 2
-                                                ? "button green disabled"
-                                                : "button green"
+                                                ? "button regular green disabled"
+                                                : "button regular green"
                                         }
                                         onClick={(e) => {
                                             e.stopPropagation();

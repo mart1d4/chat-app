@@ -27,6 +27,7 @@ const codeFileExtensions = [
     "mm",
     "pas",
     "asm",
+    "rs",
 
     // Functional and Scripting
     "hs",
@@ -318,6 +319,7 @@ const codeExtensions = [
     "f95",
     "asm",
     "vhdl",
+    "rs",
 ];
 
 const xmlExtensions = [

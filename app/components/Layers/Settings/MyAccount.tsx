@@ -227,7 +227,7 @@ export function MyAccount({ setActiveTab }: any) {
                         </div>
 
                         <button
-                            className="button blue"
+                            className="button regular blue"
                             onClick={() => setActiveTab("Profiles")}
                         >
                             Edit User Profile
@@ -245,7 +245,7 @@ export function MyAccount({ setActiveTab }: any) {
                                 <DialogTrigger>
                                     <button
                                         id="change-username"
-                                        className="button grey"
+                                        className="button regular grey"
                                     >
                                         Edit
                                     </button>
@@ -311,7 +311,7 @@ export function MyAccount({ setActiveTab }: any) {
                             <Dialog>
                                 <DialogTrigger>
                                     <button
-                                        className="button grey"
+                                        className="button regular grey"
                                         id="change-email"
                                     >
                                         {!!user.email ? "Edit" : "Add"}
@@ -486,7 +486,7 @@ export function MyAccount({ setActiveTab }: any) {
 
                             <button
                                 disabled
-                                className="button grey disabled"
+                                className="button regular grey disabled"
                             >
                                 {!!user.phone ? "Edit" : "Add"}
                             </button>
@@ -506,7 +506,7 @@ export function MyAccount({ setActiveTab }: any) {
                     <DialogTrigger>
                         <button
                             id="change-password"
-                            className="button blue"
+                            className="button regular blue"
                             style={{ marginBottom: "28px" }}
                         >
                             Change Password
@@ -567,7 +567,7 @@ export function MyAccount({ setActiveTab }: any) {
                     <div className={styles.buttonsContainer}>
                         <button
                             disabled
-                            className="button blue disabled"
+                            className="button regular blue disabled"
                         >
                             Enable Authenticator App
                         </button>
@@ -583,7 +583,7 @@ export function MyAccount({ setActiveTab }: any) {
                     <div className={styles.buttonsContainer}>
                         <button
                             disabled
-                            className="button blue disabled"
+                            className="button regular blue disabled"
                         >
                             Register a Security Key
                         </button>
@@ -601,9 +601,13 @@ export function MyAccount({ setActiveTab }: any) {
                             </div>
 
                             <div className={styles.buttonsContainer}>
-                                <button className="button blue">Enable SMS Authentication</button>
+                                <button className="button regular blue">
+                                    Enable SMS Authentication
+                                </button>
 
-                                <button className="button underline">Change phone number</button>
+                                <button className="button regular underline">
+                                    Change phone number
+                                </button>
                             </div>
                         </div>
                     </>
@@ -625,7 +629,7 @@ export function MyAccount({ setActiveTab }: any) {
 
                     <button
                         disabled
-                        className="button red disabled"
+                        className="button regular red disabled"
                     >
                         Delete Account
                     </button>

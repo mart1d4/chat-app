@@ -10,7 +10,6 @@ export function Range({
     max,
     step,
     size,
-    initValue,
     homogeneousBg,
     ...props
 }: {
@@ -20,17 +19,10 @@ export function Range({
     max?: number;
     step?: number;
     size?: "sm" | "md" | "lg";
-    initValue?: number;
     homogeneousBg?: string;
 }) {
     const [isDragging, setIsDragging] = useState(false);
-    const [value, setValue] = useState(initValue ?? 0);
-
     const slider = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        onChange(value);
-    }, [value, onChange]);
 
     const handleDrag = (e: MouseEvent) => {
         if (!slider.current) return;
@@ -49,8 +41,8 @@ export function Range({
             max ?? 100
         );
 
-        if (newValue === value) return;
-        setValue(newValue);
+        if (newValue === val) return;
+        onChange(newValue);
     };
 
     useEffect(() => {
@@ -72,10 +64,6 @@ export function Range({
         };
     }, [isDragging]);
 
-    useEffect(() => {
-        setValue(val ?? 0);
-    }, [val]);
-
     return (
         <div
             className={`${styles.slider} ${styles[size ?? "md"]}`}
@@ -86,12 +74,12 @@ export function Range({
                 min={min ?? 0}
                 max={max ?? 100}
                 step={step ?? 1}
-                value={val ?? value}
+                value={val ?? 0}
                 className={styles.input}
                 focus-id="range-slider-crop"
                 onChange={(e) => {
-                    if (value === Number(e.target.value)) return;
-                    setValue(Number(e.target.value));
+                    if (val === Number(e.target.value)) return;
+                    onChange(Number(e.target.value));
                 }}
             />
 
@@ -117,7 +105,7 @@ export function Range({
                     className={styles.progress}
                     style={{
                         width: `${
-                            ((Math.round((value - (min ?? 0)) / (step ?? 1)) * (step ?? 1)) /
+                            ((Math.round((val ?? 0 - (min ?? 0)) / (step ?? 1)) * (step ?? 1)) /
                                 ((max ?? 100) - (min ?? 0))) *
                             100
                         }%`,

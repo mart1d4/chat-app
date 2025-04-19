@@ -4,14 +4,15 @@ import { getRandomImage, getStatusColor, getStatusLabel, getStatusMask } from "@
 import { useData, useShowSettings, useTriggerDialog } from "@/store";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { useFetchNote, useFetchUser } from "@/hooks/useFetchData";
+import type { AppUser, GuildRole, User, UserGuild } from "@/type";
 import { useRelationships } from "@/hooks/useRelationships";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useRequests } from "@/hooks/useRequests";
-import { useState, Fragment, useId } from "react";
+import { useState, Fragment, useId, useMemo } from "react";
 import { getButtonColor } from "@/lib/getColors";
-import { usePopoverContext } from "../Popover";
+import { Popover, PopoverContent, PopoverTrigger, usePopoverContext } from "../Popover";
 import { getCdnUrl } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
-import type { AppUser, User } from "@/type";
 import styles from "./UserCard.module.css";
 import Image from "next/image";
 import {
@@ -29,18 +30,21 @@ import {
     Masks,
     Icon,
     Menu,
+    Input,
 } from "@components";
 
 export function UserCard({
     initUser,
     me,
     mode,
+    guild,
     onAvatarClick,
     onBannerClick,
 }: {
     initUser: typeof mode extends "edit" ? AppUser : User["id"] & Partial<User>;
     me?: boolean;
     mode?: "edit";
+    guild?: UserGuild;
     onAvatarClick?: () => void;
     onBannerClick?: () => void;
 }) {
@@ -72,8 +76,10 @@ export function UserCard({
     const [usernameCopied, setUsernameCopied] = useState(false);
     const [message, setMessage] = useState("");
 
-    const { updateUser, addFriend, removeFriend, sendMessage, createChannel } = useRequests();
+    const { updateUser, addFriend, removeFriend, sendMessage, createChannel, updateMember } =
+        useRequests();
     const { setOpen } = !mode ? usePopoverContext() : { setOpen: () => {} };
+    const { hasPermission } = usePermissions({ guildId: guild?.id });
     const { setShowSettings } = useShowSettings();
     const { triggerDialog } = useTriggerDialog();
     const currentUser = useAuthenticatedUser();
@@ -83,6 +89,17 @@ export function UserCard({
     const { isCurrentUser, isFriend, hasRequested, wasRequested, isBlocked } = useRelationships(
         initUser.id
     );
+
+    const profileMe = guild?.members.find((m) => m.id === currentUser.id);
+
+    const roles =
+        guild?.roles.filter((r) => !r.everyone).sort((a, b) => a.position - b.position) || [];
+    const userRoles = roles.filter((r: GuildRole) => initUser?.roles?.includes(r.id)) || [];
+    const canManageRoles = hasPermission({ permission: "MANAGE_ROLES" });
+
+    const meRoles = roles.filter((r: GuildRole) => profileMe?.roles.includes(r.id)) || [];
+    const highestRole = meRoles.length ? meRoles[0] : null;
+    const isMeOwner = guild?.ownerId === currentUser.id;
 
     async function handleSendMessage() {
         if (message.length > 0) {
@@ -566,14 +583,14 @@ export function UserCard({
                         </div>
                         <div>
                             <button
-                                className="button blue small"
+                                className="button regular blue small"
                                 onClick={() => addFriend.send({ username: user.username })}
                             >
                                 Accept
                             </button>
 
                             <button
-                                className="button grey small"
+                                className="button regular grey small"
                                 onClick={() => removeFriend.send({ username: user.username })}
                             >
                                 Ignore
@@ -693,6 +710,95 @@ export function UserCard({
                             )}
                         </div>
                     )}
+
+                {(!!userRoles.length || canManageRoles) && (
+                    <section className={styles.roles}>
+                        {userRoles.map((role) => {
+                            const canRemove =
+                                canManageRoles &&
+                                (highestRole?.position < role.position || isMeOwner);
+
+                            return (
+                                <div
+                                    key={role.id}
+                                    className={styles.role}
+                                >
+                                    {canRemove ? (
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <button
+                                                    style={{
+                                                        backgroundColor: role.color || "#99AAB5",
+                                                    }}
+                                                    onClick={() => {
+                                                        let newRoles = initUser.roles;
+
+                                                        if (initUser.roles.includes(role.id)) {
+                                                            newRoles = initUser.roles.filter(
+                                                                (r) => r !== role.id
+                                                            );
+                                                        } else {
+                                                            newRoles = [...initUser.roles, role.id];
+                                                        }
+
+                                                        updateMember.send({
+                                                            guildId: guild!.id,
+                                                            memberId: initUser.id,
+                                                            updates: { roles: newRoles },
+                                                        });
+                                                    }}
+                                                >
+                                                    <Icon
+                                                        size={10}
+                                                        name="cross"
+                                                    />
+                                                </button>
+                                            </TooltipTrigger>
+
+                                            <TooltipContent>Remove Role</TooltipContent>
+                                        </Tooltip>
+                                    ) : (
+                                        <div style={{ backgroundColor: role.color || "#99AAB5" }} />
+                                    )}
+
+                                    <span>{role.name}</span>
+                                </div>
+                            );
+                        })}
+
+                        {canManageRoles && (
+                            <Popover>
+                                <PopoverTrigger>
+                                    <div className={styles.roleAdd}>
+                                        <Tooltip>
+                                            <TooltipTrigger>
+                                                <button>
+                                                    <Icon
+                                                        size={16}
+                                                        name="add"
+                                                    />
+                                                </button>
+                                            </TooltipTrigger>
+
+                                            <TooltipContent>Add Role</TooltipContent>
+                                        </Tooltip>
+                                    </div>
+                                </PopoverTrigger>
+
+                                <PopoverContent>
+                                    <RoleAdd
+                                        guildId={guild!.id}
+                                        isMeOwner={isMeOwner}
+                                        memberId={initUser.id}
+                                        roleList={guild!.roles}
+                                        memberRoles={initUser.roles}
+                                        highestRolePosition={highestRole?.position}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        )}
+                    </section>
+                )}
             </div>
 
             {me ? (
@@ -700,7 +806,7 @@ export function UserCard({
                     <section>
                         <button
                             autoFocus
-                            className="button"
+                            className="button regular"
                             onClick={() => {
                                 setShowSettings({ type: "USER", tab: "Profiles" });
                                 setOpen(false);
@@ -723,7 +829,7 @@ export function UserCard({
                             placement="right-start"
                         >
                             <MenuTrigger>
-                                <button className="button">
+                                <button className="button regular">
                                     <StatusIcon status={user.status} />
 
                                     <span>{getStatusLabel(user.status)}</span>
@@ -811,7 +917,7 @@ export function UserCard({
                             placement="right-start"
                         >
                             <MenuTrigger>
-                                <button className="button">
+                                <button className="button regular">
                                     <Icon
                                         size={16}
                                         name="user-circle"
@@ -852,7 +958,7 @@ export function UserCard({
                         <div className={styles.divider} />
 
                         <button
-                            className="button"
+                            className="button regular"
                             onClick={() => {
                                 try {
                                     navigator.clipboard.writeText(user.id);
@@ -876,7 +982,7 @@ export function UserCard({
                     <div className={styles.editProfile}>
                         <button
                             disabled={!!mode}
-                            className="button"
+                            className="button regular"
                             onClick={() => {
                                 setOpen(false);
                                 setShowSettings({ type: "USER", tab: "Profiles" });
@@ -953,5 +1059,103 @@ export function StatusIcon({
                 />
             </foreignObject>
         </svg>
+    );
+}
+
+function RoleAdd({
+    roleList,
+    memberRoles,
+    guildId,
+    memberId,
+    isMeOwner,
+    highestRolePosition,
+}: {
+    roleList: GuildRole[];
+    memberRoles: number[];
+    guildId: number;
+    memberId: number;
+    isMeOwner: boolean;
+    highestRolePosition: number | undefined;
+}) {
+    const [search, setSearch] = useState("");
+
+    const { setOpen } = usePopoverContext();
+    const { updateMember } = useRequests();
+
+    const roles = useMemo(
+        () =>
+            roleList
+                .filter((r) => !memberRoles.includes(r.id))
+                .filter((r) => r.position > (highestRolePosition ?? 0) || isMeOwner)
+                .filter((r) => r.name.toLowerCase().includes(search.toLowerCase())),
+        [roleList, memberRoles, highestRolePosition, isMeOwner, search]
+    );
+
+    return (
+        <div className={styles.roleSearch}>
+            <Input
+                autoFocus
+                hideLabel
+                size="small"
+                label="Role"
+                value={search}
+                placeholder="Role"
+                onChange={(v) => setSearch(v)}
+                rightItem={
+                    search.length ? (
+                        <button
+                            onClick={() => setSearch("")}
+                            className={styles.clearButton}
+                        >
+                            <Icon
+                                size={16}
+                                name="cross"
+                            />
+                        </button>
+                    ) : (
+                        <Icon
+                            name="search"
+                            size={16}
+                        />
+                    )
+                }
+            />
+
+            {roles.length ? (
+                <ol className="scrollbar">
+                    {roles.map((role) => (
+                        <div key={role.id}>
+                            <button
+                                className={styles.roleItem}
+                                onClick={() => {
+                                    const newRoles = [...memberRoles, role.id];
+
+                                    updateMember.send(
+                                        {
+                                            guildId,
+                                            memberId,
+                                            updates: { roles: newRoles },
+                                        },
+                                        {
+                                            onComplete: () => {
+                                                setOpen(false);
+                                            },
+                                        }
+                                    );
+                                }}
+                            >
+                                <div style={{ backgroundColor: role.color || "#99AAB5" }} />
+                                <p>{role.name}</p>
+                            </button>
+                        </div>
+                    ))}
+                </ol>
+            ) : (
+                <ol className={`${styles.empty} select-none`}>
+                    <h1>Nope!</h1>
+                    <p>Did you make a typo?</p>
+                </ol>
+            )}
+        </div>
     );
 }

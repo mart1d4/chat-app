@@ -1,10 +1,12 @@
 "use client";
 
+import { useActiveVoice, useData, useSettings, useShowSettings, useVoice } from "@/store";
 import { useKrispNoiseFilter } from "@livekit/components-react/krisp";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
-import { useActiveVoice, useData, useSettings, useShowSettings, useVoice } from "@/store";
 import styles from "./UserSection.module.css";
 import { getStatusLabel } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { Track } from "livekit-client";
 import Link from "next/link";
 import {
     useConnectionState,
@@ -24,8 +26,6 @@ import {
     Avatar,
     Icon,
 } from "@components";
-import { useEffect, useState } from "react";
-import { Track } from "livekit-client";
 
 export function UserSection() {
     const { setSettings, settings } = useSettings();
@@ -156,7 +156,11 @@ export function UserSection() {
 
                         <Tooltip>
                             <TooltipTrigger>
-                                <button onClick={() => setShowSettings({ type: "USER" })}>
+                                <button
+                                    onClick={() =>
+                                        setShowSettings({ type: "USER", tab: "My Account" })
+                                    }
+                                >
                                     <div className={styles.toolbar}>
                                         <Icon
                                             name="cog"

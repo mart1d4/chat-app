@@ -21,10 +21,10 @@ type RequestState<R> = {
 type RequestFunctions = Record<string, (...args: any[]) => Promise<any>>;
 
 export function useRequests() {
-    const { channels, addUser, removeUser } = useData();
     const { triggerDialog } = useTriggerDialog();
     const { triggerAlert } = useTriggerAlert();
     const user = useAuthenticatedUser();
+    const { channels } = useData();
     const router = useRouter();
 
     async function sendRequest({
@@ -239,21 +239,24 @@ export function useRequests() {
         createChannel: async ({
             recipients,
             skipWarning,
+            isDM,
         }: {
             recipients: number[];
             skipWarning?: boolean;
+            isDM?: boolean;
         }) => {
             const sameChannel = channels.find((channel) => {
                 return (
                     channel.recipients.length === recipients.length + 1 &&
-                    channel.recipients.every((r) => [user.id, ...recipients].includes(r.id))
+                    channel.recipients.every((r) => [user.id, ...recipients].includes(r.id)) &&
+                    (isDM ? channel.type === 0 : true)
                 );
             });
 
             if (sameChannel?.type === 0) {
                 router.push(`/channels/me/${sameChannel.id}`);
                 return {};
-            } else if (sameChannel?.type === 1 && !skipWarning) {
+            } else if (sameChannel?.type === 1 && !skipWarning && !isDM) {
                 triggerDialog({
                     type: "CHANNEL_EXISTS",
                     data: { channel: sameChannel, recipients: recipients },
@@ -362,7 +365,7 @@ export function useRequests() {
             channelId: number;
             body: Record<string, any>;
         }) => {
-            return sendRequestHelper(`/channels/${channelId}`, "PUT", body);
+            return sendRequestHelper(`/channels/${channelId}`, "PATCH", body);
         },
         deleteGuildChannel: async ({ channelId }: { channelId: number }) => {
             return sendRequestHelper(`/channels/${channelId}`, "DELETE");
@@ -422,11 +425,132 @@ export function useRequests() {
                 "DELETE"
             );
         },
+        removeAllReactions: async ({
+            channelId,
+            messageId,
+        }: {
+            channelId: number;
+            messageId: number;
+        }) => {
+            return sendRequestHelper(
+                `/channels/${channelId}/messages/${messageId}/reactions`,
+                "DELETE"
+            );
+        },
         authorizeVoice: async ({ channelId }: { channelId: number }) => {
             return sendRequestHelper(`/auth/voice/${channelId}`, "POST");
         },
         getGuildChannels: async ({ guildId }: { guildId: number }) => {
             return sendRequestHelper(`/guilds/${guildId}/channels`, "GET");
+        },
+        createGuildRole: async ({ guildId }: { guildId: number }) => {
+            return sendRequestHelper(`/guilds/${guildId}/roles`, "POST");
+        },
+        updateGuildRole: async ({
+            guildId,
+            roleId,
+            updates,
+        }: {
+            guildId: number;
+            roleId: number;
+            updates: Record<string, any>;
+        }) => {
+            return sendRequestHelper(`/guilds/${guildId}/roles/${roleId}`, "PATCH", updates);
+        },
+        deleteGuildRole: async ({ guildId, roleId }: { guildId: number; roleId: number }) => {
+            return sendRequestHelper(`/guilds/${guildId}/roles/${roleId}`, "DELETE");
+        },
+        updateMember: async ({
+            guildId,
+            memberId,
+            updates,
+        }: {
+            guildId: number;
+            memberId: number;
+            updates: Record<string, any>;
+        }) => {
+            return sendRequestHelper(`/guilds/${guildId}/members/${memberId}`, "PATCH", updates);
+        },
+        updateGuild: async ({
+            guildId,
+            updates,
+        }: {
+            guildId: number;
+            updates: Record<string, any>;
+        }) => {
+            return sendRequestHelper(`/guilds/${guildId}`, "PATCH", updates);
+        },
+        leaveGuild: async ({ guildId }: { guildId: number }) => {
+            return sendRequestHelper(`/users/@me/guilds/${guildId}`, "DELETE");
+        },
+        timeoutMember: async ({
+            guildId,
+            memberId,
+            timeout,
+            reason,
+        }: {
+            guildId: number;
+            memberId: number;
+            timeout: number;
+            reason?: string;
+        }) => {
+            return sendRequestHelper(`/guilds/${guildId}/members/${memberId}/timeout`, "POST", {
+                timeout,
+                reason,
+            });
+        },
+        kickMember: async ({
+            guildId,
+            memberId,
+            reason,
+        }: {
+            guildId: number;
+            memberId: number;
+            reason?: string;
+        }) => {
+            return sendRequestHelper(`/guilds/${guildId}/members/${memberId}/kick`, "POST", {
+                reason,
+            });
+        },
+        banMember: async ({
+            guildId,
+            memberId,
+            reason,
+            removeMessages,
+        }: {
+            guildId: number;
+            memberId: number;
+            reason?: string;
+            removeMessages?: number;
+        }) => {
+            return sendRequestHelper(`/guilds/${guildId}/members/${memberId}/ban`, "POST", {
+                reason,
+                removeMessages,
+            });
+        },
+        unbanMember: async ({ guildId, memberId }: { guildId: number; memberId: number }) => {
+            return sendRequestHelper(`/guilds/${guildId}/members/${memberId}/unban`, "POST");
+        },
+        getBannedMembers: async ({ guildId }: { guildId: number }) => {
+            return sendRequestHelper(`/guilds/${guildId}/bans`, "GET");
+        },
+        getAuditLogs: async ({
+            guildId,
+            limit,
+            before,
+            after,
+        }: {
+            guildId: number;
+            limit?: number;
+            before?: string;
+            after?: string;
+        }) => {
+            return sendRequestHelper(
+                `/guilds/${guildId}/audit-logs`,
+                "GET",
+                {},
+                { limit, before, after }
+            );
         },
     };
 

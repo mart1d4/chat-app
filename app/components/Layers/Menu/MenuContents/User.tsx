@@ -3,15 +3,16 @@
 import { useData, useMention, useTriggerAlert, useTriggerDialog, useVoice } from "@/store";
 import { MenuContent, MenuDivider, MenuTrigger, MenuItem, Menu } from "@components";
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
+import type { Guild, GuildChannel, GuildRole, User, UserGuild } from "@/type";
 import { useRelationships } from "@/hooks/useRelationships";
 import { getDateUntilEnd, isStillMuted } from "@/lib/mute";
 import { usePopoverContext } from "../../Popover/Popover";
 import { useNotifications } from "@/store/notifications";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useChannelSettings } from "@/store/settings";
 import { isChannelPrivate } from "@/lib/permissions";
 import { useRequests } from "@/hooks/useRequests";
-import type { GuildChannel, User } from "@/type";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useMenuContext } from "../Menu";
 import styles from "../Menu.module.css";
@@ -19,6 +20,7 @@ import styles from "../Menu.module.css";
 export function UserMenu({
     user,
     type,
+    guild,
     channelType,
     channelId,
     channelName,
@@ -27,6 +29,7 @@ export function UserMenu({
 }: {
     user: (User["id"] & Partial<User>) | undefined;
     type?: "small" | "profile" | "card" | "author" | "channel";
+    guild?: UserGuild;
     channelType?: number;
     channelId?: number;
     channelName?: string;
@@ -36,6 +39,7 @@ export function UserMenu({
     const { removeChannelRecipient: removeChannelR, guilds, channels, updateGuild } = useData();
     const { muted, muteChannel, unmuteChannel } = useChannelSettings();
     const { notifications, removeNotification } = useNotifications();
+    const { hasPermission } = usePermissions({ guildId: guild?.id });
     const { channelId: voiceId, setChannelId } = useVoice();
     const { setOpen: setPopoverOpen } = usePopoverContext();
     const { triggerDialog } = useTriggerDialog();
@@ -50,6 +54,7 @@ export function UserMenu({
         createChannel,
         deleteChannel,
         updateChannel,
+        updateMember,
         createInvite,
         removeFriend,
         sendMessage,
@@ -81,9 +86,38 @@ export function UserMenu({
         user?.id
     );
 
+    const isDM = [0, 1].includes(channelType || 0);
+
+    const profileMe = guild?.members.find((m) => m.id === appUser.id);
+
+    const guildRoles = guild?.roles || [];
+    const roles = guildRoles.filter((r) => !r.everyone).sort((a, b) => a.position - b.position);
+
+    const userRoles = guildRoles.filter((r: GuildRole) => user?.roles?.includes(r.id));
+    const userHighestRole = userRoles.length ? userRoles[0] : null;
+
+    const meRoles = roles.filter((r: GuildRole) => profileMe?.roles.includes(r.id));
+    const meHighestRole = meRoles.length ? meRoles[0] : null;
+
+    const isUserOwner = guild?.ownerId === user?.id;
+    const isMeOwner = guild?.ownerId === appUser.id;
+
+    const isUserAboveMe = isMeOwner
+        ? false
+        : isUserOwner || userHighestRole?.position < meHighestRole?.position;
+
+    const canTimeout = hasPermission({ permission: "MODERATE_MEMBERS" }) && !isUserAboveMe;
+    const canKick = hasPermission({ permission: "KICK_MEMBERS" }) && !isUserAboveMe;
+    const canSendMessages = isDM || hasPermission({ permission: "SEND_MESSAGES" });
+    const canBan = hasPermission({ permission: "BAN_MEMBERS" }) && !isUserAboveMe;
+    const canManageRoles = hasPermission({ permission: "MANAGE_ROLES" });
+
     function messageUser() {
         if (!user?.id) return;
-        createChannel.send({ recipients: [user.id] }, { onComplete: () => setOpen(false) });
+        createChannel.send(
+            { recipients: [user.id], isDM: true },
+            { onComplete: () => setOpen(false) }
+        );
     }
 
     const callUser = useCallback(() => {
@@ -418,7 +452,7 @@ export function UserMenu({
                     Profile
                 </MenuItem>
 
-                {channelType !== 0 && (
+                {channelType !== 0 && canSendMessages && (
                     <MenuItem onClick={() => setMention(user.id)}>Mention</MenuItem>
                 )}
 
@@ -431,6 +465,111 @@ export function UserMenu({
                         Close DM
                     </MenuItem>
                 )}
+
+                {!!roles?.length &&
+                    !!user?.roles?.length &&
+                    (canManageRoles ? (
+                        <>
+                            <MenuDivider />
+
+                            <Menu
+                                gap={12}
+                                openOnHover
+                                openOnFocus
+                                flipMainAxis
+                                placement="right-start"
+                            >
+                                <MenuTrigger>
+                                    <div>
+                                        <MenuItem submenu>Roles</MenuItem>
+                                    </div>
+                                </MenuTrigger>
+
+                                <MenuContent>
+                                    {roles.map((role: GuildRole) => (
+                                        <MenuItem
+                                            key={role.id}
+                                            checked={user.roles.includes(role.id)}
+                                            disabled={
+                                                role.position <= meHighestRole?.position &&
+                                                !isMeOwner
+                                            }
+                                            onClick={() => {
+                                                if (
+                                                    role.position <= meHighestRole?.position &&
+                                                    !isMeOwner
+                                                ) {
+                                                    return;
+                                                }
+
+                                                let newRoles = user.roles;
+
+                                                if (user.roles.includes(role.id)) {
+                                                    newRoles = user.roles.filter(
+                                                        (r) => r !== role.id
+                                                    );
+                                                } else {
+                                                    newRoles = [...user.roles, role.id];
+                                                }
+
+                                                updateMember.send({
+                                                    guildId: guild!.id,
+                                                    memberId: user.id,
+                                                    updates: { roles: newRoles },
+                                                });
+                                            }}
+                                        >
+                                            <div className={styles.role}>
+                                                <div
+                                                    className={styles.roleColor}
+                                                    style={{
+                                                        backgroundColor: role.color || "#99AAB5",
+                                                    }}
+                                                />
+
+                                                <p>{role.name}</p>
+                                            </div>
+                                        </MenuItem>
+                                    ))}
+                                </MenuContent>
+                            </Menu>
+                        </>
+                    ) : userRoles.length ? (
+                        <>
+                            <MenuDivider />
+
+                            <Menu
+                                gap={12}
+                                openOnHover
+                                openOnFocus
+                                flipMainAxis
+                                placement="right-start"
+                            >
+                                <MenuTrigger>
+                                    <div>
+                                        <MenuItem submenu>Roles</MenuItem>
+                                    </div>
+                                </MenuTrigger>
+
+                                <MenuContent>
+                                    {userRoles.map((role: GuildRole) => (
+                                        <MenuItem key={role.id}>
+                                            <div className={styles.role}>
+                                                <div
+                                                    className={styles.roleColor}
+                                                    style={{
+                                                        backgroundColor: role.color || "#99AAB5",
+                                                    }}
+                                                />
+
+                                                <p>{role.name}</p>
+                                            </div>
+                                        </MenuItem>
+                                    ))}
+                                </MenuContent>
+                            </Menu>
+                        </>
+                    ) : null)}
 
                 <MenuDivider />
 
@@ -610,7 +749,7 @@ export function UserMenu({
                 Profile
             </MenuItem>
 
-            {!!channelType && channelType !== 0 && (
+            {!!channelType && channelType !== 0 && canSendMessages && (
                 <MenuItem onClick={() => setMention(user.id)}>Mention</MenuItem>
             )}
 
@@ -854,6 +993,155 @@ export function UserMenu({
                     <MenuDivider />
                 </>
             )}
+
+            {(canTimeout || canKick || canBan) && (
+                <>
+                    {canTimeout && (
+                        <MenuItem
+                            danger
+                            onClick={() => {
+                                setOpen(false);
+                                triggerDialog({
+                                    type: "TIMEOUT_USER",
+                                    data: { guild, user },
+                                });
+                            }}
+                        >
+                            Timeout {user.displayName}
+                        </MenuItem>
+                    )}
+
+                    {canKick && (
+                        <MenuItem
+                            danger
+                            onClick={() => {
+                                setOpen(false);
+                                triggerDialog({
+                                    type: "KICK_USER",
+                                    data: { guild, user },
+                                });
+                            }}
+                        >
+                            Kick {user.displayName}
+                        </MenuItem>
+                    )}
+
+                    {canBan && (
+                        <MenuItem
+                            danger
+                            onClick={() => {
+                                setOpen(false);
+                                triggerDialog({
+                                    type: "BAN_USER",
+                                    data: { guild, user },
+                                });
+                            }}
+                        >
+                            Ban {user.displayName}
+                        </MenuItem>
+                    )}
+
+                    <MenuDivider />
+                </>
+            )}
+
+            {!!roles?.length &&
+                !!user?.roles?.length &&
+                (canManageRoles ? (
+                    <>
+                        <Menu
+                            gap={12}
+                            openOnHover
+                            openOnFocus
+                            flipMainAxis
+                            placement="right-start"
+                        >
+                            <MenuTrigger>
+                                <div>
+                                    <MenuItem submenu>Roles</MenuItem>
+                                </div>
+                            </MenuTrigger>
+
+                            <MenuContent>
+                                {roles.map((role: GuildRole) => (
+                                    <MenuItem
+                                        key={role.id}
+                                        checked={user.roles.includes(role.id)}
+                                        disabled={
+                                            role.position <= meHighestRole?.position && !isMeOwner
+                                        }
+                                        onClick={() => {
+                                            if (
+                                                role.position <= meHighestRole?.position &&
+                                                !isMeOwner
+                                            ) {
+                                                return;
+                                            }
+
+                                            let newRoles = user.roles;
+
+                                            if (user.roles.includes(role.id)) {
+                                                newRoles = user.roles.filter((r) => r !== role.id);
+                                            } else {
+                                                newRoles = [...user.roles, role.id];
+                                            }
+
+                                            updateMember.send({
+                                                guildId: guild!.id,
+                                                memberId: user.id,
+                                                updates: { roles: newRoles },
+                                            });
+                                        }}
+                                    >
+                                        <div className={styles.role}>
+                                            <div
+                                                className={styles.roleColor}
+                                                style={{ backgroundColor: role.color || "#99AAB5" }}
+                                            />
+
+                                            <p>{role.name}</p>
+                                        </div>
+                                    </MenuItem>
+                                ))}
+                            </MenuContent>
+                        </Menu>
+
+                        <MenuDivider />
+                    </>
+                ) : userRoles.length ? (
+                    <>
+                        <Menu
+                            gap={12}
+                            openOnHover
+                            openOnFocus
+                            flipMainAxis
+                            placement="right-start"
+                        >
+                            <MenuTrigger>
+                                <div>
+                                    <MenuItem submenu>Roles</MenuItem>
+                                </div>
+                            </MenuTrigger>
+
+                            <MenuContent>
+                                {userRoles.map((role: GuildRole) => (
+                                    <MenuItem key={role.id}>
+                                        <div className={styles.role}>
+                                            <div
+                                                className={styles.roleColor}
+                                                style={{ backgroundColor: role.color || "#99AAB5" }}
+                                            />
+
+                                            <p>{role.name}</p>
+                                        </div>
+                                    </MenuItem>
+                                ))}
+                            </MenuContent>
+                        </Menu>
+
+                        <MenuDivider />
+                    </>
+                ) : null)}
 
             <MenuItem
                 icon="id"

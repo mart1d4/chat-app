@@ -442,32 +442,24 @@ export function doesUserHaveChannelPermission(
     user: GuildMember,
     permission: keyof typeof PERMISSIONS
 ) {
-    // Check for permissions, if channel has no overwrites, use its category's overwrites (it channel has a category)
-    // remember that deny rules always take precedence over allow rules
-    // Also need to take into the account that each role has its own permissions, and that some roles are higher than others
+    const memberRoles = roles.filter((r) => user.roles.includes(r.id));
 
-    // Sort roles so that the highest role is first
-    // a higher role is a role with a lower position
-    const userRoles = roles
-        .filter((r) => user.roles.includes(r.id))
-        .sort((a, b) => b.position - a.position);
+    const maxRolePerms = combinePermissions(memberRoles.map((r) => r.permissions));
 
-    const userPermissions = user.permissions;
-
-    // First check if any of the roles user has makes the user an admin
-    if (hasPermission(userPermissions, PERMISSIONS.ADMINISTRATOR)) return true;
-
-    for (const role of userRoles) {
-        if (hasPermission(role.permissions, PERMISSIONS.ADMINISTRATOR)) return true;
-    }
+    // If user is admin, they have all permissions
+    if (hasPermission(maxRolePerms, PERMISSIONS.ADMINISTRATOR)) return true;
 
     const overwrites = channel.permissionOverwrites;
     const category = channels.find((c) => c.id === channel.parentId);
     const categoryOverwrites = category?.permissionOverwrites || [];
 
+    if (user.communicationDisabledUntil && user.communicationDisabledUntil > Date.now()) {
+        return false;
+    }
+
     // Check channel overwrites
     for (const overwrite of overwrites) {
-        if (overwrite.type === 0 && userRoles.find((r) => r.id === overwrite.id)) {
+        if (overwrite.type === 0 && user.roles.includes(overwrite.id)) {
             if (hasPermission(overwrite.deny, PERMISSIONS[permission])) return false;
             if (hasPermission(overwrite.allow, PERMISSIONS[permission])) return true;
         } else if (overwrite.type === 1 && overwrite.id === user.id) {
@@ -478,7 +470,7 @@ export function doesUserHaveChannelPermission(
 
     // Check category overwrites
     for (const overwrite of categoryOverwrites) {
-        if (overwrite.type === 0 && userRoles.find((r) => r.id === overwrite.id)) {
+        if (overwrite.type === 0 && user.roles.includes(overwrite.id)) {
             if (hasPermission(overwrite.deny, PERMISSIONS[permission])) return false;
             if (hasPermission(overwrite.allow, PERMISSIONS[permission])) return true;
         } else if (overwrite.type === 1 && overwrite.id === user.id) {
@@ -487,13 +479,8 @@ export function doesUserHaveChannelPermission(
         }
     }
 
-    // Check guild permissions
-    if (hasPermission(userPermissions, PERMISSIONS[permission])) return true;
-
     // Check role permissions
-    for (const role of userRoles) {
-        if (hasPermission(role.permissions, PERMISSIONS[permission])) return true;
-    }
+    if (hasPermission(maxRolePerms, PERMISSIONS[permission])) return true;
 
     return false;
 }
@@ -503,27 +490,35 @@ export function doesUserHaveGuildPermission(
     user: GuildMember,
     permission: keyof typeof PERMISSIONS
 ) {
-    const userRoles = user.roles.sort(
-        (a, b) => roles.find((r) => r.id === b)?.position - roles.find((r) => r.id === a)?.position
-    );
+    const memberRoles = roles.filter((r) => user.roles.includes(r.id));
+    const maxRolePerms = combinePermissions(memberRoles.map((r) => r.permissions));
 
-    const userPermissions = user.permissions;
-
-    if (hasPermission(userPermissions, PERMISSIONS.ADMINISTRATOR)) return true;
-
-    for (const role of userRoles) {
-        const rolePermissions = roles.find((r) => r.id === role)?.permissions;
-        if (hasPermission(rolePermissions, PERMISSIONS.ADMINISTRATOR)) return true;
-    }
-
-    if (hasPermission(userPermissions, PERMISSIONS[permission])) return true;
-
-    for (const role of userRoles) {
-        const rolePermissions = roles.find((r) => r.id === role)?.permissions;
-        if (hasPermission(rolePermissions, PERMISSIONS[permission])) return true;
+    if (
+        hasPermission(maxRolePerms, PERMISSIONS.ADMINISTRATOR) ||
+        hasPermission(maxRolePerms, PERMISSIONS[permission])
+    ) {
+        return true;
     }
 
     return false;
+}
+
+// Function to check if a permission integer has additional permissions
+// compared to another permission integer
+export function hasAdditionalPermissions(
+    current: bigint | string,
+    additional: bigint | string
+): boolean {
+    if (typeof current === "string") {
+        current = BigInt(current);
+    }
+
+    if (typeof additional === "string") {
+        additional = BigInt(additional);
+    }
+
+    // Check if `additional` has any bits set that are not in `current`
+    return (current & additional) !== additional;
 }
 
 export function getDefaultPermissions() {
@@ -564,4 +559,9 @@ export function isChannelPrivate(overwrites: PermissionOverwrites[], everyoneRol
     }
 
     return false;
+}
+
+export function getPermissionFlagFromBigint(permission: bigint) {
+    const permissionFlags = Object.entries(PERMISSIONS).find(([, value]) => value === permission);
+    return permissionFlags ? (permissionFlags[0] as keyof typeof PERMISSIONS) : null;
 }

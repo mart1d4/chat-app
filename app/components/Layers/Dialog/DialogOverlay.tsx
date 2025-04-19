@@ -2,7 +2,9 @@
 
 import { useAuthenticatedUser } from "@/hooks/useAuthenticatedUser";
 import { ImageUpload } from "./ImageUpload/ImageUpload";
+import type { KnownUser, UserGuild } from "@/type";
 import { useRequests } from "@/hooks/useRequests";
+import { DialogDescription } from "./Dialog";
 import { getRelativeDate } from "@/lib/time";
 import { useRouter } from "next/navigation";
 import { useTriggerDialog } from "@/store";
@@ -20,6 +22,7 @@ import {
     LeaveGroup,
     Dialog,
     Avatar,
+    Input,
 } from "@components";
 
 const warnings = {
@@ -33,7 +36,7 @@ const warnings = {
     },
     FILE_SIZE: {
         title: "Uh oh, this file exceeds the size limit.",
-        description: "The max file size is 10MB.",
+        description: "The max file size is 50MB.",
         confirmLabel: "Got it",
         hideCancel: true,
         boldHeading: true,
@@ -58,13 +61,17 @@ export function DialogOverlay() {
     const { open, removeDialog } = useTriggerDialog();
     const appUser = useAuthenticatedUser();
     const router = useRouter();
+
     const {
         addChannelRecipients,
         deleteGuildChannel,
+        removeAllReactions,
+        deleteGuildRole,
         deleteChannel,
         createChannel,
         removeFriend,
         changeOwner,
+        leaveGuild,
         blockUser,
     } = useRequests();
 
@@ -255,7 +262,7 @@ export function DialogOverlay() {
         }
 
         if (type === "UNPIN_MESSAGE") {
-            if (!data?.message || !data?.functions) return null;
+            if (!data?.message || !data?.channel || !data?.functions) return null;
 
             return (
                 <Dialog
@@ -277,7 +284,10 @@ export function DialogOverlay() {
                                 setLoading((prev) => ({ ...prev, unpinMessage: false }));
                             }}
                         >
-                            <FixedMessage message={data.message} />
+                            <FixedMessage
+                                message={data.message}
+                                channel={data.channel}
+                            />
 
                             <DialogProtip>
                                 You can hold down shift when clicking <strong>unpin message</strong>{" "}
@@ -289,8 +299,173 @@ export function DialogOverlay() {
             );
         }
 
-        if (type === "PIN_MESSAGE") {
+        if (type === "VIEW_REACTIONS") {
             if (!data?.message || !data?.functions) return null;
+
+            return (
+                <Dialog
+                    key={type}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <div style={{ animation: close ? animation : "" }}>
+                        <DialogContent hideFooter>TODO!</DialogContent>
+                    </div>
+                </Dialog>
+            );
+        }
+
+        if (type === "REMOVE_REACTIONS") {
+            if (!data?.channelId || !data?.messageId) return null;
+
+            return (
+                <Dialog
+                    key={type}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <div style={{ animation: close ? animation : "" }}>
+                        <DialogContent
+                            confirmLabel="Yes"
+                            heading="Remove All Reactions"
+                            description="Are you sure you want to remove all reactions from this message?"
+                            confirmLoading={removeAllReactions.isLoading}
+                            onConfirm={() => {
+                                removeAllReactions.send(
+                                    { channelId: data.channelId, messageId: data.messageId },
+                                    { onComplete: () => remove(id) }
+                                );
+                            }}
+                        />
+                    </div>
+                </Dialog>
+            );
+        }
+
+        if (type === "ROLE_DELETE") {
+            if (!data?.role || !data?.guildId) return null;
+
+            return (
+                <Dialog
+                    key={type}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <div style={{ animation: close ? animation : "" }}>
+                        <DialogContent
+                            confirmLabel="Okay"
+                            heading="Delete Role"
+                            confirmLoading={deleteGuildRole.isLoading}
+                            onConfirm={() => {
+                                deleteGuildRole.send(
+                                    { guildId: data.guildId, roleId: data.role.id },
+                                    { onComplete: () => remove(id) }
+                                );
+                            }}
+                        >
+                            <DialogDescription>
+                                Are you sure you want to delete the{" "}
+                                <strong>{data.role.name}</strong> role? This action cannot be
+                                undone.
+                            </DialogDescription>
+                        </DialogContent>
+                    </div>
+                </Dialog>
+            );
+        }
+
+        if (type === "TIMEOUT_USER") {
+            if (!data?.user || !data?.guild) return null;
+
+            return (
+                <Dialog
+                    key={type}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <div style={{ animation: close ? animation : "" }}>
+                        <TimeoutUser
+                            user={data.user}
+                            guild={data.guild}
+                            remove={() => remove(id)}
+                        />
+                    </div>
+                </Dialog>
+            );
+        }
+
+        if (type === "KICK_USER") {
+            if (!data?.user || !data?.guild) return null;
+
+            return (
+                <Dialog
+                    key={type}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <div style={{ animation: close ? animation : "" }}>
+                        <KickUser
+                            user={data.user}
+                            guild={data.guild}
+                            remove={() => remove(id)}
+                        />
+                    </div>
+                </Dialog>
+            );
+        }
+
+        if (type === "BAN_USER") {
+            if (!data?.user || !data?.guild) return null;
+
+            return (
+                <Dialog
+                    key={type}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <div style={{ animation: close ? animation : "" }}>
+                        <BanUser
+                            user={data.user}
+                            guild={data.guild}
+                            remove={() => remove(id)}
+                        />
+                    </div>
+                </Dialog>
+            );
+        }
+
+        if (type === "LEAVE_GUILD") {
+            if (!data?.guild) return null;
+
+            return (
+                <Dialog
+                    key={type}
+                    open={i === open.length - 1 && !close}
+                    onOpenChange={(v) => !v && remove(id)}
+                >
+                    <DialogContent
+                        confirmColor="red"
+                        confirmLabel="Leave Server"
+                        heading={`Leave '${data.guild.name}'`}
+                        confirmLoading={leaveGuild.isLoading}
+                        onConfirm={() => {
+                            leaveGuild.send(
+                                { guildId: data.guild.id },
+                                { onComplete: () => remove(id) }
+                            );
+                        }}
+                    >
+                        <p>
+                            Are you sure you want to leave <strong>{data.guild.name}</strong>? You
+                            won't be able to rejoin this server unless you are re-invited.
+                        </p>
+                    </DialogContent>
+                </Dialog>
+            );
+        }
+
+        if (type === "PIN_MESSAGE") {
+            if (!data?.message || !data?.channel || !data?.functions) return null;
 
             return (
                 <Dialog
@@ -312,7 +487,10 @@ export function DialogOverlay() {
                                 setLoading((prev) => ({ ...prev, pinMessage: false }));
                             }}
                         >
-                            <FixedMessage message={data.message} />
+                            <FixedMessage
+                                message={data.message}
+                                channel={data.channel}
+                            />
                         </DialogContent>
                     </div>
                 </Dialog>
@@ -652,4 +830,197 @@ export function DialogOverlay() {
             </Dialog>
         );
     });
+}
+
+function TimeoutUser({
+    user,
+    guild,
+    remove,
+}: {
+    user: KnownUser;
+    guild: UserGuild;
+    remove: () => void;
+}) {
+    const [duration, setDuration] = useState(60);
+    const [reason, setReason] = useState("");
+    const { timeoutMember } = useRequests();
+
+    const durations = [
+        {
+            label: "60 Secs",
+            value: 60,
+        },
+        {
+            label: "5 Mins",
+            value: 300,
+        },
+        {
+            label: "10 Mins",
+            value: 600,
+        },
+        {
+            label: "1 Hour",
+            value: 3600,
+        },
+        {
+            label: "1 Day",
+            value: 86400,
+        },
+        {
+            label: "1 Week",
+            value: 604800,
+        },
+    ];
+
+    return (
+        <DialogContent
+            confirmColor="red"
+            confirmLabel="Timeout"
+            heading={`Timeout ${user.displayName}`}
+            confirmLoading={timeoutMember.isLoading}
+            description={`Members who are in timeout are temporarily not allowed to chat or react in text channels. They are also not allowed to connect to voice or Stage channels.`}
+            onConfirm={() => {
+                timeoutMember.send(
+                    { guildId: guild.id, memberId: user.id, reason, timeout: duration },
+                    { onComplete: () => remove() }
+                );
+            }}
+        >
+            <Input
+                type="select"
+                label="Duration"
+                value={duration}
+                choices={durations}
+                onChange={(v) => setDuration(v)}
+            />
+
+            <Input
+                label="Reason"
+                value={reason}
+                type="textarea"
+                maxLength={512}
+                onChange={(v) => setReason(v)}
+                placeholder="Enter a reason. This will only be visible in the Audit Log and will not be shown to the member."
+            />
+        </DialogContent>
+    );
+}
+
+function KickUser({
+    user,
+    guild,
+    remove,
+}: {
+    user: KnownUser;
+    guild: UserGuild;
+    remove: () => void;
+}) {
+    const [reason, setReason] = useState("");
+    const { kickMember } = useRequests();
+
+    return (
+        <DialogContent
+            confirmColor="red"
+            confirmLabel="Kick"
+            confirmLoading={kickMember.isLoading}
+            heading={`Kick ${user.displayName} from ${guild.name}?`}
+            onConfirm={() => {
+                kickMember.send(
+                    { guildId: guild.id, memberId: user.id, reason },
+                    { onComplete: () => remove() }
+                );
+            }}
+        >
+            <p>
+                Are you sure you want to kick <strong>{user.displayName}</strong> from the server?
+                They will be able to rejoin again with a new invite.
+            </p>
+
+            <Input
+                autoFocus
+                value={reason}
+                type="textarea"
+                maxLength={512}
+                label="Reason For Kick"
+                onChange={(v) => setReason(v)}
+            />
+        </DialogContent>
+    );
+}
+
+function BanUser({
+    user,
+    guild,
+    remove,
+}: {
+    user: KnownUser;
+    guild: UserGuild;
+    remove: () => void;
+}) {
+    const [removeMessages, setRemoveMessages] = useState(1);
+    const [reason, setReason] = useState("");
+    const { banMember } = useRequests();
+
+    const removeMessagesChoices = [
+        {
+            label: "Don't Delete Any",
+            value: null,
+        },
+        {
+            label: "Previous Hour",
+            value: 1,
+        },
+        {
+            label: "Previous 6 Hours",
+            value: 6,
+        },
+        {
+            label: "Previous 12 Hours",
+            value: 12,
+        },
+        {
+            label: "Previous 24 Hours",
+            value: 24,
+        },
+        {
+            label: "Previous 3 Days",
+            value: 72,
+        },
+        {
+            label: "Previous 7 Days",
+            value: 168,
+        },
+    ];
+
+    return (
+        <DialogContent
+            confirmLabel="Ban"
+            confirmColor="red"
+            confirmLoading={banMember.isLoading}
+            heading={`Ban @${user.displayName}?`}
+            onConfirm={() => {
+                banMember.send(
+                    { guildId: guild.id, memberId: user.id, reason, removeMessages },
+                    { onComplete: () => remove() }
+                );
+            }}
+        >
+            <Input
+                autoFocus
+                value={reason}
+                type="textarea"
+                maxLength={512}
+                label="Reason For Ban"
+                onChange={(v) => setReason(v)}
+            />
+
+            <Input
+                type="select"
+                value={removeMessages}
+                label="Delete Message History"
+                choices={removeMessagesChoices}
+                onChange={(v) => setRemoveMessages(v)}
+            />
+        </DialogContent>
+    );
 }

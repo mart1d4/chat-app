@@ -91,47 +91,11 @@
     flex-direction: column;
 }
 
-.privateCheck > div:first-child {
-    width: 100%;
-    display: flex;
-    align-items: center;
-}
-
-.privateCheck > div:first-child > label {
-    flex: 1;
-    display: block;
-    overflow: hidden;
-    color: var(--fg-1);
-    line-height: 24px;
-    font-size: 16px;
-    font-weight: 500;
-    word-wrap: break-word;
-    cursor: pointer;
-}
-
-.privateCheck > div:first-child > label > svg {
-    position: relative;
-    top: 2px;
-    width: 16px;
-    height: 16px;
-    display: inline-block;
-    opacity: 0.6;
-    margin-right: 3px;
-}
-
-.privateCheck > div:first-child > div {
-    flex: 0 0 auto;
-}
-
-.privateCheck > div:last-child {
+.privateCheck > :last-child {
     margin-top: 8px;
     color: var(--fg-3);
     user-select: none;
     font-size: 14px;
     line-height: 20px;
     font-weight: 400;
-}
-
-.channelType + div svg {
-    color: var(--fg-3);
 }

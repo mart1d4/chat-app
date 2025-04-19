@@ -13,14 +13,16 @@ import {
     DialogTrigger,
     CreateGuild,
     MenuTrigger,
+    MenuContent,
     UserMenu,
+    MenuItem,
     Dialog,
     Menu,
     Icon,
 } from "@components";
 
-export const AppNav = memo(function AppNav() {
-    const { notifications } = useNotifications();
+export const AppNav = function AppNav() {
+    const { notifications, removeAllDMNotifications, removeAllNotifications } = useNotifications();
     const user = useAuthenticatedUser();
     const { channelId } = useVoice();
     const { guilds } = useData();
@@ -77,12 +79,36 @@ export const AppNav = memo(function AppNav() {
     return (
         <nav className={styles.nav}>
             <ul className={styles.list}>
-                <NavIcon
-                    special={true}
-                    link={"/channels/me"}
-                    name="Direct Messages"
-                    svg={<Icon name="message" />}
-                />
+                <Menu
+                    positionOnClick
+                    openOnRightClick
+                    placement="right-start"
+                >
+                    <MenuTrigger>
+                        <div>
+                            <NavIcon
+                                special={true}
+                                link={"/channels/me"}
+                                name="Direct Messages"
+                                svg={<Icon name="message" />}
+                            />
+                        </div>
+                    </MenuTrigger>
+
+                    {!!chanNotifs.length && (
+                        <MenuContent>
+                            {!!dmChannelsWithPings.length && (
+                                <MenuItem onClick={() => removeAllDMNotifications()}>
+                                    Read All DMs
+                                </MenuItem>
+                            )}
+
+                            <MenuItem onClick={() => removeAllNotifications()}>
+                                Read All Notifications
+                            </MenuItem>
+                        </MenuContent>
+                    )}
+                </Menu>
 
                 {dmChannelsWithPings.map((channel) => {
                     const friend =
@@ -236,4 +262,4 @@ export const AppNav = memo(function AppNav() {
             </ul>
         </nav>
     );
-});
+};

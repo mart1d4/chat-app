@@ -95,19 +95,19 @@
 }
 
 .input > input {
-    font-size: 16px;
-    line-height: 32px;
+    flex: 1;
+    margin: 1px;
     height: 30px;
+    border: none;
+    resize: none;
+    font-size: 16px;
     min-width: 48px;
     appearance: none;
-    margin: 1px;
+    line-height: 32px;
+    color: var(--fg-3);
     padding: 0 32px 0 8px;
     box-sizing: border-box;
     background-color: transparent;
-    border: none;
-    resize: none;
-    flex: 1;
-    color: var(--fg-3);
 }
 
 .input > input:focus {
@@ -128,17 +128,17 @@
 }
 
 .scroller::-webkit-scrollbar {
-    width: 8px;
+    width: 8px !important;
 }
 
 .scroller::-webkit-scrollbar-track {
-    border: 2px var(--bg-4) solid;
-    background-color: var(--bg-4);
+    border: 2px var(--bg-4) solid !important;
+    background-color: var(--bg-4) !important;
 }
 
 .scroller::-webkit-scrollbar-thumb {
-    border: 2px var(--bg-4) solid;
-    background-color: var(--bg-4);
+    border: 2px var(--bg-4) solid !important;
+    background-color: var(--bg-0) !important;
 }
 
 .scroller:hover::-webkit-scrollbar-thumb {
@@ -197,10 +197,10 @@
     white-space: nowrap;
 }
 
-button.inviteButton {
+.inviteButton {
     min-width: 72px;
-    transition: all 0s;
-    border: 1px solid var(--success-0);
+    transition: all 0s !important;
+    border: 1px solid var(--success-0) !important;
 }
 
 .inviteButton.failed {
@@ -221,12 +221,12 @@ button.inviteButton {
 
 .friend:hover > .inviteButton:hover,
 .inviteButton:focus-visible {
-    border-color: var(--success-1);
+    border-color: var(--success-1) !important;
     background-color: var(--success-1);
 }
 
 .friend:hover > .inviteButton:active {
-    border-color: var(--success-2);
+    border-color: var(--success-2) !important;
     background-color: var(--success-2);
 }
 
